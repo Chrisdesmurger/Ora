@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Ora</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Accueil</string>
+    <string name="nav_search">Recherche</string>
+    <string name="nav_library">Bibliothèque</string>
+    <string name="nav_journal">Journal</string>
+    <string name="nav_profile">Profil</string>
+
+    <!-- Home Screen -->
+    <string name="home_suggestion_title">Your suggestion of the day</string>
+    <string name="home_get_started">Get Started</string>
+
+    <!-- Categories -->
+    <string name="category_yoga">Yoga</string>
+    <string name="category_pilates">Pilates</string>
+    <string name="category_meditation">Méditation</string>
+    <string name="category_breathing">Respiration</string>
+
+    <!-- Journal -->
+    <string name="journal_gratitudes_title">3 gratitudes du jour</string>
+    <string name="journal_feeling_placeholder">Écris comment tu te sens aujourd\'hui...</string>
+    <string name="journal_tracker_title">Mon habit tracker</string>
+    <string name="journal_detail_title">Journal Quotidien</string>
+    <string name="journal_mood_question">Comment tu te sens aujourd\'hui?</string>
+    <string name="journal_story_question">Qu\'as-tu envie de raconter aujourd\'hui?</string>
+    <string name="journal_gratitude_question">Aujourd\'hui, je suis reconnaissant(e) pour...</string>
+    <string name="journal_accomplishments">Mes accomplissements</string>
+    <string name="journal_improvements">À améliorer</string>
+    <string name="journal_learning_question">Qu\'est-ce que j\'ai appris aujourd\'hui?</string>
+    <string name="journal_save">Sauvegarder</string>
+
+    <!-- Library -->
+    <string name="library_practices_title">Pratiques</string>
+    <string name="library_meditation_section">Méditation</string>
+    <string name="library_yoga_section">Yoga</string>
+    <string name="library_pilates_section">Pilates</string>
+    <string name="library_breathing_section">Respiration</string>
+
+    <!-- Video -->
+    <string name="video_new_badge">NOUVEAU</string>
+    <string name="video_play">Lire</string>
+
+    <!-- Moods -->
+    <string name="mood_happy">Heureux</string>
+    <string name="mood_good">Bien</string>
+    <string name="mood_neutral">Neutre</string>
+    <string name="mood_sad">Triste</string>
+
+    <!-- Notifications -->
+    <string name="notification_evening_title">Ora - Moment de réflexion</string>
+    <string name="notification_channel_name">Rappels du soir</string>
+    <string name="notification_channel_description">Notifications pour les rappels du soir</string>
+
+    <!-- Common -->
+    <string name="loading">Chargement...</string>
+    <string name="error_generic">Une erreur s\'est produite</string>
+    <string name="retry">Réessayer</string>
+    <string name="back">Retour</string>
+    <string name="save">Enregistrer</string>
+    <string name="cancel">Annuler</string>
+</resources>

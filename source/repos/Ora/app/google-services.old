@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "859432337771",
+    "project_id": "ora-wellbeing",
+    "storage_bucket": "ora-wellbeing.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:859432337771:android:9198476a9d023daf908c2e",
+        "android_client_info": {
+          "package_name": "com.ora.wellbeing"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAqbB51scaiO2JII8xtUAAMRASMuizZVz8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

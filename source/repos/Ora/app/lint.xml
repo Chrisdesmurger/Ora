@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!-- Ora Android App Lint Configuration -->
+    <!-- Ensures code quality and accessibility standards -->
+
+    <!-- Error Level Issues - Must be fixed -->
+    <issue id="HardcodedText" severity="error">
+        <message>Hardcoded text should use string resources for internationalization</message>
+    </issue>
+
+    <issue id="MissingContentDescription" severity="error">
+        <message>Images must have content descriptions for accessibility</message>
+    </issue>
+
+    <issue id="SmallSp" severity="error">
+        <message>Text size should be at least 12sp for readability</message>
+    </issue>
+
+    <issue id="TouchTargetSizeCheck" severity="error">
+        <message>Touch targets should be at least 48dp for accessibility</message>
+    </issue>
+
+    <issue id="ButtonStyle" severity="error">
+        <message>Buttons should use Material Design styles</message>
+    </issue>
+
+    <!-- Warning Level Issues - Should be addressed -->
+    <issue id="UnusedResources" severity="warning">
+        <message>Remove unused resources to reduce APK size</message>
+    </issue>
+
+    <issue id="IconMissingDensityFolder" severity="warning">
+        <message>Provide icons for all density folders</message>
+    </issue>
+
+    <issue id="ObsoleteLayoutParam" severity="warning">
+        <message>Remove obsolete layout parameters</message>
+    </issue>
+
+    <issue id="UseCompoundDrawables" severity="warning">
+        <message>Use compound drawables instead of ImageView + TextView</message>
+    </issue>
+
+    <issue id="UselessParent" severity="warning">
+        <message>Remove useless parent layouts</message>
+    </issue>
+
+    <issue id="TooManyViews" severity="warning">
+        <message>Layouts should not have too many views for performance</message>
+    </issue>
+
+    <issue id="TooDeepLayout" severity="warning">
+        <message>Layout hierarchy should not be too deep</message>
+    </issue>
+
+    <!-- Accessibility Issues - Critical for inclusive design -->
+    <issue id="ContentDescription" severity="error">
+        <message>Interactive elements must have content descriptions</message>
+    </issue>
+
+    <issue id="ClickableViewAccessibility" severity="error">
+        <message>Custom clickable views should implement accessibility properly</message>
+    </issue>
+
+    <issue id="LabelFor" severity="warning">
+        <message>Text fields should have proper labels</message>
+    </issue>
+
+    <issue id="SpeakableTextPresentCheck" severity="warning">
+        <message>Interactive elements should have speakable text</message>
+    </issue>
+
+    <!-- Security Issues -->
+    <issue id="AllowBackup" severity="error">
+        <message>Apps should explicitly declare allowBackup</message>
+    </issue>
+
+    <issue id="SetWorldReadable" severity="error">
+        <message>Files should not be world readable</message>
+    </issue>
+
+    <issue id="SetWorldWritable" severity="error">
+        <message>Files should not be world writable</message>
+    </issue>
+
+    <issue id="TrustAllX509TrustManager" severity="error">
+        <message>Do not trust all certificates</message>
+    </issue>
+
+    <!-- Performance Issues -->
+    <issue id="Overdraw" severity="warning">
+        <message>Avoid overdraw for better performance</message>
+    </issue>
+
+    <issue id="UnusedIds" severity="info">
+        <message>Remove unused IDs</message>
+    </issue>
+
+    <issue id="InefficientWeight" severity="warning">
+        <message>Use efficient weight distribution</message>
+    </issue>
+
+    <issue id="NestedWeights" severity="warning">
+        <message>Avoid nested weights for better performance</message>
+    </issue>
+
+    <issue id="DisableBaselineAlignment" severity="info">
+        <message>Consider disabling baseline alignment for performance</message>
+    </issue>
+
+    <!-- Kotlin/Compose Specific -->
+    <issue id="ComposableNaming" severity="error">
+        <message>Composable functions should follow naming conventions</message>
+    </issue>
+
+    <issue id="UnstableCollections" severity="warning">
+        <message>Use stable collections in Compose for better performance</message>
+    </issue>
+
+    <!-- Internationalization -->
+    <issue id="MissingTranslation" severity="warning">
+        <message>Provide translations for all supported languages</message>
+    </issue>
+
+    <issue id="ExtraTranslation" severity="info">
+        <message>Remove unused translations</message>
+    </issue>
+
+    <issue id="PluralsCandidate" severity="info">
+        <message>Consider using plurals for quantity strings</message>
+    </issue>
+
+    <!-- Resource Issues -->
+    <issue id="IconDuplicates" severity="info">
+        <message>Duplicate icons can be consolidated</message>
+    </issue>
+
+    <issue id="IconDuplicatesConfig" severity="info">
+        <message>Same icon used for different configurations</message>
+    </issue>
+
+    <issue id="IconNoDpi" severity="warning">
+        <message>Specify DPI for icons</message>
+    </issue>
+
+    <issue id="VectorRaster" severity="info">
+        <message>Consider using vector drawables instead of raster images</message>
+    </issue>
+
+    <!-- Manifest Issues -->
+    <issue id="PermissionImpliesUnsupportedChromeOsHardware" severity="warning">
+        <message>Permission implies unsupported hardware on Chrome OS</message>
+    </issue>
+
+    <issue id="UnsupportedChromeOsHardware" severity="info">
+        <message>Hardware feature not supported on Chrome OS</message>
+    </issue>
+
+    <!-- Custom Rules for Ora App -->
+    <issue id="LogNotTimber" severity="error">
+        <message>Use Timber for logging instead of Log</message>
+    </issue>
+
+    <issue id="HardcodedDispatcher" severity="warning">
+        <message>Inject dispatchers instead of using hardcoded ones</message>
+    </issue>
+
+    <!-- Suppressed Issues (with justification) -->
+    <!-- Suppress RtlHardcoded for specific layouts that need explicit positioning -->
+    <issue id="RtlHardcoded" severity="ignore">
+        <ignore path="**/res/layout/splash_screen.xml" />
+        <ignore path="**/res/layout/onboarding_*.xml" />
+    </issue>
+
+    <!-- Allow some hardcoded text in debug builds -->
+    <issue id="HardcodedText" severity="ignore">
+        <ignore path="**/debug/**" />
+    </issue>
+
+    <!-- Allow unused resources in test builds -->
+    <issue id="UnusedResources" severity="ignore">
+        <ignore path="**/test/**" />
+        <ignore path="**/androidTest/**" />
+    </issue>
+
+    <!-- Custom Ora-specific rules -->
+    <!-- Ensure proper naming for Compose screens -->
+    <issue id="ComposableNaming">
+        <option name="pattern" value="[A-Z][a-zA-Z]*Screen|[A-Z][a-zA-Z]*Component" />
+    </issue>
+
+    <!-- Ensure minimum text size for accessibility -->
+    <issue id="SmallSp">
+        <option name="minTextSize" value="12" />
+    </issue>
+
+    <!-- Ensure touch targets are accessible -->
+    <issue id="TouchTargetSizeCheck">
+        <option name="minSize" value="48dp" />
+    </issue>
+
+    <!-- Project-specific configuration -->
+    <option name="baseline" value="lint-baseline.xml" />
+    <option name="checkAllWarnings" value="true" />
+    <option name="warningsAsErrors" value="false" />
+    <option name="abortOnError" value="false" />
+    <option name="checkReleaseBuilds" value="true" />
+    <option name="ignoreTestSources" value="false" />
+    <option name="checkGeneratedSources" value="false" />
+    <option name="explainIssues" value="true" />
+    <option name="noLines" value="false" />
+    <option name="showAll" value="false" />
+    <option name="checkDependencies" value="true" />
+</lint>
