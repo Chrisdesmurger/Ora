@@ -26,8 +26,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 /**
- * Écran d'authentification avec Email/Password et Google Sign-In
- * Design Ora: Utilise les couleurs zen (violet, teal, rose)
+ * Ecran d'authentification avec Email/Password et Google Sign-In
+ * Design Ora: Utilise la palette chaude orange/beige pour une experience apaisante
  */
 @Composable
 fun AuthScreen(
@@ -38,7 +38,7 @@ fun AuthScreen(
     val authResult by viewModel.authResult.collectAsStateWithLifecycle()
     val focusManager = LocalFocusManager.current
 
-    // Redirection après succès d'authentification
+    // Redirection apres succes d'authentification
     LaunchedEffect(authResult) {
         if (authResult is AuthResult.Success) {
             onAuthSuccess()
@@ -74,30 +74,41 @@ fun AuthScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // Logo / Titre de l'app avec couleurs Ora
+                // Logo Ora avec couleur orange chaleureuse
                 Text(
-                    text = "🧘‍♀️ Ora",
+                    text = "ORA",
                     style = MaterialTheme.typography.displayLarge,
-                    color = MaterialTheme.colorScheme.primary // Bleu violet zen
+                    color = MaterialTheme.colorScheme.primary // Orange coral
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Tagline avec couleur principale
+                Text(
+                    text = "Body · Mind · Soul",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                // Sous-titre apaisant
                 Text(
-                    text = "Votre compagnon bien-être",
+                    text = "Votre compagnon bien-etre",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.secondary, // Teal apaisante
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center
                 )
 
                 Spacer(modifier = Modifier.height(48.dp))
 
-                // Carte arrondie pour le formulaire (style zen)
+                // Carte arrondie pour le formulaire (style zen avec fond chaud)
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
                     color = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 2.dp
+                    tonalElevation = 1.dp
                 ) {
                     Column(
                         modifier = Modifier.padding(24.dp),
@@ -105,14 +116,14 @@ fun AuthScreen(
                     ) {
                         // Titre du formulaire
                         Text(
-                            text = if (uiState.isSignUpMode) "Créer un compte" else "Se connecter",
+                            text = if (uiState.isSignUpMode) "Creer un compte" else "Se connecter",
                             style = MaterialTheme.typography.headlineMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Champ Email avec couleurs Ora
+                        // Champ Email avec couleurs Ora chaleureuses
                         OutlinedTextField(
                             value = uiState.email,
                             onValueChange = { viewModel.onEvent(AuthUiEvent.EmailChanged(it)) },
@@ -123,7 +134,8 @@ fun AuthScreen(
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                                 focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                cursorColor = MaterialTheme.colorScheme.primary
+                                cursorColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                             ),
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Email,
@@ -142,13 +154,14 @@ fun AuthScreen(
                             value = uiState.password,
                             onValueChange = { viewModel.onEvent(AuthUiEvent.PasswordChanged(it)) },
                             label = { Text("Mot de passe") },
-                            placeholder = { Text("Minimum 6 caractères") },
+                            placeholder = { Text("Minimum 6 caracteres") },
                             singleLine = true,
                             enabled = !uiState.isLoading,
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                                 focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                cursorColor = MaterialTheme.colorScheme.primary
+                                cursorColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                             ),
                             visualTransformation = if (uiState.isPasswordVisible)
                                 VisualTransformation.None
@@ -190,7 +203,7 @@ fun AuthScreen(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Bouton principal (Sign In / Sign Up) - Couleur primaire Ora
+                        // Bouton principal (Sign In / Sign Up) - Orange coral chaud
                         Button(
                             onClick = {
                                 if (uiState.isSignUpMode) {
@@ -216,7 +229,7 @@ fun AuthScreen(
                                 )
                             } else {
                                 Text(
-                                    text = if (uiState.isSignUpMode) "Créer mon compte" else "Se connecter",
+                                    text = if (uiState.isSignUpMode) "Creer mon compte" else "Se connecter",
                                     style = MaterialTheme.typography.titleMedium
                                 )
                             }
@@ -224,17 +237,17 @@ fun AuthScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Bouton pour changer de mode - Couleur secondaire
+                        // Bouton pour changer de mode - Texte avec couleur secondaire peach
                         TextButton(
                             onClick = { viewModel.onEvent(AuthUiEvent.ToggleSignUpMode) },
                             enabled = !uiState.isLoading
                         ) {
                             Text(
                                 text = if (uiState.isSignUpMode)
-                                    "Déjà un compte ? Se connecter"
+                                    "Deja un compte ? Se connecter"
                                 else
                                     "Pas encore de compte ? S'inscrire",
-                                color = MaterialTheme.colorScheme.secondary
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
                         }
                     }
@@ -242,35 +255,35 @@ fun AuthScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Divider avec "OU" - Couleur tertiaire douce
+                // Divider avec "OU"
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Divider(
                         modifier = Modifier.weight(1f),
-                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
                     )
                     Text(
                         text = "OU",
                         modifier = Modifier.padding(horizontal = 16.dp),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     )
                     Divider(
                         modifier = Modifier.weight(1f),
-                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
                     )
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Bouton Google Sign-In - Bordure secondaire
+                // Bouton Google Sign-In - Bordure avec couleur secondaire
                 OutlinedButton(
                     onClick = { viewModel.onEvent(AuthUiEvent.SignInWithGoogle) },
                     enabled = !uiState.isLoading,
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.secondary
+                        contentColor = MaterialTheme.colorScheme.onSurface
                     ),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier
@@ -278,20 +291,20 @@ fun AuthScreen(
                         .height(56.dp)
                 ) {
                     Text(
-                        text = "🔐 Continuer avec Google",
+                        text = "Continuer avec Google",
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.secondary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Message d'information - Couleur tertiaire
+                // Message d'information - Couleur tertiaire douce
                 AnimatedVisibility(visible = uiState.isSignUpMode) {
                     Text(
-                        text = "En créant un compte, vous acceptez nos conditions d'utilisation et notre politique de confidentialité.",
+                        text = "En creant un compte, vous acceptez nos conditions d'utilisation et notre politique de confidentialite.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.8f),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
@@ -300,3 +313,4 @@ fun AuthScreen(
         }
     }
 }
+

@@ -16,28 +16,51 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-// Couleurs Ora pour le bien-être
-private val LightPrimary = Color(0xFF6B73FF)      // Bleu violet zen
-private val LightSecondary = Color(0xFF03DAC6)     // Teal apaisante
-private val LightTertiary = Color(0xFFFF6B9D)      // Rose doux
-private val LightBackground = Color(0xFFFFFBFE)     // Blanc cassé
-private val LightSurface = Color(0xFFF7F2FA)       // Violet très clair
-private val LightOnPrimary = Color.White
-private val LightOnSecondary = Color.Black
-private val LightOnTertiary = Color.White
-private val LightOnBackground = Color(0xFF1C1B1F)
-private val LightOnSurface = Color(0xFF1C1B1F)
+// Couleurs Ora - Palette Chaude et Apaisante
+// Basée sur l'analyse des mockups officiels Ora
 
-private val DarkPrimary = Color(0xFF8B93FF)        // Bleu violet plus clair
-private val DarkSecondary = Color(0xFF66FFF2)      // Teal lumineuse
-private val DarkTertiary = Color(0xFFFF94B3)       // Rose plus clair
-private val DarkBackground = Color(0xFF1C1B1F)     // Noir doux
-private val DarkSurface = Color(0xFF2B2930)        // Gris foncé
-private val DarkOnPrimary = Color.Black
-private val DarkOnSecondary = Color.Black
-private val DarkOnTertiary = Color.Black
-private val DarkOnBackground = Color(0xFFE6E1E5)
-private val DarkOnSurface = Color(0xFFE6E1E5)
+// Couleur principale - Orange Coral (Logo et CTA)
+private val LightPrimary = Color(0xFFF18D5C)        // Orange coral chaleureux
+private val LightSecondary = Color(0xFFF5C9A9)      // Peach doux (accents)
+private val LightTertiary = Color(0xFFA8C5B0)       // Vert sage (Yoga)
+
+// Arrière-plans et surfaces
+private val LightBackground = Color(0xFFF5EFE6)     // Beige/crème chaleureux
+private val LightSurface = Color(0xFFFFFBF8)        // Blanc cassé légèrement chaud
+private val LightSurfaceVariant = Color(0xFFF5E1C9) // Peach très clair pour cartes
+
+// Textes
+private val LightOnPrimary = Color.White            // Texte sur orange
+private val LightOnSecondary = Color(0xFF4A4A4A)    // Texte foncé sur peach
+private val LightOnTertiary = Color(0xFF2D3D2D)     // Texte foncé sur vert
+private val LightOnBackground = Color(0xFF4A4A4A)   // Texte principal (gris foncé)
+private val LightOnSurface = Color(0xFF4A4A4A)      // Texte sur surfaces
+
+// Couleurs de catégories (pour badges et cartes)
+val CategoryYogaGreen = Color(0xFFA8C5B0)           // Yoga - Vert sage
+val CategoryPilatesPeach = Color(0xFFF5C9A9)        // Pilates - Peach
+val CategoryMeditationLavender = Color(0xFFC5B8D4)  // Méditation - Lavande
+val CategoryBreathingBlue = Color(0xFFA3C4E0)       // Respiration - Bleu clair
+
+// Couleurs pour les cartes de gratitude
+val GratitudePink = Color(0xFFF5D4D4)               // Rose très doux
+val GratitudePeach = Color(0xFFF5E1C9)              // Peach doux
+val GratitudeMint = Color(0xFFD4E8D4)               // Menthe douce
+
+// Mode sombre - Adaptation de la palette chaude
+private val DarkPrimary = Color(0xFFF5A879)         // Orange plus clair pour le dark mode
+private val DarkSecondary = Color(0xFFE8B892)       // Peach plus saturé
+private val DarkTertiary = Color(0xFF94B5A0)        // Vert sage plus vif
+
+private val DarkBackground = Color(0xFF2A2520)      // Brun très foncé
+private val DarkSurface = Color(0xFF3A3330)         // Brun foncé pour cartes
+private val DarkSurfaceVariant = Color(0xFF4A4038)  // Brun moyen
+
+private val DarkOnPrimary = Color(0xFF1A1A1A)       // Texte très foncé sur orange
+private val DarkOnSecondary = Color(0xFF1A1A1A)     // Texte foncé sur peach
+private val DarkOnTertiary = Color(0xFF1A1A1A)      // Texte foncé sur vert
+private val DarkOnBackground = Color(0xFFE8E0D8)    // Texte clair sur fond sombre
+private val DarkOnSurface = Color(0xFFE8E0D8)       // Texte clair sur surfaces
 
 private val LightColorScheme = lightColorScheme(
     primary = LightPrimary,
@@ -45,6 +68,7 @@ private val LightColorScheme = lightColorScheme(
     tertiary = LightTertiary,
     background = LightBackground,
     surface = LightSurface,
+    surfaceVariant = LightSurfaceVariant,
     onPrimary = LightOnPrimary,
     onSecondary = LightOnSecondary,
     onTertiary = LightOnTertiary,
@@ -58,6 +82,7 @@ private val DarkColorScheme = darkColorScheme(
     tertiary = DarkTertiary,
     background = DarkBackground,
     surface = DarkSurface,
+    surfaceVariant = DarkSurfaceVariant,
     onPrimary = DarkOnPrimary,
     onSecondary = DarkOnSecondary,
     onTertiary = DarkOnTertiary,
@@ -68,7 +93,7 @@ private val DarkColorScheme = darkColorScheme(
 @Composable
 fun OraTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false, // Désactivé par défaut pour garder la palette Ora
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -85,8 +110,8 @@ fun OraTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
+            window.statusBarColor = colorScheme.background.toArgb()
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }
 
