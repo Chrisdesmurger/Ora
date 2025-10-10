@@ -107,15 +107,37 @@ lint/tmp/
 .firebaserc
 firebase-debug.log
 
-# Documentation temporaire
+# Documentation temporaire (tous doivent être dans docs/archive/)
 *.backup
 DIAGNOSTIC-*.md
 *_SUMMARY.md
 *_FIX_SUMMARY.md
+PROFILE-TEST-*.md
+diagnostic-*.md
 
 # Mockups et assets temporaires
 Mockup/
 
-# Configuration locale
+# Configuration locale et fichiers temporaires
 android_requirements.json
 status_android.json
+creator_brief.json
+database_schema.sql
+
+# Dossiers temporaires/obsolètes
+bus/
+status/
+tasks/
+component_library/
+core/
+feature/
+contracts/
+wireframes/
+
+# Fichiers à la racine qui devraient être dans docs/ ou config/
+/*.kt
+/*_architecture.md
+/*_config.md
+/*_guide.md
+/*_tokens.yaml
+/*_flows.md
