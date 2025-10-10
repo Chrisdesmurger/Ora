@@ -188,8 +188,71 @@ For troubleshooting: [docs/FIRESTORE_TROUBLESHOOTING.md](docs/FIRESTORE_TROUBLES
 8. **Domain Layer**: Create use cases and repository interfaces
 9. **Offline Support**: Room database for offline caching
 
+## Git Automation
+
+Ce projet inclut un système d'automatisation Git complet via Claude Code pour faciliter le workflow de développement.
+
+### 🤖 Agent Git Automation
+
+Un agent spécialisé (`git-automation`) est disponible dans `.claude/agents/55_git-automation.md` pour automatiser :
+- ✅ Création de commits avec messages conventionnels (Conventional Commits)
+- ✅ Création automatique de branches feature/fix
+- ✅ Push vers le dépôt GitHub (remote `ora`)
+- ✅ Création de Pull Requests avec template complet
+
+### 📝 Utilisation
+
+Après avoir terminé une fonctionnalité ou un fix, demandez simplement à Claude :
+
+```
+"Peux-tu créer un commit et une PR pour cette fonctionnalité ?"
+"Automatise le commit et push pour ce fix"
+"Crée une PR pour les changements que je viens de faire"
+```
+
+Claude analysera automatiquement les changements et créera :
+1. Une branche appropriée (ex: `feat/profile-editing`, `fix/auth-crash`)
+2. Un commit avec message conventionnel (ex: `feat(profile): add profile editing`)
+3. Un push vers GitHub
+4. Une Pull Request avec description complète
+
+### 🛠️ Script PowerShell
+
+Un script helper est disponible pour automatisation manuelle :
+
+```powershell
+# Nouvelle fonctionnalité
+.\scripts\auto-commit-pr.ps1 -Type "feat" -Scope "profile" -Message "Add profile editing"
+
+# Correction de bug
+.\scripts\auto-commit-pr.ps1 -Type "fix" -Scope "auth" -Message "Fix login crash"
+
+# Avec issue GitHub
+.\scripts\auto-commit-pr.ps1 -Type "fix" -Scope "firestore" -Message "Fix sync" -IssueNumber "42"
+```
+
+### 📚 Convention de commits
+
+| Type | Emoji | Description | Exemple |
+|------|-------|-------------|---------|
+| `feat` | 🚀 | Nouvelle fonctionnalité | `feat(auth): add Google Sign-In` |
+| `fix` | 🐛 | Correction de bug | `fix(profile): resolve crash` |
+| `refactor` | 🔧 | Refactoring | `refactor(home): simplify logic` |
+| `test` | ✅ | Tests | `test(auth): add unit tests` |
+| `docs` | 📚 | Documentation | `docs(readme): update steps` |
+| `style` | 🎨 | UI/Formatage | `style(theme): update colors` |
+| `perf` | ⚡ | Performance | `perf(library): lazy load images` |
+| `chore` | 🛠️ | Maintenance | `chore(deps): update Firebase` |
+
+**Scopes disponibles** : `auth`, `profile`, `home`, `library`, `journal`, `programs`, `firestore`, `ui`, `theme`, `di`, `build`, `navigation`
+
+### 📖 Documentation complète
+
+Voir le guide complet : [docs/GIT_AUTOMATION.md](docs/GIT_AUTOMATION.md)
+
 ## Documentation
 
+- **Git Automation**: [docs/GIT_AUTOMATION.md](docs/GIT_AUTOMATION.md) 🆕
 - **Firebase Setup**: [docs/FIRESTORE_SETUP_GUIDE.md](docs/FIRESTORE_SETUP_GUIDE.md)
 - **Firestore Kotlin Mapping**: [docs/FIRESTORE_KOTLIN_MAPPING_GUIDE.md](docs/FIRESTORE_KOTLIN_MAPPING_GUIDE.md)
 - **Troubleshooting**: [docs/FIRESTORE_TROUBLESHOOTING.md](docs/FIRESTORE_TROUBLESHOOTING.md)
