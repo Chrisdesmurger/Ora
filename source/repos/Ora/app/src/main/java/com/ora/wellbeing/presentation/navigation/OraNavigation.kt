@@ -26,6 +26,7 @@ import com.ora.wellbeing.presentation.screens.journal.JournalScreen
 import com.ora.wellbeing.presentation.screens.programs.ProgramsScreen
 import com.ora.wellbeing.presentation.screens.profile.ProfileScreen
 import com.ora.wellbeing.presentation.screens.stats.PracticeStatsScreen
+import com.ora.wellbeing.feature.practice.ui.PracticeDetailScreen
 
 /**
  * FIX(auth): Navigation principale avec vérification d'authentification
@@ -89,7 +90,8 @@ fun OraNavigation(
             composable(OraDestinations.Home.route) {
                 HomeScreen(
                     onNavigateToContent = { contentId ->
-                        navController.navigate(OraDestinations.ContentDetail.createRoute(contentId))
+                        // Redirection vers PracticeDetail au lieu de ContentDetail
+                        navController.navigate(OraDestinations.PracticeDetail.createRoute(contentId))
                     },
                     onNavigateToProgram = { programId ->
                         navController.navigate(OraDestinations.ProgramDetail.createRoute(programId))
@@ -103,7 +105,8 @@ fun OraNavigation(
             composable(OraDestinations.Library.route) {
                 LibraryScreen(
                     onNavigateToContent = { contentId ->
-                        navController.navigate(OraDestinations.ContentDetail.createRoute(contentId))
+                        // Redirection vers PracticeDetail au lieu de ContentDetail
+                        navController.navigate(OraDestinations.PracticeDetail.createRoute(contentId))
                     },
                     onNavigateToSearch = {
                         navController.navigate(OraDestinations.LibrarySearch.route)
@@ -162,6 +165,20 @@ fun OraNavigation(
                     onStartNewSession = {
                         // TODO: Naviguer vers l'écran de démarrage de session
                         // Pour l'instant, on retourne à l'écran précédent
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            // Écran de détail d'une pratique (vidéo/audio player)
+            composable(
+                route = OraDestinations.PracticeDetail.route,
+                arguments = OraDestinations.PracticeDetail.arguments
+            ) { backStackEntry ->
+                val practiceId = backStackEntry.arguments?.getString("id") ?: return@composable
+                PracticeDetailScreen(
+                    practiceId = practiceId,
+                    onBack = {
                         navController.popBackStack()
                     }
                 )

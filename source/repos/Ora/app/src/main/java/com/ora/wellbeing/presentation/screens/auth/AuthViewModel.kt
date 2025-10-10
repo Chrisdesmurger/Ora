@@ -142,14 +142,8 @@ class AuthViewModel @Inject constructor(
             Timber.d("AuthViewModel: Starting Google sign in")
 
             try {
-                // TODO: Remplacer par votre Web Client ID depuis Firebase Console
-                // 1. Aller dans Firebase Console > Authentication > Sign-in method > Google
-                // 2. Copier le Web client ID
-                val webClientId = "YOUR_WEB_CLIENT_ID.apps.googleusercontent.com"
-
-                if (webClientId.startsWith("YOUR_")) {
-                    throw Exception("Veuillez configurer le Web Client ID dans AuthViewModel.kt")
-                }
+                // Web Client ID extrait de google-services.json (client_type: 3)
+                val webClientId = "859432337771-4uvfmnga435mtjvtl5itfru63mrtagkt.apps.googleusercontent.com"
 
                 // Créer la requête Google ID
                 val googleIdOption = GetGoogleIdOption.Builder()
@@ -169,44 +163,72 @@ class AuthViewModel @Inject constructor(
 
                 // Extraire le Google ID Token
                 val credential = result.credential
-                if (credential is GoogleIdTokenCredential) {
-                    val idToken = credential.idToken
-                    Timber.d("AuthViewModel: Got Google ID token")
+                Timber.d("AuthViewModel: Credential type: ${credential.type}, class: ${credential.javaClass.name}")
 
-                    // Authentifier avec Firebase
-                    authRepository.signInWithGoogle(idToken)
-                        .onSuccess {
-                            Timber.d("AuthViewModel: Google sign in successful")
-                            _authResult.value = AuthResult.Success
-                            _uiState.update { it.copy(isLoading = false) }
-                        }
-                        .onFailure { exception ->
-                            Timber.e(exception, "AuthViewModel: Firebase auth with Google failed")
-                            _uiState.update {
-                                it.copy(
-                                    isLoading = false,
-                                    errorMessage = "Échec de l'authentification Google: ${exception.message}"
-                                )
+                when {
+                    credential is GoogleIdTokenCredential -> {
+                        val idToken = credential.idToken
+                        Timber.d("AuthViewModel: Got Google ID token")
+
+                        // Authentifier avec Firebase
+                        authRepository.signInWithGoogle(idToken)
+                            .onSuccess {
+                                Timber.d("AuthViewModel: Google sign in successful")
+                                _authResult.value = AuthResult.Success
+                                _uiState.update { it.copy(isLoading = false) }
                             }
-                        }
-                } else {
-                    throw Exception("Type de credential inattendu")
+                            .onFailure { exception ->
+                                Timber.e(exception, "AuthViewModel: Firebase auth with Google failed")
+                                _uiState.update {
+                                    it.copy(
+                                        isLoading = false,
+                                        errorMessage = "Échec de l'authentification Google: ${exception.message}"
+                                    )
+                                }
+                            }
+                    }
+                    credential.type == "com.google.android.libraries.identity.googleid.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL" -> {
+                        // Fallback pour les cas où le cast ne fonctionne pas
+                        val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                        val idToken = googleIdTokenCredential.idToken
+                        Timber.d("AuthViewModel: Got Google ID token via createFrom")
+
+                        authRepository.signInWithGoogle(idToken)
+                            .onSuccess {
+                                Timber.d("AuthViewModel: Google sign in successful")
+                                _authResult.value = AuthResult.Success
+                                _uiState.update { it.copy(isLoading = false) }
+                            }
+                            .onFailure { exception ->
+                                Timber.e(exception, "AuthViewModel: Firebase auth with Google failed")
+                                _uiState.update {
+                                    it.copy(
+                                        isLoading = false,
+                                        errorMessage = "Échec de l'authentification Google: ${exception.message}"
+                                    )
+                                }
+                            }
+                    }
+                    else -> {
+                        throw Exception("Type de credential inattendu: ${credential.type} (${credential.javaClass.name})")
+                    }
                 }
 
             } catch (e: GetCredentialException) {
-                Timber.e(e, "AuthViewModel: Credential Manager error")
+                val errorMsg = "Credential Manager error: ${e.javaClass.simpleName} - ${e.message}"
+                Timber.e(e, "AuthViewModel: $errorMsg")
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = "Connexion Google annulée ou échouée"
+                        errorMessage = "Connexion Google échouée: ${e.javaClass.simpleName}"
                     )
                 }
             } catch (e: Exception) {
-                Timber.e(e, "AuthViewModel: Google sign in error")
+                Timber.e(e, "AuthViewModel: Google sign in error: ${e.message}")
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = getErrorMessage(e)
+                        errorMessage = "Erreur Google: ${e.message ?: e.javaClass.simpleName}"
                     )
                 }
             }

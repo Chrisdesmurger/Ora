@@ -2,28 +2,37 @@ package com.ora.wellbeing.presentation.screens.library
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ora.wellbeing.data.model.ContentItem
+import com.ora.wellbeing.domain.repository.ContentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
-    // TODO: Injecter les use cases quand ils seront créés
-    // private val getContentLibraryUseCase: GetContentLibraryUseCase,
-    // private val searchContentUseCase: SearchContentUseCase,
-    // private val filterContentUseCase: FilterContentUseCase
+    private val contentRepository: ContentRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LibraryUiState())
     val uiState: StateFlow<LibraryUiState> = _uiState.asStateFlow()
 
+    // Filter state
+    private val _selectedCategory = MutableStateFlow<String?>(null)
+    private val _selectedDuration = MutableStateFlow<String?>(null)
+    private val _searchQuery = MutableStateFlow("")
+
+    init {
+        observeContentData()
+    }
+
     fun onEvent(event: LibraryUiEvent) {
         when (event) {
-            is LibraryUiEvent.LoadLibraryData -> loadLibraryData()
+            is LibraryUiEvent.LoadLibraryData -> observeContentData()
             is LibraryUiEvent.FilterByCategory -> filterByCategory(event.category)
             is LibraryUiEvent.FilterByDuration -> filterByDuration(event.duration)
             is LibraryUiEvent.SearchContent -> searchContent(event.query)
@@ -31,182 +40,148 @@ class LibraryViewModel @Inject constructor(
         }
     }
 
-    private fun loadLibraryData() {
+    private fun observeContentData() {
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true)
 
-                // TODO: Remplacer par de vraies données depuis les use cases
-                val mockData = generateMockLibraryData()
+                // Combine content flows with filter states for real-time filtering
+                combine(
+                    contentRepository.getAllContent(),
+                    contentRepository.getPopularContent(limit = 10),
+                    contentRepository.getNewContent(limit = 10),
+                    _selectedCategory,
+                    _selectedDuration,
+                    _searchQuery
+                ) { flows: Array<Any?> ->
+                    val allContent = flows[0] as List<com.ora.wellbeing.data.model.ContentItem>
+                    val popularContent = flows[1] as List<com.ora.wellbeing.data.model.ContentItem>
+                    val newContent = flows[2] as List<com.ora.wellbeing.data.model.ContentItem>
+                    val category = flows[3] as String?
+                    val duration = flows[4] as String?
+                    val query = flows[5] as String
+                    FilteredContentData(allContent, popularContent, newContent, category, duration, query)
+                }.collect { data ->
+                    // Apply all filters
+                    val filteredContent = applyFilters(data.allContent, data.category, data.duration, data.query)
 
-                _uiState.value = mockData.copy(isLoading = false)
+                    // Extract unique categories from all content
+                    val categories = data.allContent.map { it.category }.distinct().sorted()
 
-                Timber.d("Library data loaded successfully")
+                    _uiState.value = LibraryUiState(
+                        isLoading = false,
+                        error = null,
+                        allContent = data.allContent.map { it.toUiContentItem() },
+                        filteredContent = filteredContent.map { it.toUiContentItem() },
+                        popularContent = data.popularContent.map { it.toUiContentItem() },
+                        newContent = data.newContent.map { it.toUiContentItem() },
+                        categories = categories,
+                        selectedCategory = data.category,
+                        selectedDuration = data.duration,
+                        searchQuery = data.query
+                    )
+
+                    Timber.d("observeContentData: Updated UI state (${data.allContent.size} total, ${filteredContent.size} filtered)")
+                }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = "Erreur lors du chargement de la bibliothèque"
+                    error = "Erreur lors du chargement de la bibliothèque: ${e.message}"
                 )
-                Timber.e(e, "Error loading library data")
+                Timber.e(e, "Error observing content data")
             }
         }
     }
 
     private fun filterByCategory(category: String) {
-        val currentState = _uiState.value
-        val selectedCategory = if (category.isEmpty()) null else category
-
-        val filteredContent = if (selectedCategory == null) {
-            currentState.allContent
-        } else {
-            currentState.allContent.filter { it.category == selectedCategory }
-        }
-
-        _uiState.value = currentState.copy(
-            selectedCategory = selectedCategory,
-            filteredContent = filteredContent
-        )
-
-        Timber.d("Filtered by category: $selectedCategory")
+        _selectedCategory.value = if (category.isEmpty()) null else category
+        Timber.d("filterByCategory: $category")
     }
 
     private fun filterByDuration(duration: String) {
-        val currentState = _uiState.value
-        val selectedDuration = if (duration.isEmpty()) null else duration
+        _selectedDuration.value = if (duration.isEmpty()) null else duration
+        Timber.d("filterByDuration: $duration")
+    }
 
-        val filteredContent = if (selectedDuration == null) {
-            currentState.allContent
-        } else {
-            currentState.allContent.filter { content ->
-                when (selectedDuration) {
-                    "5-10 min" -> content.durationMinutes in 5..10
-                    "10-20 min" -> content.durationMinutes in 11..20
-                    "20+ min" -> content.durationMinutes > 20
+    private fun searchContent(query: String) {
+        _searchQuery.value = query
+        Timber.d("searchContent: $query")
+    }
+
+    private fun clearFilters() {
+        _selectedCategory.value = null
+        _selectedDuration.value = null
+        _searchQuery.value = ""
+        Timber.d("Filters cleared")
+    }
+
+    /**
+     * Apply all filters to content list
+     */
+    private fun applyFilters(
+        content: List<ContentItem>,
+        category: String?,
+        duration: String?,
+        query: String
+    ): List<ContentItem> {
+        var filtered = content
+
+        // Filter by category
+        if (!category.isNullOrEmpty()) {
+            filtered = filtered.filter { it.category == category }
+        }
+
+        // Filter by duration
+        if (!duration.isNullOrEmpty()) {
+            filtered = filtered.filter { item ->
+                when (duration) {
+                    "5-10 min" -> item.durationMinutes in 5..10
+                    "10-20 min" -> item.durationMinutes in 11..20
+                    "20+ min" -> item.durationMinutes > 20
                     else -> true
                 }
             }
         }
 
-        _uiState.value = currentState.copy(
-            selectedDuration = selectedDuration,
-            filteredContent = filteredContent
-        )
-
-        Timber.d("Filtered by duration: $selectedDuration")
-    }
-
-    private fun searchContent(query: String) {
-        val currentState = _uiState.value
-
-        val filteredContent = if (query.isEmpty()) {
-            currentState.allContent
-        } else {
-            currentState.allContent.filter { content ->
-                content.title.contains(query, ignoreCase = true) ||
-                content.category.contains(query, ignoreCase = true) ||
-                content.instructor.contains(query, ignoreCase = true)
-            }
+        // Filter by search query
+        if (query.isNotEmpty()) {
+            filtered = filtered.filter { it.matchesQuery(query) }
         }
 
-        _uiState.value = currentState.copy(
-            searchQuery = query,
-            filteredContent = filteredContent
-        )
-
-        Timber.d("Searched content with query: $query")
+        return filtered
     }
 
-    private fun clearFilters() {
-        val currentState = _uiState.value
-
-        _uiState.value = currentState.copy(
-            selectedCategory = null,
-            selectedDuration = null,
-            searchQuery = "",
-            filteredContent = currentState.allContent
-        )
-
-        Timber.d("Filters cleared")
-    }
-
-    private fun generateMockLibraryData(): LibraryUiState {
-        val allContent = listOf(
-            LibraryUiState.ContentItem(
-                id = "1",
-                title = "Méditation matinale",
-                category = "Méditation",
-                duration = "10 min",
-                durationMinutes = 10,
-                instructor = "Sophie Martin",
-                thumbnailUrl = "",
-                isPopular = true,
-                isNew = false
-            ),
-            LibraryUiState.ContentItem(
-                id = "2",
-                title = "Yoga pour débutants",
-                category = "Yoga",
-                duration = "15 min",
-                durationMinutes = 15,
-                instructor = "Pierre Dubois",
-                thumbnailUrl = "",
-                isPopular = true,
-                isNew = false
-            ),
-            LibraryUiState.ContentItem(
-                id = "3",
-                title = "Respiration anti-stress",
-                category = "Respiration",
-                duration = "5 min",
-                durationMinutes = 5,
-                instructor = "Marie Leroy",
-                thumbnailUrl = "",
-                isPopular = false,
-                isNew = true
-            ),
-            LibraryUiState.ContentItem(
-                id = "4",
-                title = "Méditation du soir",
-                category = "Méditation",
-                duration = "12 min",
-                durationMinutes = 12,
-                instructor = "Sophie Martin",
-                thumbnailUrl = "",
-                isPopular = false,
-                isNew = true
-            ),
-            LibraryUiState.ContentItem(
-                id = "5",
-                title = "Yoga avancé",
-                category = "Yoga",
-                duration = "25 min",
-                durationMinutes = 25,
-                instructor = "Pierre Dubois",
-                thumbnailUrl = "",
-                isPopular = true,
-                isNew = false
-            ),
-            LibraryUiState.ContentItem(
-                id = "6",
-                title = "Exercices de gratitude",
-                category = "Bien-être",
-                duration = "8 min",
-                durationMinutes = 8,
-                instructor = "Claire Moreau",
-                thumbnailUrl = "",
-                isPopular = false,
-                isNew = true
-            )
-        )
-
-        return LibraryUiState(
-            allContent = allContent,
-            filteredContent = allContent,
-            popularContent = allContent.filter { it.isPopular },
-            newContent = allContent.filter { it.isNew },
-            categories = allContent.map { it.category }.distinct()
+    /**
+     * Converts ContentItem (data model) to ContentItem (UI model)
+     */
+    private fun ContentItem.toUiContentItem(): LibraryUiState.ContentItem {
+        return LibraryUiState.ContentItem(
+            id = id,
+            title = title,
+            category = category,
+            duration = duration,
+            durationMinutes = durationMinutes,
+            instructor = instructor,
+            thumbnailUrl = thumbnailUrl ?: "",
+            description = description,
+            isPopular = isPopular,
+            isNew = isNew,
+            rating = rating,
+            completionCount = completionCount
         )
     }
+
+    /**
+     * Data class to hold filtered content data
+     */
+    private data class FilteredContentData(
+        val allContent: List<ContentItem>,
+        val popularContent: List<ContentItem>,
+        val newContent: List<ContentItem>,
+        val category: String?,
+        val duration: String?,
+        val query: String
+    )
 }
 
 /**

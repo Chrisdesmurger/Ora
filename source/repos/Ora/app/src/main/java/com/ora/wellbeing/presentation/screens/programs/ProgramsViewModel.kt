@@ -2,66 +2,155 @@ package com.ora.wellbeing.presentation.screens.programs
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
+import com.ora.wellbeing.data.model.Program
+import com.ora.wellbeing.data.model.UserProgram
+import com.ora.wellbeing.domain.repository.ProgramRepository
+import com.ora.wellbeing.domain.repository.UserProgramRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
 class ProgramsViewModel @Inject constructor(
-    // TODO: Injecter les use cases quand ils seront créés
-    // private val getProgramsUseCase: GetProgramsUseCase,
-    // private val getActiveProgramsUseCase: GetActiveProgramsUseCase,
-    // private val joinProgramUseCase: JoinProgramUseCase,
-    // private val getRecommendedProgramsUseCase: GetRecommendedProgramsUseCase
+    private val programRepository: ProgramRepository,
+    private val userProgramRepository: UserProgramRepository,
+    private val auth: FirebaseAuth
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProgramsUiState())
     val uiState: StateFlow<ProgramsUiState> = _uiState.asStateFlow()
 
+    init {
+        observeProgramData()
+    }
+
     fun onEvent(event: ProgramsUiEvent) {
         when (event) {
-            is ProgramsUiEvent.LoadProgramsData -> loadProgramsData()
+            is ProgramsUiEvent.LoadProgramsData -> observeProgramData()
             is ProgramsUiEvent.JoinProgram -> joinProgram(event.programId)
             is ProgramsUiEvent.LeaveProgram -> leaveProgram(event.programId)
         }
     }
 
-    private fun loadProgramsData() {
+    private fun observeProgramData() {
+        val uid = auth.currentUser?.uid ?: run {
+            Timber.e("observeProgramData: No authenticated user")
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                error = "Vous devez être connecté pour voir les programmes"
+            )
+            return
+        }
+
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true)
 
-                // TODO: Remplacer par de vraies données depuis les use cases
-                val mockData = generateMockProgramsData()
+                // Combine all programs and user enrollments for real-time sync
+                combine(
+                    programRepository.getAllPrograms(),
+                    programRepository.getPopularPrograms(limit = 10),
+                    userProgramRepository.getEnrolledPrograms(uid)
+                ) { allPrograms, popularPrograms, enrolledPrograms ->
+                    Triple(allPrograms, popularPrograms, enrolledPrograms)
+                }.collect { (allPrograms, popularPrograms, enrolledPrograms) ->
 
-                _uiState.value = mockData.copy(isLoading = false)
+                    // Map user enrollments to active programs for UI
+                    val activePrograms = enrolledPrograms
+                        .filter { !it.isCompleted }
+                        .map { userProgram ->
+                            // Find the corresponding program details
+                            val program = allPrograms.find { it.id == userProgram.programId }
+                            userProgram.toActiveProgram(program)
+                        }
 
-                Timber.d("Programs data loaded successfully")
+                    // Get recommended programs (high rating, not enrolled)
+                    val enrolledProgramIds = enrolledPrograms.map { it.programId }.toSet()
+                    val recommendedPrograms = allPrograms
+                        .filter { it.hasHighRating() && it.id !in enrolledProgramIds }
+                        .sortedByDescending { it.rating }
+                        .take(5)
+                        .map { it.toUiProgram(isEnrolled = false) }
+
+                    // Get popular challenges (category = Défis)
+                    val popularChallenges = allPrograms
+                        .filter { it.category == "Défis" && it.isPopular() }
+                        .sortedByDescending { it.participantCount }
+                        .take(5)
+                        .map { it.toUiProgram(isEnrolled = it.id in enrolledProgramIds) }
+
+                    // Group all programs by category
+                    val programsByCategory = allPrograms
+                        .groupBy { it.category }
+                        .mapValues { (_, programs) ->
+                            programs.map { program ->
+                                program.toUiProgram(isEnrolled = program.id in enrolledProgramIds)
+                            }
+                        }
+
+                    _uiState.value = ProgramsUiState(
+                        isLoading = false,
+                        error = null,
+                        activePrograms = activePrograms,
+                        recommendedPrograms = recommendedPrograms,
+                        popularChallenges = popularChallenges,
+                        programsByCategory = programsByCategory
+                    )
+
+                    Timber.d("observeProgramData: Updated UI state (${allPrograms.size} programs, ${activePrograms.size} active)")
+                }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = "Erreur lors du chargement des programmes"
+                    error = "Erreur lors du chargement des programmes: ${e.message}"
                 )
-                Timber.e(e, "Error loading programs data")
+                Timber.e(e, "Error observing program data")
             }
         }
     }
 
     private fun joinProgram(programId: String) {
+        val uid = auth.currentUser?.uid ?: run {
+            Timber.e("joinProgram: No authenticated user")
+            _uiState.value = _uiState.value.copy(error = "Vous devez être connecté")
+            return
+        }
+
         viewModelScope.launch {
             try {
-                // TODO: Implémenter l'inscription à un programme
-                Timber.d("Joined program: $programId")
-
-                // Recharger les données après inscription
-                loadProgramsData()
+                // Get program details to get total days
+                val program = programRepository.getProgram(programId)
+                program.collect { prog ->
+                    if (prog != null) {
+                        val result = userProgramRepository.enrollInProgram(uid, programId, prog.duration)
+                        result.fold(
+                            onSuccess = {
+                                Timber.i("joinProgram: Successfully enrolled in program $programId")
+                                // UI state will update automatically via Flow
+                            },
+                            onFailure = { error ->
+                                _uiState.value = _uiState.value.copy(
+                                    error = "Erreur lors de l'inscription: ${error.message}"
+                                )
+                                Timber.e(error, "Error enrolling in program")
+                            }
+                        )
+                    } else {
+                        _uiState.value = _uiState.value.copy(
+                            error = "Programme non trouvé"
+                        )
+                        Timber.e("joinProgram: Program $programId not found")
+                    }
+                }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = "Erreur lors de l'inscription au programme"
+                    error = "Erreur lors de l'inscription: ${e.message}"
                 )
                 Timber.e(e, "Error joining program")
             }
@@ -69,181 +158,71 @@ class ProgramsViewModel @Inject constructor(
     }
 
     private fun leaveProgram(programId: String) {
+        val uid = auth.currentUser?.uid ?: run {
+            Timber.e("leaveProgram: No authenticated user")
+            return
+        }
+
         viewModelScope.launch {
             try {
-                // TODO: Implémenter l'abandon d'un programme
-                Timber.d("Left program: $programId")
-
-                // Recharger les données après abandon
-                loadProgramsData()
+                val result = userProgramRepository.unenrollFromProgram(uid, programId)
+                result.fold(
+                    onSuccess = {
+                        Timber.i("leaveProgram: Successfully unenrolled from program $programId")
+                        // UI state will update automatically via Flow
+                    },
+                    onFailure = { error ->
+                        _uiState.value = _uiState.value.copy(
+                            error = "Erreur lors de l'abandon: ${error.message}"
+                        )
+                        Timber.e(error, "Error leaving program")
+                    }
+                )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = "Erreur lors de l'abandon du programme"
+                    error = "Erreur lors de l'abandon: ${e.message}"
                 )
                 Timber.e(e, "Error leaving program")
             }
         }
     }
 
-    private fun generateMockProgramsData(): ProgramsUiState {
-        // Programmes actifs
-        val activePrograms = listOf(
-            ProgramsUiState.ActiveProgram(
-                id = "active_1",
-                title = "21 jours de méditation",
-                description = "Développez une routine de méditation quotidienne",
-                currentDay = 8,
-                totalDays = 21,
-                progressPercentage = 38,
-                nextSessionTitle = "Méditation de pleine conscience",
-                nextSessionDuration = "10 min"
-            ),
-            ProgramsUiState.ActiveProgram(
-                id = "active_2",
-                title = "Yoga pour débutants",
-                description = "Apprenez les bases du yoga en douceur",
-                currentDay = 3,
-                totalDays = 10,
-                progressPercentage = 30,
-                nextSessionTitle = "Salutation au soleil",
-                nextSessionDuration = "15 min"
-            )
+    /**
+     * Converts UserProgram (data model) to ActiveProgram (UI model)
+     */
+    private fun UserProgram.toActiveProgram(program: Program?): ProgramsUiState.ActiveProgram {
+        return ProgramsUiState.ActiveProgram(
+            id = programId,
+            title = program?.title ?: "Programme inconnu",
+            description = program?.description ?: "",
+            currentDay = currentDay,
+            totalDays = totalDays,
+            progressPercentage = calculateProgress(), // Use calculateProgress() method
+            nextSessionTitle = "Session $currentDay",
+            nextSessionDuration = "10 min", // Default, could be dynamic
+            category = program?.category ?: "",
+            thumbnailUrl = program?.thumbnailUrl ?: ""
         )
+    }
 
-        // Programmes recommandés
-        val recommendedPrograms = listOf(
-            ProgramsUiState.Program(
-                id = "rec_1",
-                title = "Gestion du stress",
-                description = "Techniques avancées pour gérer le stress quotidien et retrouver la sérénité",
-                category = "Bien-être",
-                duration = 14,
-                level = "Intermédiaire",
-                participantCount = 1247,
-                rating = 4.8f,
-                thumbnailUrl = ""
-            ),
-            ProgramsUiState.Program(
-                id = "rec_2",
-                title = "Sommeil réparateur",
-                description = "Améliorez la qualité de votre sommeil avec des techniques de relaxation",
-                category = "Sommeil",
-                duration = 7,
-                level = "Débutant",
-                participantCount = 892,
-                rating = 4.6f,
-                thumbnailUrl = ""
-            )
-        )
-
-        // Défis populaires
-        val popularChallenges = listOf(
-            ProgramsUiState.Program(
-                id = "challenge_1",
-                title = "30 jours de gratitude",
-                description = "Cultivez la gratitude quotidiennement",
-                category = "Défis",
-                duration = 30,
-                level = "Tous niveaux",
-                participantCount = 3456,
-                rating = 4.9f,
-                thumbnailUrl = ""
-            ),
-            ProgramsUiState.Program(
-                id = "challenge_2",
-                title = "7 jours de réveil en douceur",
-                description = "Commencez chaque journée en douceur",
-                category = "Défis",
-                duration = 7,
-                level = "Débutant",
-                participantCount = 2103,
-                rating = 4.7f,
-                thumbnailUrl = ""
-            ),
-            ProgramsUiState.Program(
-                id = "challenge_3",
-                title = "14 jours sans stress",
-                description = "Éliminez le stress de votre vie",
-                category = "Défis",
-                duration = 14,
-                level = "Intermédiaire",
-                participantCount = 1876,
-                rating = 4.8f,
-                thumbnailUrl = ""
-            )
-        )
-
-        // Tous les programmes par catégorie
-        val allPrograms = listOf(
-            // Méditation
-            ProgramsUiState.Program(
-                id = "med_1",
-                title = "Méditation avancée",
-                description = "Techniques avancées de méditation",
-                category = "Méditation",
-                duration = 28,
-                level = "Avancé",
-                participantCount = 567,
-                rating = 4.9f,
-                thumbnailUrl = ""
-            ),
-            ProgramsUiState.Program(
-                id = "med_2",
-                title = "Méditation en mouvement",
-                description = "Méditation à travers le mouvement",
-                category = "Méditation",
-                duration = 14,
-                level = "Intermédiaire",
-                participantCount = 432,
-                rating = 4.5f,
-                thumbnailUrl = ""
-            ),
-
-            // Yoga
-            ProgramsUiState.Program(
-                id = "yoga_1",
-                title = "Yoga avancé",
-                description = "Postures et séquences avancées",
-                category = "Yoga",
-                duration = 21,
-                level = "Avancé",
-                participantCount = 789,
-                rating = 4.7f,
-                thumbnailUrl = ""
-            ),
-            ProgramsUiState.Program(
-                id = "yoga_2",
-                title = "Yoga restaurateur",
-                description = "Yoga doux pour la récupération",
-                category = "Yoga",
-                duration = 10,
-                level = "Tous niveaux",
-                participantCount = 634,
-                rating = 4.6f,
-                thumbnailUrl = ""
-            ),
-
-            // Bien-être
-            ProgramsUiState.Program(
-                id = "wellness_1",
-                title = "Équilibre vie-travail",
-                description = "Trouvez l'équilibre parfait",
-                category = "Bien-être",
-                duration = 21,
-                level = "Intermédiaire",
-                participantCount = 923,
-                rating = 4.4f,
-                thumbnailUrl = ""
-            )
-        )
-
-        val programsByCategory = allPrograms.groupBy { it.category }
-
-        return ProgramsUiState(
-            activePrograms = activePrograms,
-            recommendedPrograms = recommendedPrograms,
-            popularChallenges = popularChallenges,
-            programsByCategory = programsByCategory
+    /**
+     * Converts Program (data model) to Program (UI model)
+     */
+    private fun Program.toUiProgram(isEnrolled: Boolean): ProgramsUiState.Program {
+        return ProgramsUiState.Program(
+            id = id,
+            title = title,
+            description = description,
+            category = category,
+            duration = duration,
+            level = level,
+            participantCount = participantCount,
+            rating = rating,
+            thumbnailUrl = thumbnailUrl ?: "",
+            instructor = instructor ?: "",
+            price = if (isPremiumOnly) "Premium" else "Gratuit",
+            isEnrolled = isEnrolled,
+            estimatedTimePerDay = "10-15 min" // Could be dynamic based on program data
         )
     }
 }

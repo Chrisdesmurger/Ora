@@ -98,3 +98,24 @@ lint/tmp/
 *.swp
 *~
 .vscode/
+
+# IDE
+.idea/
+.claude/
+
+# Firebase
+.firebaserc
+firebase-debug.log
+
+# Documentation temporaire
+*.backup
+DIAGNOSTIC-*.md
+*_SUMMARY.md
+*_FIX_SUMMARY.md
+
+# Mockups et assets temporaires
+Mockup/
+
+# Configuration locale
+android_requirements.json
+status_android.json

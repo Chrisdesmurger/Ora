@@ -1,0 +1,368 @@
+{
+  "programs": [
+    {
+      "id": "meditation-debutant-7j",
+      "title": "Méditation pour Débutants",
+      "description": "Découvrez les bases de la méditation avec ce programme de 7 jours conçu pour les débutants. Apprenez à calmer votre esprit et à cultiver la pleine conscience dans votre quotidien.",
+      "category": "Méditation",
+      "duration": 7,
+      "level": "Débutant",
+      "participant_count": 4521,
+      "rating": 4.8,
+      "thumbnail_url": "https://placeholder.com/programs/meditation-debutant.jpg",
+      "instructor": "Claire Dubois",
+      "is_premium_only": false,
+      "is_active": true,
+      "sessions": [
+        {
+          "day": 1,
+          "content_id": "med-respiration-consciente",
+          "title": "Respiration consciente",
+          "duration_minutes": 10
+        },
+        {
+          "day": 2,
+          "content_id": "med-scan-corporel",
+          "title": "Scan corporel",
+          "duration_minutes": 12
+        },
+        {
+          "day": 3,
+          "content_id": "med-ancrage",
+          "title": "Ancrage et présence",
+          "duration_minutes": 10
+        },
+        {
+          "day": 4,
+          "content_id": "med-observer-pensees",
+          "title": "Observer ses pensées",
+          "duration_minutes": 15
+        },
+        {
+          "day": 5,
+          "content_id": "med-bienveillance",
+          "title": "Cultiver la bienveillance",
+          "duration_minutes": 12
+        },
+        {
+          "day": 6,
+          "content_id": "med-gratitude",
+          "title": "Méditation de gratitude",
+          "duration_minutes": 10
+        },
+        {
+          "day": 7,
+          "content_id": "med-integration",
+          "title": "Intégration et pratique quotidienne",
+          "duration_minutes": 15
+        }
+      ]
+    },
+    {
+      "id": "yoga-matinal-14j",
+      "title": "Yoga Matinal Énergisant",
+      "description": "Commencez chaque journée avec vitalité grâce à ce programme de yoga de 14 jours. Des séances douces mais dynamisantes pour réveiller votre corps en douceur.",
+      "category": "Yoga",
+      "duration": 14,
+      "level": "Tous niveaux",
+      "participant_count": 3287,
+      "rating": 4.7,
+      "thumbnail_url": "https://placeholder.com/programs/yoga-matinal.jpg",
+      "instructor": "Sophie Martin",
+      "is_premium_only": false,
+      "is_active": true,
+      "sessions": [
+        {
+          "day": 1,
+          "content_id": "yoga-salutation-soleil",
+          "title": "Salutations au soleil",
+          "duration_minutes": 15
+        },
+        {
+          "day": 2,
+          "content_id": "yoga-etirements-doux",
+          "title": "Étirements doux",
+          "duration_minutes": 12
+        },
+        {
+          "day": 3,
+          "content_id": "yoga-force-centrale",
+          "title": "Renforcement du centre",
+          "duration_minutes": 18
+        }
+      ]
+    },
+    {
+      "id": "sommeil-reparateur-10j",
+      "title": "Sommeil Réparateur",
+      "description": "Améliorez la qualité de votre sommeil avec ce programme de 10 jours. Techniques de relaxation, méditations guidées et rituels du soir pour des nuits paisibles.",
+      "category": "Sommeil",
+      "duration": 10,
+      "level": "Tous niveaux",
+      "participant_count": 5643,
+      "rating": 4.9,
+      "thumbnail_url": "https://placeholder.com/programs/sommeil-reparateur.jpg",
+      "instructor": "Marc Leroy",
+      "is_premium_only": true,
+      "is_active": true,
+      "sessions": [
+        {
+          "day": 1,
+          "content_id": "sommeil-relaxation-progressive",
+          "title": "Relaxation musculaire progressive",
+          "duration_minutes": 20
+        },
+        {
+          "day": 2,
+          "content_id": "sommeil-visualisation",
+          "title": "Visualisation apaisante",
+          "duration_minutes": 15
+        },
+        {
+          "day": 3,
+          "content_id": "sommeil-respiration-4-7-8",
+          "title": "Respiration 4-7-8",
+          "duration_minutes": 10
+        }
+      ]
+    },
+    {
+      "id": "defi-gratitude-21j",
+      "title": "Défi Gratitude 21 Jours",
+      "description": "Transformez votre perspective avec ce défi de 21 jours axé sur la gratitude. Cultivez la reconnaissance et l'appréciation dans votre vie quotidienne.",
+      "category": "Défis",
+      "duration": 21,
+      "level": "Tous niveaux",
+      "participant_count": 8921,
+      "rating": 4.9,
+      "thumbnail_url": "https://placeholder.com/programs/defi-gratitude.jpg",
+      "instructor": "Emma Rousseau",
+      "is_premium_only": false,
+      "is_active": true,
+      "sessions": [
+        {
+          "day": 1,
+          "content_id": "gratitude-introduction",
+          "title": "Introduction à la gratitude",
+          "duration_minutes": 8
+        },
+        {
+          "day": 2,
+          "content_id": "gratitude-petit-plaisirs",
+          "title": "Apprécier les petits plaisirs",
+          "duration_minutes": 10
+        },
+        {
+          "day": 3,
+          "content_id": "gratitude-relations",
+          "title": "Gratitude pour nos relations",
+          "duration_minutes": 12
+        }
+      ]
+    },
+    {
+      "id": "bien-etre-travail-7j",
+      "title": "Bien-être au Travail",
+      "description": "Gérez le stress professionnel et trouvez l'équilibre avec ce programme de 7 jours. Techniques pratiques à intégrer pendant votre journée de travail.",
+      "category": "Bien-être",
+      "duration": 7,
+      "level": "Tous niveaux",
+      "participant_count": 2156,
+      "rating": 4.6,
+      "thumbnail_url": "https://placeholder.com/programs/bien-etre-travail.jpg",
+      "instructor": "Jean Dupont",
+      "is_premium_only": false,
+      "is_active": true,
+      "sessions": [
+        {
+          "day": 1,
+          "content_id": "travail-pause-consciente",
+          "title": "Micro-pauses conscientes",
+          "duration_minutes": 5
+        },
+        {
+          "day": 2,
+          "content_id": "travail-gestion-stress",
+          "title": "Gestion du stress au bureau",
+          "duration_minutes": 10
+        },
+        {
+          "day": 3,
+          "content_id": "travail-concentration",
+          "title": "Améliorer sa concentration",
+          "duration_minutes": 12
+        }
+      ]
+    },
+    {
+      "id": "meditation-avancee-30j",
+      "title": "Méditation Avancée",
+      "description": "Approfondissez votre pratique méditative avec ce programme intensif de 30 jours. Pour pratiquants expérimentés cherchant à explorer de nouvelles dimensions.",
+      "category": "Méditation",
+      "duration": 30,
+      "level": "Avancé",
+      "participant_count": 1243,
+      "rating": 4.8,
+      "thumbnail_url": "https://placeholder.com/programs/meditation-avancee.jpg",
+      "instructor": "Claire Dubois",
+      "is_premium_only": true,
+      "is_active": true,
+      "sessions": [
+        {
+          "day": 1,
+          "content_id": "med-vipassana-intro",
+          "title": "Introduction au Vipassana",
+          "duration_minutes": 25
+        },
+        {
+          "day": 2,
+          "content_id": "med-silence-profond",
+          "title": "Méditation du silence profond",
+          "duration_minutes": 30
+        },
+        {
+          "day": 3,
+          "content_id": "med-conscience-pure",
+          "title": "Conscience pure",
+          "duration_minutes": 30
+        }
+      ]
+    },
+    {
+      "id": "yoga-souplesse-21j",
+      "title": "Yoga pour la Souplesse",
+      "description": "Gagnez en flexibilité et mobilité avec ce programme de yoga de 21 jours. Progressez à votre rythme vers plus de souplesse corporelle.",
+      "category": "Yoga",
+      "duration": 21,
+      "level": "Intermédiaire",
+      "participant_count": 2789,
+      "rating": 4.7,
+      "thumbnail_url": "https://placeholder.com/programs/yoga-souplesse.jpg",
+      "instructor": "Sophie Martin",
+      "is_premium_only": true,
+      "is_active": true,
+      "sessions": [
+        {
+          "day": 1,
+          "content_id": "yoga-hanches-ouverture",
+          "title": "Ouverture des hanches",
+          "duration_minutes": 20
+        },
+        {
+          "day": 2,
+          "content_id": "yoga-dos-souple",
+          "title": "Assouplissement du dos",
+          "duration_minutes": 22
+        },
+        {
+          "day": 3,
+          "content_id": "yoga-jambes-flexibles",
+          "title": "Flexibilité des jambes",
+          "duration_minutes": 18
+        }
+      ]
+    },
+    {
+      "id": "respiration-energie-14j",
+      "title": "Respiration & Énergie",
+      "description": "Maîtrisez les techniques respiratoires pour booster votre énergie vitale. Programme de 14 jours pour découvrir le pouvoir du souffle.",
+      "category": "Bien-être",
+      "duration": 14,
+      "level": "Débutant",
+      "participant_count": 1876,
+      "rating": 4.6,
+      "thumbnail_url": "https://placeholder.com/programs/respiration-energie.jpg",
+      "instructor": "Marc Leroy",
+      "is_premium_only": false,
+      "is_active": true,
+      "sessions": [
+        {
+          "day": 1,
+          "content_id": "resp-coherence-cardiaque",
+          "title": "Cohérence cardiaque",
+          "duration_minutes": 8
+        },
+        {
+          "day": 2,
+          "content_id": "resp-pranayama-base",
+          "title": "Pranayama de base",
+          "duration_minutes": 12
+        },
+        {
+          "day": 3,
+          "content_id": "resp-energisante",
+          "title": "Respiration énergisante",
+          "duration_minutes": 10
+        }
+      ]
+    },
+    {
+      "id": "pilates-renforcement-28j",
+      "title": "Pilates Renforcement Profond",
+      "description": "Renforcez vos muscles profonds et améliorez votre posture avec ce programme de Pilates de 28 jours. Pour un corps fort et aligné.",
+      "category": "Pilates",
+      "duration": 28,
+      "level": "Intermédiaire",
+      "participant_count": 1534,
+      "rating": 4.8,
+      "thumbnail_url": "https://placeholder.com/programs/pilates-renforcement.jpg",
+      "instructor": "Laura Blanc",
+      "is_premium_only": true,
+      "is_active": true,
+      "sessions": [
+        {
+          "day": 1,
+          "content_id": "pilates-core-basics",
+          "title": "Les bases du core",
+          "duration_minutes": 15
+        },
+        {
+          "day": 2,
+          "content_id": "pilates-posture",
+          "title": "Travail postural",
+          "duration_minutes": 18
+        },
+        {
+          "day": 3,
+          "content_id": "pilates-equilibre",
+          "title": "Équilibre et stabilité",
+          "duration_minutes": 20
+        }
+      ]
+    },
+    {
+      "id": "defi-meditation-quotidienne",
+      "title": "Défi Méditation Quotidienne",
+      "description": "Installez une pratique méditative régulière avec ce défi de 30 jours. Chaque jour, une courte méditation pour ancrer cette habitude bienfaisante.",
+      "category": "Défis",
+      "duration": 30,
+      "level": "Tous niveaux",
+      "participant_count": 6432,
+      "rating": 4.9,
+      "thumbnail_url": "https://placeholder.com/programs/defi-meditation-quotidienne.jpg",
+      "instructor": "Claire Dubois",
+      "is_premium_only": false,
+      "is_active": true,
+      "sessions": [
+        {
+          "day": 1,
+          "content_id": "med-matin-5min",
+          "title": "Méditation matinale 5 min",
+          "duration_minutes": 5
+        },
+        {
+          "day": 2,
+          "content_id": "med-instant-present",
+          "title": "Retour à l'instant présent",
+          "duration_minutes": 7
+        },
+        {
+          "day": 3,
+          "content_id": "med-calme-interieur",
+          "title": "Cultiver le calme intérieur",
+          "duration_minutes": 8
+        }
+      ]
+    }
+  ]
+}

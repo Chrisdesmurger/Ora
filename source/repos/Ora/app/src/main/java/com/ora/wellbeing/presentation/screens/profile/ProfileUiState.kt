@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 /**
  * État de l'interface utilisateur pour l'écran Profile
  * Modélise exactement le mockup image9.png
+ * FIX(user-dynamic): Ajout de champs isPremium et planTier
  */
 data class ProfileUiState(
     val isLoading: Boolean = false,
@@ -21,11 +22,14 @@ data class ProfileUiState(
 
 /**
  * Profil utilisateur simplifié selon mockup
+ * FIX(user-dynamic): Ajout de isPremium et planTier
  */
 data class UserProfile(
     val name: String,
     val motto: String,
-    val photoUrl: String? = null
+    val photoUrl: String? = null,
+    val isPremium: Boolean = false, // FIX(user-dynamic): Nouveau champ
+    val planTier: String = "Gratuit" // FIX(user-dynamic): Nouveau champ
 )
 
 /**

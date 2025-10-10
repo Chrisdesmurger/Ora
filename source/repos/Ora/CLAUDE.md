@@ -18,7 +18,8 @@ Ora is a Android wellbeing application built with Jetpack Compose, implementing 
 - **Architecture**: MVVM with Clean Architecture
 - **DI**: Hilt (Dagger)
 - **Navigation**: Navigation Compose
-- **Database**: Room (configured)
+- **Backend**: Firebase (Authentication + Firestore)
+- **Database**: Room (configured) + Firestore (active)
 - **Networking**: Retrofit + OkHttp (configured)
 - **Media**: ExoPlayer (configured)
 - **Async**: Coroutines + Flow
@@ -49,22 +50,29 @@ Ora is a Android wellbeing application built with Jetpack Compose, implementing 
   - JournalScreen + JournalViewModel
   - ProgramsScreen + ProgramsViewModel
   - ProfileScreen + ProfileViewModel
-- OraTheme with Material 3 design system
+- OraTheme with Material 3 design system (Ora brand colors)
 - Navigation destinations and routing
 - Mock data for all screens
 - MVVM pattern with UiState/UiEvent
+- **Firebase Authentication** (Email/Password + Google Sign-In via Credential Manager)
+- **Firestore Integration** with real-time sync:
+  - UserProfile (users collection)
+  - UserStats (stats collection)
+  - SyncManager for automatic profile/stats creation
+  - Repository pattern with Flow-based listeners
+  - Security rules with UID-based isolation
 
 #### 🚧 In Progress / TODO
 - Domain layer (Use Cases, Repository interfaces)
-- Data layer (Room database, Repository implementations)
+- Data layer (Room database for offline cache)
 - API integration (Retrofit setup exists)
 - ExoPlayer integration for video/audio content
 - WorkManager for evening gratitude reminders
 - Detailed screens (ContentDetail, ProgramDetail, etc.)
-- User authentication
-- Real data persistence
+- Google Play Billing for Premium subscriptions
 - Push notifications
-- Settings screens
+- Settings screens (Profile editing, preferences)
+- Content management (meditation sessions, yoga videos)
 
 ## File Structure
 
@@ -74,26 +82,39 @@ app/src/main/java/com/ora/wellbeing/
 ├── OraApplication.kt (✅ Hilt setup)
 ├── presentation/
 │   ├── theme/
-│   │   ├── OraTheme.kt (✅ Material 3 colors)
-│   │   └── Typography.kt (✅ Text styles)
+│   │   └── OraTheme.kt (✅ Material 3 with Ora brand colors)
 │   ├── navigation/
 │   │   ├── OraDestinations.kt (✅ Route definitions)
-│   │   └── OraNavigation.kt (✅ NavHost + BottomBar)
+│   │   ├── OraNavigation.kt (✅ NavHost + BottomBar)
+│   │   └── OraAuthViewModel.kt (✅ Auth state management)
 │   └── screens/
-│       ├── home/ (✅ Complete)
-│       ├── library/ (✅ Complete)
-│       ├── journal/ (✅ Complete)
-│       ├── programs/ (✅ Complete)
-│       └── profile/ (✅ Complete)
+│       ├── auth/ (✅ AuthScreen with Email/Password + Google)
+│       ├── home/ (✅ HomeScreen + HomeViewModel)
+│       ├── library/ (✅ LibraryScreen + LibraryViewModel)
+│       ├── journal/ (✅ JournalScreen + JournalViewModel)
+│       ├── programs/ (✅ ProgramsScreen + ProgramsViewModel)
+│       └── profile/ (✅ ProfileScreen + ProfileViewModel)
 ├── domain/ (🚧 Planned)
-└── data/ (🚧 Planned)
+├── data/
+│   ├── model/
+│   │   ├── UserProfile.kt (✅ Firestore model)
+│   │   └── UserStats.kt (✅ Firestore model)
+│   ├── repository/
+│   │   ├── AuthRepository.kt (✅ Firebase Auth)
+│   │   ├── UserProfileRepository.kt (✅ Firestore)
+│   │   └── UserStatsRepository.kt (✅ Firestore)
+│   └── sync/
+│       └── SyncManager.kt (✅ Auto profile/stats creation)
+└── di/
+    ├── FirebaseModule.kt (✅ Firebase DI)
+    └── FirestoreModule.kt (✅ Firestore DI)
 ```
 
 ## Design Principles
 
 ### UI/UX
 - Material 3 Design with custom Ora color scheme
-- Zen-focused color palette (purple, teal, soft rose)
+- Warm color palette: Orange coral (#F18D5C), Peach (#F5C9A9), Warm beige (#F5EFE6)
 - Accessible components with proper contrast
 - Smooth animations and transitions
 - Responsive layout for different screen sizes
@@ -106,29 +127,71 @@ app/src/main/java/com/ora/wellbeing/
 - Proper error handling
 - Timber logging
 
+### Firebase/Firestore Best Practices
+
+**IMPORTANT:** When working with Firestore models in Kotlin:
+
+1. **Use regular `class`, NOT `data class`**
+2. **Properties MUST be declared outside constructor**
+3. **Field names MUST match Firestore schema exactly (camelCase)**
+4. **Only use `@PropertyName` if Firestore uses snake_case (our schema uses camelCase)**
+5. **All persisted properties must be `var` (not `val`)**
+6. **Computed methods must have `@Exclude`**
+7. **Always provide a no-arg constructor**
+
+**CRITICAL:** Our Firestore schema uses **camelCase** field names (firstName, photoUrl, planTier, etc.) so Kotlin models should match exactly without `@PropertyName` annotations.
+
+See detailed guide: [docs/FIRESTORE_KOTLIN_MAPPING_GUIDE.md](docs/FIRESTORE_KOTLIN_MAPPING_GUIDE.md)
+
+For troubleshooting: [docs/FIRESTORE_TROUBLESHOOTING.md](docs/FIRESTORE_TROUBLESHOOTING.md)
+
 ## Build Commands
 
 - **Build**: `./gradlew build`
 - **Debug**: `./gradlew assembleDebug`
+- **Install**: `./gradlew installDebug`
+- **Clean Build**: `./gradlew clean assembleDebug installDebug`
 - **Test**: `./gradlew test`
 - **Lint**: `./gradlew lint`
+
+## Firebase Commands
+
+- **Deploy Firestore Rules**: `firebase deploy --only firestore:rules`
+- **Deploy All**: `firebase deploy`
+- **Login**: `firebase login`
 
 ## Key Dependencies
 
 - Compose BOM: 2023.10.01
 - Hilt: 2.48.1
 - Navigation Compose: 2.7.6
+- **Firebase BOM: 33.7.0**
+  - Firebase Auth
+  - Firestore
+  - Google Play Services Auth (for Credential Manager)
 - Room: 2.6.1
 - ExoPlayer: 1.2.0
 - Retrofit: 2.9.0
 - Work Manager: 2.9.0
 - Timber: 5.0.1
+- Credentials: 1.5.0-beta01 (Google Sign-In)
 
 ## Next Development Priorities
 
-1. **Domain Layer**: Create use cases and repository interfaces
-2. **Data Layer**: Implement Room database and repositories
+1. **Profile Editing**: Allow users to update their profile (firstName, lastName, motto, photoUrl)
+2. **Content Management**: Add meditation sessions, yoga videos to Firestore
 3. **Content Player**: ExoPlayer integration for meditation/yoga videos
-4. **Notifications**: WorkManager for daily gratitude reminders
-5. **Authentication**: User sign-up/sign-in flow
-6. **Real Data**: Replace mock data with actual backend integration
+4. **Gratitude Journal**: Persist gratitudes to Firestore with real-time sync
+5. **Programs**: Structured challenges and learning paths in Firestore
+6. **Google Play Billing**: Premium subscription flow
+7. **Notifications**: WorkManager for daily gratitude reminders
+8. **Domain Layer**: Create use cases and repository interfaces
+9. **Offline Support**: Room database for offline caching
+
+## Documentation
+
+- **Firebase Setup**: [docs/FIRESTORE_SETUP_GUIDE.md](docs/FIRESTORE_SETUP_GUIDE.md)
+- **Firestore Kotlin Mapping**: [docs/FIRESTORE_KOTLIN_MAPPING_GUIDE.md](docs/FIRESTORE_KOTLIN_MAPPING_GUIDE.md)
+- **Troubleshooting**: [docs/FIRESTORE_TROUBLESHOOTING.md](docs/FIRESTORE_TROUBLESHOOTING.md)
+- **Test Checklist**: [docs/FIRESTORE_TEST_CHECKLIST.md](docs/FIRESTORE_TEST_CHECKLIST.md)
+- **Design System**: [docs/DESIGN_SYSTEM_SUMMARY.md](docs/DESIGN_SYSTEM_SUMMARY.md)

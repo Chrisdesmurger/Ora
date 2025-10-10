@@ -19,24 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ora.wellbeing.presentation.navigation.QuickSessionType
-import com.ora.wellbeing.presentation.theme.OraTheme
-
-// Ora Design System Colors
-private val OraBackground = Color(0xFFFFF5F0)
-private val OraOrange = Color(0xFFF4845F)
-private val OraTextDark = Color(0xFF3D2C2C)
-private val OraTextMedium = Color(0xFF6B6B6B)
-private val OraCardBeige = Color(0xFFFFFBF8)
-
-// Quick Session Colors (from mockup)
-private val YogaGreen = Color(0xFFD4E3D8)
-private val YogaGreenIcon = Color(0xFF7BA089)
-private val PilatesOrange = Color(0xFFFFD4C4)
-private val PilatesOrangeIcon = Color(0xFFF4845F)
-private val MeditationPurple = Color(0xFFD4C4E8)
-private val MeditationPurpleIcon = Color(0xFFB4A5D4)
-private val BreathingBlue = Color(0xFFC4D8E8)
-private val BreathingBlueIcon = Color(0xFFA8C4B7)
+import com.ora.wellbeing.presentation.theme.*
 
 @Composable
 fun HomeScreen(
@@ -110,7 +93,7 @@ private fun WelcomeSection(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = OraCardBeige
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -120,10 +103,10 @@ private fun WelcomeSection(
         ) {
             // FIX(build-debug-android): Texte de bienvenue restauré
             Text(
-                text = "Bonjour $userName! 👋",
+                text = if (userName.isNotBlank()) "Bonjour $userName" else "Bonjour",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = OraTextDark
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             if (streakDays > 0) {
@@ -131,7 +114,7 @@ private fun WelcomeSection(
                 Text(
                     text = "🔥 $streakDays jours de suite!",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = OraOrange
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -148,7 +131,7 @@ private fun QuickSessionsSection(
             text = "Sessions rapides",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = OraTextDark
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -172,9 +155,9 @@ private fun QuickSessionCard(
     onClick: () -> Unit
 ) {
     val (backgroundColor, iconColor, sessionName) = when (sessionType) {
-        QuickSessionType.BREATHING -> Triple(BreathingBlue, BreathingBlueIcon, "Respiration")
-        QuickSessionType.YOGA_FLASH -> Triple(YogaGreen, YogaGreenIcon, "Flash Yoga")
-        QuickSessionType.MINI_MEDITATION -> Triple(MeditationPurple, MeditationPurpleIcon, "Méditation")
+        QuickSessionType.BREATHING -> Triple(CategoryBreathingBlue, CategoryBreathingBlue, "Respiration")
+        QuickSessionType.YOGA_FLASH -> Triple(CategoryYogaGreen, MaterialTheme.colorScheme.tertiary, "Flash Yoga")
+        QuickSessionType.MINI_MEDITATION -> Triple(CategoryMeditationLavender, CategoryMeditationLavender, "Méditation")
     }
 
     Card(
@@ -204,7 +187,7 @@ private fun QuickSessionCard(
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
                 textAlign = TextAlign.Center,
-                color = OraTextDark
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
@@ -223,7 +206,7 @@ private fun RecommendationsSection(
             text = "Recommandations du jour",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = OraTextDark
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -250,7 +233,7 @@ private fun RecommendationCard(
         onClick = onClick,
         modifier = Modifier.width(200.dp),
         colors = CardDefaults.cardColors(
-            containerColor = OraCardBeige
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -263,7 +246,7 @@ private fun RecommendationCard(
                 Icon(
                     imageVector = Icons.Default.PlayArrow,
                     contentDescription = null,
-                    tint = OraOrange
+                    tint = MaterialTheme.colorScheme.primary
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -272,7 +255,7 @@ private fun RecommendationCard(
                 Text(
                     text = content.duration,
                     style = MaterialTheme.typography.bodySmall,
-                    color = OraTextMedium
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -283,7 +266,7 @@ private fun RecommendationCard(
                 text = content.title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = OraTextDark
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -291,7 +274,7 @@ private fun RecommendationCard(
             Text(
                 text = content.category,
                 style = MaterialTheme.typography.bodySmall,
-                color = OraOrange
+                color = MaterialTheme.colorScheme.primary
             )
         }
     }
@@ -310,7 +293,7 @@ private fun ActiveProgramsSection(
             text = "Programmes en cours",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = OraTextDark
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -337,7 +320,7 @@ private fun ActiveProgramCard(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = OraCardBeige
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -349,7 +332,7 @@ private fun ActiveProgramCard(
                 text = program.title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = OraTextDark
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -358,7 +341,7 @@ private fun ActiveProgramCard(
             Text(
                 text = "Jour ${program.currentDay} sur ${program.totalDays}",
                 style = MaterialTheme.typography.bodyMedium,
-                color = OraTextMedium
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -367,7 +350,7 @@ private fun ActiveProgramCard(
             LinearProgressIndicator(
                 progress = program.progressPercentage / 100f,
                 modifier = Modifier.fillMaxWidth(),
-                color = OraOrange,
+                color = MaterialTheme.colorScheme.primary,
                 trackColor = Color(0xFFFFE4D9)
             )
 
@@ -376,7 +359,7 @@ private fun ActiveProgramCard(
             Text(
                 text = "${program.progressPercentage}%",
                 style = MaterialTheme.typography.bodySmall,
-                color = OraOrange,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.align(Alignment.End)
             )
         }
@@ -392,7 +375,7 @@ private fun QuickStatsSection(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = OraCardBeige
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -404,7 +387,7 @@ private fun QuickStatsSection(
                 text = "Cette semaine",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = OraTextDark
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -445,7 +428,7 @@ private fun StatItem(
             text = value,
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
-            color = OraOrange
+            color = MaterialTheme.colorScheme.primary
         )
 
         Spacer(modifier = Modifier.height(4.dp))
@@ -453,7 +436,7 @@ private fun StatItem(
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = OraTextMedium
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

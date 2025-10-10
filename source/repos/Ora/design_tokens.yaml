@@ -1,0 +1,443 @@
+design_system: Ora Wellbeing App
+version: "1.0"
+platform: Android Compose
+material_version: "3.0"
+
+# Color Tokens
+color:
+  brand:
+    primary:
+      value: "#7B5CF2"
+      description: "Violet apaisant principal de la marque Ora"
+      usage: ["buttons_primary", "navigation_active", "accent_elements"]
+
+    secondary:
+      value: "#FF8A80"
+      description: "Saumon chaleureux pour accents secondaires"
+      usage: ["buttons_secondary", "highlights", "warm_touches"]
+
+    tertiary:
+      value: "#4CAF50"
+      description: "Vert nature pour éléments positifs"
+      usage: ["success_states", "progress", "nature_elements"]
+
+  semantic:
+    content_types:
+      yoga:
+        value: "#8E24AA"
+        description: "Violet pour contenus yoga"
+        usage: ["yoga_categories", "yoga_content_cards"]
+
+      meditation:
+        value: "#26A69A"
+        description: "Vert teal pour méditation"
+        usage: ["meditation_categories", "mindfulness_content"]
+
+      breathing:
+        value: "#42A5F5"
+        description: "Bleu ciel pour exercices de respiration"
+        usage: ["breathing_exercises", "calm_content"]
+
+      journal:
+        value: "#FF7043"
+        description: "Orange doux pour journal personnel"
+        usage: ["journal_entries", "personal_content"]
+
+      pilates:
+        value: "#AB47BC"
+        description: "Violet pilates distinct du yoga"
+        usage: ["pilates_content", "strength_exercises"]
+
+    mood_indicators:
+      excellent:
+        value: "#4CAF50"
+        description: "Vert pour humeur excellente"
+        emoji: "😊"
+
+      good:
+        value: "#8BC34A"
+        description: "Vert clair pour bonne humeur"
+        emoji: "🙂"
+
+      neutral:
+        value: "#FFC107"
+        description: "Jaune pour humeur neutre"
+        emoji: "😐"
+
+      bad:
+        value: "#FF9800"
+        description: "Orange pour humeur difficile"
+        emoji: "😔"
+
+      terrible:
+        value: "#F44336"
+        description: "Rouge pour très mauvaise humeur"
+        emoji: "😢"
+
+    system_feedback:
+      success:
+        value: "#4CAF50"
+        description: "Vert pour succès et accomplissements"
+        usage: ["completion_states", "positive_feedback"]
+
+      warning:
+        value: "#FF9800"
+        description: "Orange pour avertissements"
+        usage: ["caution_messages", "attention_needed"]
+
+      error:
+        value: "#F44336"
+        description: "Rouge pour erreurs"
+        usage: ["error_states", "critical_issues"]
+
+      info:
+        value: "#2196F3"
+        description: "Bleu pour informations"
+        usage: ["info_messages", "tips"]
+
+      streak_fire:
+        value: "#FF5722"
+        description: "Orange feu pour séries accomplies"
+        usage: ["streak_indicators", "achievement_highlights"]
+
+# Typography Tokens
+typography:
+  scale: "Material 3 Type Scale"
+
+  families:
+    primary:
+      name: "System Default"
+      fallback: ["Roboto", "San Francisco", "Helvetica Neue", "Arial"]
+      description: "Police système pour lisibilité optimale"
+
+    display:
+      name: "System Default"
+      weight: "Light"
+      usage: ["app_title", "hero_headings"]
+
+    body:
+      name: "System Default"
+      weight: "Regular"
+      usage: ["body_text", "descriptions", "content"]
+
+  roles:
+    display_large:
+      size: "57sp"
+      line_height: "64sp"
+      weight: "Light"
+      usage: ["splash_titles", "hero_text"]
+
+    display_medium:
+      size: "45sp"
+      line_height: "52sp"
+      weight: "Light"
+      usage: ["section_titles"]
+
+    headline_large:
+      size: "32sp"
+      line_height: "40sp"
+      weight: "SemiBold"
+      usage: ["screen_titles", "primary_headings"]
+
+    headline_medium:
+      size: "28sp"
+      line_height: "36sp"
+      weight: "SemiBold"
+      usage: ["card_titles", "secondary_headings"]
+
+    title_large:
+      size: "22sp"
+      line_height: "28sp"
+      weight: "SemiBold"
+      usage: ["content_titles", "section_headers"]
+
+    title_medium:
+      size: "16sp"
+      line_height: "24sp"
+      weight: "Medium"
+      usage: ["card_subtitles", "list_headers"]
+
+    body_large:
+      size: "16sp"
+      line_height: "24sp"
+      weight: "Regular"
+      usage: ["main_content", "descriptions"]
+
+    body_medium:
+      size: "14sp"
+      line_height: "20sp"
+      weight: "Regular"
+      usage: ["secondary_text", "metadata"]
+
+    label_large:
+      size: "14sp"
+      line_height: "20sp"
+      weight: "Medium"
+      usage: ["button_text", "navigation_labels"]
+
+    label_medium:
+      size: "12sp"
+      line_height: "16sp"
+      weight: "Medium"
+      usage: ["badges", "chips", "small_labels"]
+
+# Spacing Tokens
+spacing:
+  scale_type: "4dp Grid System"
+
+  values:
+    xs: "4dp"
+    sm: "8dp"
+    md: "16dp"
+    lg: "24dp"
+    xl: "32dp"
+    xxl: "48dp"
+    xxxl: "64dp"
+
+  usage:
+    component_padding:
+      card_internal: "16dp"
+      button_horizontal: "24dp"
+      button_vertical: "12dp"
+      list_item: "16dp"
+
+    layout_margins:
+      screen_horizontal: "16dp"
+      screen_vertical: "24dp"
+      section_vertical: "32dp"
+
+    element_spacing:
+      between_cards: "8dp"
+      between_sections: "24dp"
+      text_paragraphs: "16dp"
+
+# Elevation Tokens
+elevation:
+  levels:
+    level_0:
+      value: "0dp"
+      usage: ["background", "flush_surfaces"]
+
+    level_1:
+      value: "1dp"
+      usage: ["cards", "content_containers"]
+
+    level_2:
+      value: "3dp"
+      usage: ["app_bars", "pressed_cards"]
+
+    level_3:
+      value: "6dp"
+      usage: ["bottom_sheets", "dialogs"]
+
+    level_4:
+      value: "8dp"
+      usage: ["navigation_drawer", "modal_surfaces"]
+
+    level_5:
+      value: "12dp"
+      usage: ["fab", "tooltips"]
+
+# Corner Radius Tokens
+radius:
+  values:
+    xs: "4dp"
+    sm: "8dp"
+    md: "12dp"
+    lg: "16dp"
+    xl: "24dp"
+    full: "9999dp"
+
+  usage:
+    buttons:
+      primary: "12dp"
+      secondary: "8dp"
+      fab: "16dp"
+
+    cards:
+      content: "12dp"
+      media: "8dp"
+      elevated: "16dp"
+
+    inputs:
+      text_fields: "8dp"
+      search: "24dp"
+      chips: "16dp"
+
+# Animation Tokens
+animation:
+  duration:
+    instant: "0ms"
+    quick: "100ms"
+    fast: "200ms"
+    normal: "300ms"
+    slow: "500ms"
+    slower: "1000ms"
+
+  easing:
+    linear: "cubic-bezier(0, 0, 1, 1)"
+    ease_in: "cubic-bezier(0.4, 0, 1, 1)"
+    ease_out: "cubic-bezier(0, 0, 0.2, 1)"
+    ease_in_out: "cubic-bezier(0.4, 0, 0.2, 1)"
+    emphasized: "cubic-bezier(0.2, 0, 0, 1)"
+
+  transitions:
+    navigation:
+      duration: "300ms"
+      easing: "emphasized"
+
+    state_change:
+      duration: "200ms"
+      easing: "ease_out"
+
+    micro_interaction:
+      duration: "100ms"
+      easing: "ease_in_out"
+
+# Icon Tokens
+iconography:
+  sizes:
+    small: "16dp"
+    medium: "24dp"
+    large: "32dp"
+    extra_large: "48dp"
+
+  style: "Material Icons Rounded"
+
+  categories:
+    navigation:
+      home: "home"
+      library: "library_books"
+      journal: "book"
+      programs: "calendar_today"
+      profile: "person"
+
+    content_types:
+      yoga: "self_improvement"
+      meditation: "spa"
+      breathing: "air"
+      pilates: "fitness_center"
+
+    actions:
+      play: "play_arrow"
+      pause: "pause"
+      favorite: "favorite"
+      share: "share"
+      download: "download"
+      settings: "settings"
+
+    status:
+      check: "check_circle"
+      error: "error"
+      warning: "warning"
+      info: "info"
+
+# Layout Tokens
+layout:
+  breakpoints:
+    compact:
+      min_width: "0dp"
+      max_width: "599dp"
+      description: "Phones in portrait"
+
+    medium:
+      min_width: "600dp"
+      max_width: "839dp"
+      description: "Tablets, phones in landscape"
+
+    expanded:
+      min_width: "840dp"
+      max_width: "9999dp"
+      description: "Large tablets, desktop"
+
+  grid:
+    columns:
+      compact: 4
+      medium: 8
+      expanded: 12
+
+    margins:
+      compact: "16dp"
+      medium: "24dp"
+      expanded: "24dp"
+
+    gutters:
+      compact: "16dp"
+      medium: "24dp"
+      expanded: "24dp"
+
+# Component Specific Tokens
+components:
+  bottom_navigation:
+    height: "80dp"
+    icon_size: "24dp"
+    label_typography: "label_medium"
+    background_color: "surface"
+    elevation: "level_2"
+
+  app_bar:
+    height: "64dp"
+    title_typography: "title_large"
+    background_color: "surface"
+    elevation: "level_0"
+
+  cards:
+    content_card:
+      min_height: "120dp"
+      padding: "16dp"
+      corner_radius: "md"
+      elevation: "level_1"
+
+    media_card:
+      aspect_ratio: "16:9"
+      corner_radius: "sm"
+      overlay_gradient: "linear-gradient(transparent 60%, rgba(0,0,0,0.6))"
+
+  buttons:
+    primary:
+      height: "48dp"
+      padding_horizontal: "24dp"
+      corner_radius: "md"
+      typography: "label_large"
+
+    secondary:
+      height: "40dp"
+      padding_horizontal: "16dp"
+      corner_radius: "sm"
+      typography: "label_medium"
+
+  fab:
+    size: "56dp"
+    icon_size: "24dp"
+    corner_radius: "lg"
+    elevation: "level_5"
+
+# Accessibility Tokens
+accessibility:
+  touch_targets:
+    minimum_size: "48dp"
+    recommended_size: "48dp"
+
+  contrast_ratios:
+    normal_text: "4.5:1"
+    large_text: "3:1"
+    ui_components: "3:1"
+
+  focus_indicators:
+    width: "2dp"
+    color: "primary"
+    style: "solid"
+
+# Dark Theme Adaptations
+dark_theme:
+  surface_tints:
+    level_1: "5%"
+    level_2: "8%"
+    level_3: "11%"
+    level_4: "12%"
+    level_5: "14%"
+
+  adjustments:
+    reduce_elevation_contrast: true
+    increase_outline_prominence: true
+    soften_bright_colors: true

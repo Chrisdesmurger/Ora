@@ -1,0 +1,22 @@
+{
+  "name": "ora-firebase-tools",
+  "version": "1.0.0",
+  "description": "Firebase data management tools for Ora Wellbeing",
+  "main": "import-seed-data.js",
+  "scripts": {
+    "import": "node import-seed-data.js",
+    "import:programs": "node import-programs-only.js",
+    "import:content": "node import-content-only.js",
+    "clean": "node clean-collections.js"
+  },
+  "keywords": [
+    "firebase",
+    "firestore",
+    "seed-data"
+  ],
+  "author": "Ora Wellbeing",
+  "license": "MIT",
+  "dependencies": {
+    "firebase-admin": "^12.7.0"
+  }
+}

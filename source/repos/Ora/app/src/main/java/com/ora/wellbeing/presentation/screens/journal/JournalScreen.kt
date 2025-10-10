@@ -17,21 +17,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ora.wellbeing.presentation.theme.OraTheme
+import com.ora.wellbeing.presentation.theme.*
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-
-// Couleurs Ora Journal (depuis mockup)
-private val OraBeigeBg = Color(0xFFFFF5F0)
-private val OraBeigeCard = Color(0xFFFFFBF8)
-private val OraBeigeInput = Color(0xFFFFF9F0)
-private val OraRosePastel = Color(0xFFFFD4CC)
-private val OraOrangePastel = Color(0xFFFFE5CC)
-private val OraVertMenthe = Color(0xFFD4E8D9)
-private val OraTextDark = Color(0xFF2C2C2C)
-private val OraTextMedium = Color(0xFF5C5C5C)
-private val OraOrange = Color(0xFFF4845F)
-private val OraVert = Color(0xFF7BA089)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,7 +37,7 @@ fun JournalScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(OraBeigeBg)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
         // Header avec titre et actions
@@ -66,7 +54,7 @@ fun JournalScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = OraOrange)
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else {
             LazyColumn(
@@ -95,7 +83,7 @@ fun JournalScreen(
                         Text(
                             text = "Entrées récentes",
                             style = MaterialTheme.typography.titleLarge,
-                            color = OraTextDark,
+                            color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
                     }
@@ -136,7 +124,7 @@ private fun JournalHeader(
             Text(
                 text = "Journal de gratitudes",
                 style = MaterialTheme.typography.headlineSmall,
-                color = OraTextDark
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             if (streak > 0) {
@@ -146,7 +134,7 @@ private fun JournalHeader(
                     Text(
                         text = "🔥 Série de $streak jour${if (streak > 1) "s" else ""}",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = OraOrange
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -157,14 +145,14 @@ private fun JournalHeader(
                 Icon(
                     imageVector = Icons.Default.History,
                     contentDescription = "Historique",
-                    tint = OraTextDark
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
             }
 
             FilledTonalButton(
                 onClick = onNewEntryClick,
                 colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = OraOrange,
+                    containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = Color.White
                 )
             ) {
@@ -191,7 +179,7 @@ private fun TodayEntrySection(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = OraBeigeCard
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Column(
@@ -205,12 +193,12 @@ private fun TodayEntrySection(
                 Text(
                     text = "Aujourd'hui",
                     style = MaterialTheme.typography.titleLarge,
-                    color = OraTextDark
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 if (todayEntry != null) {
                     TextButton(onClick = onEditTodayEntry) {
-                        Text("Modifier", color = OraOrange)
+                        Text("Modifier", color = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
@@ -223,7 +211,7 @@ private fun TodayEntrySection(
                     Text(
                         text = "Prenez un moment pour noter vos gratitudes du jour ✨",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = OraTextMedium
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -231,7 +219,7 @@ private fun TodayEntrySection(
                     FilledTonalButton(
                         onClick = onAddTodayEntry,
                         colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = OraOrange,
+                            containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = Color.White
                         )
                     ) {
@@ -253,7 +241,7 @@ private fun TodayEntrySection(
                     if (todayEntry.gratitudes.isNotEmpty()) {
                         GratitudeItem(
                             text = todayEntry.gratitudes[0],
-                            backgroundColor = OraRosePastel,
+                            backgroundColor = GratitudePink,
                             index = 1
                         )
                     }
@@ -262,7 +250,7 @@ private fun TodayEntrySection(
                     if (todayEntry.gratitudes.size > 1) {
                         GratitudeItem(
                             text = todayEntry.gratitudes[1],
-                            backgroundColor = OraOrangePastel,
+                            backgroundColor = GratitudePeach,
                             index = 2
                         )
                     }
@@ -271,7 +259,7 @@ private fun TodayEntrySection(
                     if (todayEntry.gratitudes.size > 2) {
                         GratitudeItem(
                             text = todayEntry.gratitudes[2],
-                            backgroundColor = OraVertMenthe,
+                            backgroundColor = GratitudeMint,
                             index = 3
                         )
                     }
@@ -281,7 +269,7 @@ private fun TodayEntrySection(
                         Text(
                             text = "Humeur: ${todayEntry.mood}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = OraTextMedium
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -330,7 +318,7 @@ private fun GratitudeItem(
         Text(
             text = text,
             style = MaterialTheme.typography.bodyMedium,
-            color = OraTextDark
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }
@@ -347,7 +335,7 @@ private fun GratitudeReminderCard(
         onClick = onReminderClick,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = OraBeigeInput
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
         Row(
@@ -359,7 +347,7 @@ private fun GratitudeReminderCard(
             Icon(
                 imageVector = Icons.Default.Lightbulb,
                 contentDescription = null,
-                tint = OraOrange,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(24.dp)
             )
 
@@ -369,20 +357,20 @@ private fun GratitudeReminderCard(
                 Text(
                     text = "Moment de gratitude",
                     style = MaterialTheme.typography.titleMedium,
-                    color = OraTextDark
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Text(
                     text = "Notez 3 choses pour lesquelles vous êtes reconnaissant(e)",
                     style = MaterialTheme.typography.bodySmall,
-                    color = OraTextMedium
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             Icon(
                 imageVector = Icons.Default.ArrowForward,
                 contentDescription = "Aller",
-                tint = OraTextDark
+                tint = MaterialTheme.colorScheme.onSurface
             )
         }
     }
@@ -399,7 +387,7 @@ private fun JournalEntryCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = OraBeigeCard
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Column(
@@ -413,7 +401,7 @@ private fun JournalEntryCard(
                 Text(
                     text = entry.formattedDate,
                     style = MaterialTheme.typography.titleMedium,
-                    color = OraTextDark
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 if (entry.mood.isNotEmpty()) {
@@ -430,7 +418,7 @@ private fun JournalEntryCard(
                 Text(
                     text = "• $gratitude",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = OraTextMedium
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -438,7 +426,7 @@ private fun JournalEntryCard(
                 Text(
                     text = "et ${entry.gratitudes.size - 2} autre${if (entry.gratitudes.size > 3) "s" else ""}...",
                     style = MaterialTheme.typography.bodySmall,
-                    color = OraTextMedium
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -455,7 +443,7 @@ private fun GratitudeStatsCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = OraBeigeCard
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Column(
@@ -464,7 +452,7 @@ private fun GratitudeStatsCard(
             Text(
                 text = "Vos statistiques",
                 style = MaterialTheme.typography.titleMedium,
-                color = OraTextDark,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
@@ -506,7 +494,7 @@ private fun StatItem(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = OraOrange,
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(24.dp)
         )
 
@@ -515,13 +503,13 @@ private fun StatItem(
         Text(
             text = value,
             style = MaterialTheme.typography.titleLarge,
-            color = OraOrange
+            color = MaterialTheme.colorScheme.primary
         )
 
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = OraTextMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
     }

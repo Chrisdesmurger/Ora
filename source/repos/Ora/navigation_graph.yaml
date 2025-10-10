@@ -1,0 +1,485 @@
+navigation_architecture: Ora Android App
+framework: Jetpack Compose Navigation
+pattern: Single Activity + Compose Destinations
+
+# Structure principale de navigation
+main_navigation:
+  type: BottomNavigation
+  persistent: true
+  tabs:
+    home:
+      route: "home"
+      label: "Accueil"
+      icon: "home"
+      icon_filled: "home_filled"
+      badge: null
+
+    library:
+      route: "library"
+      label: "Bibliothèque"
+      icon: "library_books"
+      icon_filled: "library_books_filled"
+      badge: null
+
+    journal:
+      route: "journal"
+      label: "Journal"
+      icon: "book"
+      icon_filled: "book_filled"
+      badge: "conditional" # Si pas d'entrée aujourd'hui
+
+    programs:
+      route: "programs"
+      label: "Programmes"
+      icon: "calendar_today"
+      icon_filled: "calendar_today_filled"
+      badge: null
+
+    profile:
+      route: "profile"
+      label: "Profil"
+      icon: "person"
+      icon_filled: "person_filled"
+      badge: null
+
+# Graphs de navigation détaillés
+navigation_graphs:
+
+  # Graph principal (container)
+  main_graph:
+    route: "main"
+    start_destination: "onboarding_check"
+    destinations:
+      - onboarding_check # Route de démarrage
+      - onboarding_graph # Nested graph
+      - main_content_graph # Nested graph avec bottom nav
+
+  # Graph onboarding (première utilisation)
+  onboarding_graph:
+    route: "onboarding"
+    start_destination: "welcome"
+    destinations:
+      welcome:
+        route: "onboarding/welcome"
+        type: "screen"
+        arguments: []
+        transitions:
+          next: "carousel"
+          skip: "preferences"
+
+      carousel:
+        route: "onboarding/carousel"
+        type: "screen"
+        arguments: []
+        transitions:
+          next: "preferences"
+          previous: "welcome"
+          skip: "preferences"
+
+      preferences:
+        route: "onboarding/preferences"
+        type: "screen"
+        arguments: []
+        transitions:
+          next: "permissions"
+          previous: "carousel"
+
+      permissions:
+        route: "onboarding/permissions"
+        type: "screen"
+        arguments: []
+        transitions:
+          finish: "main_content/home"
+          skip: "main_content/home"
+
+  # Graph contenu principal avec bottom navigation
+  main_content_graph:
+    route: "main_content"
+    start_destination: "home"
+    destinations:
+
+      # Onglet Accueil
+      home:
+        route: "main_content/home"
+        type: "screen"
+        arguments: []
+        transitions:
+          to_content_detail: "content_detail/{contentId}"
+          to_quick_session: "quick_session/{sessionType}"
+          to_library: "main_content/library"
+          to_journal: "main_content/journal"
+
+      # Onglet Bibliothèque
+      library:
+        route: "main_content/library"
+        type: "screen"
+        arguments:
+          - name: "category"
+            type: "string"
+            required: false
+            default: "all"
+          - name: "filters"
+            type: "string"
+            required: false
+            default: null
+        transitions:
+          to_content_detail: "content_detail/{contentId}"
+          to_search: "library_search"
+          to_filters: "library_filters"
+
+      library_search:
+        route: "library_search"
+        type: "screen"
+        arguments:
+          - name: "query"
+            type: "string"
+            required: false
+        transitions:
+          to_content_detail: "content_detail/{contentId}"
+          back: "main_content/library"
+
+      library_filters:
+        route: "library_filters"
+        type: "bottom_sheet"
+        arguments: []
+        transitions:
+          apply: "main_content/library?filters={filtersJson}"
+          back: "main_content/library"
+
+      # Onglet Journal
+      journal:
+        route: "main_content/journal"
+        type: "screen"
+        arguments:
+          - name: "date"
+            type: "string"
+            required: false
+            default: "today"
+        transitions:
+          to_journal_entry: "journal_entry/{date}"
+          to_journal_history: "journal_history"
+          to_calendar_view: "journal_calendar"
+
+      journal_entry:
+        route: "journal_entry/{date}"
+        type: "screen"
+        arguments:
+          - name: "date"
+            type: "string"
+            required: true
+        transitions:
+          save_and_exit: "main_content/journal"
+          to_history: "journal_history"
+
+      journal_history:
+        route: "journal_history"
+        type: "screen"
+        arguments:
+          - name: "view_mode"
+            type: "string"
+            required: false
+            default: "list"
+        transitions:
+          to_entry: "journal_entry/{date}"
+          to_calendar: "journal_calendar"
+          back: "main_content/journal"
+
+      journal_calendar:
+        route: "journal_calendar"
+        type: "screen"
+        arguments: []
+        transitions:
+          to_entry: "journal_entry/{date}"
+          back: "main_content/journal"
+
+      # Onglet Programmes
+      programs:
+        route: "main_content/programs"
+        type: "screen"
+        arguments: []
+        transitions:
+          to_program_detail: "program_detail/{programId}"
+          to_active_program: "active_program/{programId}"
+
+      program_detail:
+        route: "program_detail/{programId}"
+        type: "screen"
+        arguments:
+          - name: "programId"
+            type: "string"
+            required: true
+        transitions:
+          start_program: "active_program/{programId}"
+          back: "main_content/programs"
+
+      active_program:
+        route: "active_program/{programId}"
+        type: "screen"
+        arguments:
+          - name: "programId"
+            type: "string"
+            required: true
+        transitions:
+          to_session: "content_detail/{contentId}?programContext={programId}"
+          back: "main_content/programs"
+
+      # Onglet Profil
+      profile:
+        route: "main_content/profile"
+        type: "screen"
+        arguments: []
+        transitions:
+          to_settings: "settings"
+          to_stats_detail: "stats_detail"
+          to_badges: "badges"
+          to_about: "about"
+
+      settings:
+        route: "settings"
+        type: "screen"
+        arguments: []
+        transitions:
+          to_notifications: "settings_notifications"
+          to_privacy: "settings_privacy"
+          to_about: "about"
+          back: "main_content/profile"
+
+      settings_notifications:
+        route: "settings_notifications"
+        type: "screen"
+        arguments: []
+        transitions:
+          back: "settings"
+
+      settings_privacy:
+        route: "settings_privacy"
+        type: "screen"
+        arguments: []
+        transitions:
+          back: "settings"
+
+      stats_detail:
+        route: "stats_detail"
+        type: "screen"
+        arguments:
+          - name: "period"
+            type: "string"
+            required: false
+            default: "month"
+        transitions:
+          back: "main_content/profile"
+
+      badges:
+        route: "badges"
+        type: "screen"
+        arguments: []
+        transitions:
+          back: "main_content/profile"
+
+      about:
+        route: "about"
+        type: "screen"
+        arguments: []
+        transitions:
+          back: "main_content/profile"
+
+  # Graph player vidéo/audio
+  player_graph:
+    route: "player"
+    start_destination: "content_detail"
+    destinations:
+
+      content_detail:
+        route: "content_detail/{contentId}"
+        type: "screen"
+        arguments:
+          - name: "contentId"
+            type: "string"
+            required: true
+          - name: "programContext"
+            type: "string"
+            required: false
+        transitions:
+          start_session: "video_player/{contentId}"
+          back: "previous_screen"
+          to_similar: "content_detail/{similarContentId}"
+
+      video_player:
+        route: "video_player/{contentId}"
+        type: "full_screen"
+        arguments:
+          - name: "contentId"
+            type: "string"
+            required: true
+          - name: "startPosition"
+            type: "long"
+            required: false
+            default: 0
+        transitions:
+          finish_session: "session_complete/{contentId}"
+          exit: "content_detail/{contentId}"
+          minimize: "picture_in_picture"
+
+      audio_player:
+        route: "audio_player/{contentId}"
+        type: "screen"
+        arguments:
+          - name: "contentId"
+            type: "string"
+            required: true
+        transitions:
+          finish_session: "session_complete/{contentId}"
+          back: "content_detail/{contentId}"
+          minimize: "background_audio"
+
+      session_complete:
+        route: "session_complete/{contentId}"
+        type: "screen"
+        arguments:
+          - name: "contentId"
+            type: "string"
+            required: true
+          - name: "duration"
+            type: "int"
+            required: false
+        transitions:
+          to_journal: "journal_entry/today"
+          to_similar: "content_detail/{similarContentId}"
+          to_home: "main_content/home"
+
+      quick_session:
+        route: "quick_session/{sessionType}"
+        type: "screen"
+        arguments:
+          - name: "sessionType"
+            type: "string"
+            required: true
+        transitions:
+          start: "video_player/{resolvedContentId}"
+          back: "main_content/home"
+
+# Configuration des transitions et animations
+transitions:
+  default:
+    enter: "slide_in_right"
+    exit: "slide_out_left"
+    pop_enter: "slide_in_left"
+    pop_exit: "slide_out_right"
+    duration: 300
+
+  bottom_navigation:
+    enter: "fade_in"
+    exit: "fade_out"
+    duration: 200
+
+  modal:
+    enter: "slide_up"
+    exit: "slide_down"
+    duration: 250
+
+  full_screen:
+    enter: "fade_in"
+    exit: "fade_out"
+    duration: 150
+
+# Deep Links et intégrations externes
+deep_links:
+  app_scheme: "ora"
+
+  links:
+    content:
+      pattern: "ora://content/{contentId}"
+      destination: "content_detail/{contentId}"
+
+    journal:
+      pattern: "ora://journal/{date?}"
+      destination: "journal_entry/{date}"
+
+    program:
+      pattern: "ora://program/{programId}"
+      destination: "program_detail/{programId}"
+
+    web_fallbacks:
+      - pattern: "https://ora.app/content/{contentId}"
+        destination: "content_detail/{contentId}"
+      - pattern: "https://ora.app/program/{programId}"
+        destination: "program_detail/{programId}"
+
+# États spéciaux et conditions de navigation
+navigation_conditions:
+  onboarding_complete:
+    condition: "user_preferences_set == true"
+    if_true: "main_content/home"
+    if_false: "onboarding/welcome"
+
+  journal_daily_reminder:
+    condition: "journal_entry_today == false && time > 18:00"
+    action: "show_badge_on_journal_tab"
+
+  program_active:
+    condition: "active_program != null"
+    action: "highlight_programs_tab"
+
+  offline_mode:
+    condition: "network_available == false"
+    restrictions:
+      - "disable_content_preview"
+      - "show_offline_indicator"
+      - "limit_video_quality"
+
+# Gestion du back stack
+back_stack_behavior:
+  bottom_navigation:
+    behavior: "retain_state"
+    clear_on_reselect: false
+
+  onboarding:
+    behavior: "clear_stack_on_complete"
+
+  player:
+    behavior: "single_top"
+    add_to_back_stack: true
+
+  modal_screens:
+    behavior: "overlay"
+    dismiss_on_outside_tap: true
+
+# Sauvegarde et restauration d'état
+state_management:
+  save_state_screens:
+    - "main_content/library" # Position scroll, filtres
+    - "journal_history" # Position calendrier
+    - "video_player" # Position lecture
+
+  restore_behavior:
+    on_app_restart: "restore_last_screen"
+    on_process_death: "restore_with_data"
+    on_configuration_change: "maintain_state"
+
+# Gestion des erreurs de navigation
+error_handling:
+  invalid_route:
+    action: "navigate_to_home"
+    log_error: true
+
+  missing_arguments:
+    action: "show_error_dialog"
+    fallback: "previous_screen"
+
+  deep_link_errors:
+    invalid_content_id: "navigate_to_library"
+    expired_link: "show_expired_dialog"
+
+# Accessibilité navigation
+accessibility:
+  focus_management:
+    on_screen_change: "focus_first_element"
+    on_back_navigation: "restore_previous_focus"
+
+  screen_reader:
+    announce_navigation: true
+    provide_context: true
+
+  keyboard_navigation:
+    support_tab_navigation: true
+    highlight_focused_elements: true

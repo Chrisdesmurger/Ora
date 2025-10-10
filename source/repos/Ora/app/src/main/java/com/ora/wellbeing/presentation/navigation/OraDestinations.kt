@@ -25,6 +25,20 @@ sealed class OraDestinations(
     object Programs : OraDestinations("programs")
     object Profile : OraDestinations("profile")
 
+    // Practice detail (NEW)
+    object PracticeDetail : OraDestinations(
+        route = "practice/{id}",
+        arguments = listOf(
+            navArgument("id") {
+                type = NavType.StringType
+            }
+        )
+    ) {
+        fun createRoute(id: String): String {
+            return "practice/$id"
+        }
+    }
+
     // Content and player destinations
     object ContentDetail : OraDestinations(
         route = "content_detail/{contentId}",

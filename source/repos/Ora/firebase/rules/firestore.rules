@@ -1,0 +1,209 @@
+rules_version = '2';
+
+// Firestore Security Rules for Ora Wellbeing App
+// Last updated: 2025-10-04
+//
+// SECURITY PRINCIPLE: User data isolation - users can only access their own data
+// All collections use UID-based access control with strict validation
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================================================
+    // USERS COLLECTION
+    // ============================================================================
+    // Stores user profile data: displayName, email, photoUrl, createdAt, etc.
+    match /users/{uid} {
+      // Users can read and write only their own profile
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && validateUserCreate(request.resource.data);
+      allow update: if request.auth != null
+                    && request.auth.uid == uid
+                    && validateUserUpdate(request.resource.data);
+      allow delete: if false; // Prevent profile deletion (use soft-delete flag instead)
+    }
+
+    // ============================================================================
+    // STATS COLLECTION
+    // ============================================================================
+    // Stores user activity statistics: totalMinutes, sessions, streakDays, lastSessionDate
+    match /stats/{uid} {
+      // Users can read only their own stats
+      allow read: if request.auth != null && request.auth.uid == uid;
+
+      // Users can create stats document on first session
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && validateStatsCreate(request.resource.data);
+
+      // Users can update stats with strict validation
+      allow update: if request.auth != null
+                    && request.auth.uid == uid
+                    && validateStatsUpdate(request.resource.data, resource.data);
+
+      allow delete: if false; // Stats should never be deleted
+    }
+
+    // ============================================================================
+    // JOURNAL ENTRIES SUBCOLLECTION
+    // ============================================================================
+    // Gratitudes: /gratitudes/{uid}/entries/{date}
+    match /gratitudes/{uid}/entries/{date} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null && request.auth.uid == uid;
+      allow update: if request.auth != null && request.auth.uid == uid;
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Legacy path (keep for backwards compatibility)
+    match /users/{uid}/journal_entries/{entryId} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && validateJournalCreate(request.resource.data);
+      allow update: if request.auth != null
+                    && request.auth.uid == uid
+                    && validateJournalUpdate(request.resource.data);
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ============================================================================
+    // USER PROGRAMS SUBCOLLECTION
+    // ============================================================================
+    // Tracks enrolled programs: /user_programs/{uid}/enrolled/{programId}
+    match /user_programs/{uid}/enrolled/{programId} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null
+                    && request.auth.uid == uid;
+      allow update: if request.auth != null
+                    && request.auth.uid == uid;
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Legacy path (keep for backwards compatibility)
+    match /users/{uid}/programs/{programId} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && validateProgramEnrollment(request.resource.data);
+      allow update: if request.auth != null
+                    && request.auth.uid == uid
+                    && validateProgramUpdate(request.resource.data);
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ============================================================================
+    // CONTENT CATALOG (READ-ONLY)
+    // ============================================================================
+    // Public content: meditation sessions, yoga videos, programs
+    match /content/{contentId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only admins can write (use Firebase Console or Cloud Functions)
+    }
+
+    match /programs/{programId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only admins can write
+    }
+
+    // ============================================================================
+    // VALIDATION FUNCTIONS
+    // ============================================================================
+
+    // User profile validation
+    function validateUserCreate(data) {
+      return data.keys().hasAll(['email', 'createdAt'])
+          && data.email is string
+          && data.email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$')
+          && data.createdAt is timestamp
+          && (!('displayName' in data) || data.displayName is string)
+          && (!('photoUrl' in data) || data.photoUrl is string);
+    }
+
+    function validateUserUpdate(data) {
+      return (!('email' in data) || data.email is string)
+          && (!('displayName' in data) || data.displayName is string)
+          && (!('photoUrl' in data) || data.photoUrl is string)
+          && !('createdAt' in data); // Prevent modification of creation timestamp
+    }
+
+    // Stats validation
+    function validateStatsCreate(data) {
+      return data.keys().hasAll(['totalMinutes', 'sessions', 'streakDays'])
+          && data.totalMinutes is int
+          && data.totalMinutes >= 0
+          && data.totalMinutes <= 525600 // Max 1 year of minutes (365 * 24 * 60)
+          && data.sessions is int
+          && data.sessions >= 0
+          && data.sessions <= 100000 // Reasonable max
+          && data.streakDays is int
+          && data.streakDays >= 0
+          && data.streakDays <= 3650; // Max 10 years
+    }
+
+    function validateStatsUpdate(newData, existingData) {
+      // FIX(user-dynamic): Prevent stats manipulation - values should only increase or reset legitimately
+      return newData.totalMinutes is int
+          && newData.totalMinutes >= 0
+          && newData.totalMinutes <= 525600
+          && newData.sessions is int
+          && newData.sessions >= 0
+          && newData.sessions <= 100000
+          && newData.streakDays is int
+          && newData.streakDays >= 0
+          && newData.streakDays <= 3650
+          // Prevent backward time manipulation
+          && (newData.totalMinutes >= existingData.totalMinutes || newData.totalMinutes == 0)
+          && (newData.sessions >= existingData.sessions || newData.sessions == 0);
+    }
+
+    // Journal entry validation
+    function validateJournalCreate(data) {
+      return data.keys().hasAll(['date', 'gratitudes', 'createdAt'])
+          && data.date is timestamp
+          && data.gratitudes is list
+          && data.gratitudes.size() >= 1
+          && data.gratitudes.size() <= 10
+          && data.createdAt is timestamp
+          && (!('mood' in data) || data.mood is string)
+          && (!('reflection' in data) || (data.reflection is string && data.reflection.size() <= 5000));
+    }
+
+    function validateJournalUpdate(data) {
+      return data.date is timestamp
+          && data.gratitudes is list
+          && data.gratitudes.size() >= 1
+          && data.gratitudes.size() <= 10
+          && (!('mood' in data) || data.mood is string)
+          && (!('reflection' in data) || (data.reflection is string && data.reflection.size() <= 5000))
+          && !('createdAt' in data); // Prevent modification of creation timestamp
+    }
+
+    // Program enrollment validation
+    function validateProgramEnrollment(data) {
+      return data.keys().hasAll(['enrolledAt', 'progress'])
+          && data.enrolledAt is timestamp
+          && data.progress is int
+          && data.progress >= 0
+          && data.progress <= 100;
+    }
+
+    function validateProgramUpdate(data) {
+      return data.progress is int
+          && data.progress >= 0
+          && data.progress <= 100
+          && (!('completedAt' in data) || data.completedAt is timestamp)
+          && !('enrolledAt' in data); // Prevent modification of enrollment date
+    }
+
+    // ============================================================================
+    // DENY ALL OTHER PATHS
+    // ============================================================================
+    // FIX(user-dynamic): Explicit deny for security - no access to undefined collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

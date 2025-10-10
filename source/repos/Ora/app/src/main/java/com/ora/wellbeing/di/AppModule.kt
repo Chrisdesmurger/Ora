@@ -2,6 +2,9 @@ package com.ora.wellbeing.di
 
 import android.content.Context
 import androidx.work.WorkManager
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.ktx.Firebase
 import com.ora.wellbeing.data.player.VideoPlayerManager
 import com.ora.wellbeing.data.repository.OraRepository
 import com.ora.wellbeing.data.repository.OraRepositoryImpl
@@ -34,6 +37,12 @@ object AppModule {
     @Singleton
     fun provideReminderScheduler(@ApplicationContext context: Context): ReminderScheduler {
         return ReminderScheduler(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideFirebaseAnalytics(): FirebaseAnalytics {
+        return Firebase.analytics
     }
 }
 

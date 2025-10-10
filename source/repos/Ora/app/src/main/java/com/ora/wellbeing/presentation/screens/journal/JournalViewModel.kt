@@ -2,141 +2,169 @@ package com.ora.wellbeing.presentation.screens.journal
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
+import com.ora.wellbeing.data.model.GratitudeEntry
+import com.ora.wellbeing.domain.repository.GratitudeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
 class JournalViewModel @Inject constructor(
-    // TODO: Injecter les use cases quand ils seront créés
-    // private val getJournalEntriesUseCase: GetJournalEntriesUseCase,
-    // private val addJournalEntryUseCase: AddJournalEntryUseCase,
-    // private val updateJournalEntryUseCase: UpdateJournalEntryUseCase,
-    // private val getGratitudeStatsUseCase: GetGratitudeStatsUseCase
+    private val gratitudeRepository: GratitudeRepository,
+    private val auth: FirebaseAuth
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(JournalUiState())
     val uiState: StateFlow<JournalUiState> = _uiState.asStateFlow()
 
+    init {
+        observeGratitudeData()
+    }
+
     fun onEvent(event: JournalUiEvent) {
         when (event) {
-            is JournalUiEvent.LoadJournalData -> loadJournalData()
+            is JournalUiEvent.LoadJournalData -> observeGratitudeData()
             is JournalUiEvent.DeleteEntry -> deleteEntry(event.entryId)
+            is JournalUiEvent.SaveGratitudes -> saveGratitudes(event.gratitudes, event.mood, event.notes)
         }
     }
 
-    private fun loadJournalData() {
+    private fun observeGratitudeData() {
+        val uid = auth.currentUser?.uid ?: run {
+            Timber.e("observeGratitudeData: No authenticated user")
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                error = "Vous devez être connecté pour voir vos gratitudes"
+            )
+            return
+        }
+
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true)
 
-                // TODO: Remplacer par de vraies données depuis les use cases
-                val mockData = generateMockJournalData()
+                // Combine today's entry, recent entries, and calculate stats
+                combine(
+                    gratitudeRepository.getTodayEntry(uid),
+                    gratitudeRepository.getRecentEntries(uid, limit = 10)
+                ) { todayEntry, recentEntries ->
+                    Triple(todayEntry, recentEntries, uid)
+                }.collect { (todayEntry, recentEntries, currentUid) ->
+                    // Calculate streak and stats
+                    val streak = gratitudeRepository.calculateStreak(currentUid)
+                    val totalCount = gratitudeRepository.getTotalEntryCount(currentUid)
+                    val thisMonthCount = recentEntries.count { entry ->
+                        val entryDate = LocalDate.parse(entry.date, DateTimeFormatter.ISO_LOCAL_DATE)
+                        entryDate.month == LocalDate.now().month && entryDate.year == LocalDate.now().year
+                    }
 
-                _uiState.value = mockData.copy(isLoading = false)
+                    _uiState.value = JournalUiState(
+                        isLoading = false,
+                        error = null,
+                        todayEntry = todayEntry?.toUiEntry(),
+                        recentEntries = recentEntries.map { it.toUiEntry() },
+                        totalEntries = totalCount,
+                        gratitudeStreak = streak,
+                        thisMonthEntries = thisMonthCount
+                    )
 
-                Timber.d("Journal data loaded successfully")
+                    Timber.d("observeGratitudeData: Updated UI state (total=$totalCount, streak=$streak)")
+                }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = "Erreur lors du chargement du journal"
+                    error = "Erreur lors du chargement du journal: ${e.message}"
                 )
-                Timber.e(e, "Error loading journal data")
+                Timber.e(e, "Error observing gratitude data")
+            }
+        }
+    }
+
+    private fun saveGratitudes(gratitudes: List<String>, mood: String?, notes: String?) {
+        val uid = auth.currentUser?.uid ?: run {
+            Timber.e("saveGratitudes: No authenticated user")
+            _uiState.value = _uiState.value.copy(error = "Vous devez être connecté")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                val entry = GratitudeEntry.createForToday(uid, gratitudes, mood, notes)
+
+                val result = gratitudeRepository.createEntry(entry)
+                result.fold(
+                    onSuccess = {
+                        Timber.i("saveGratitudes: Entry saved successfully")
+                        // UI state will update automatically via Flow
+                    },
+                    onFailure = { error ->
+                        _uiState.value = _uiState.value.copy(
+                            error = "Erreur lors de la sauvegarde: ${error.message}"
+                        )
+                        Timber.e(error, "Error saving gratitude entry")
+                    }
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Erreur lors de la sauvegarde: ${e.message}"
+                )
+                Timber.e(e, "Error saving gratitude entry")
             }
         }
     }
 
     private fun deleteEntry(entryId: String) {
+        val uid = auth.currentUser?.uid ?: run {
+            Timber.e("deleteEntry: No authenticated user")
+            return
+        }
+
         viewModelScope.launch {
             try {
-                // TODO: Implémenter la suppression d'entrée
-                Timber.d("Entry deleted: $entryId")
-
-                // Recharger les données après suppression
-                loadJournalData()
+                // Entry ID is the date (yyyy-MM-dd)
+                val result = gratitudeRepository.deleteEntry(uid, entryId)
+                result.fold(
+                    onSuccess = {
+                        Timber.i("deleteEntry: Entry $entryId deleted successfully")
+                        // UI state will update automatically via Flow
+                    },
+                    onFailure = { error ->
+                        _uiState.value = _uiState.value.copy(
+                            error = "Erreur lors de la suppression: ${error.message}"
+                        )
+                        Timber.e(error, "Error deleting entry")
+                    }
+                )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = "Erreur lors de la suppression de l'entrée"
+                    error = "Erreur lors de la suppression: ${e.message}"
                 )
                 Timber.e(e, "Error deleting journal entry")
             }
         }
     }
 
-    private fun generateMockJournalData(): JournalUiState {
-        val today = LocalDate.now()
-        val formatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.FRENCH)
-
-        // Créer des entrées d'exemple
-        val recentEntries = mutableListOf<JournalUiState.JournalEntry>()
-
-        // Entrée d'hier
-        val yesterday = today.minusDays(1)
-        recentEntries.add(
-            JournalUiState.JournalEntry(
-                id = "entry_${yesterday}",
-                date = yesterday.toString(),
-                formattedDate = yesterday.format(formatter),
-                gratitudes = listOf(
-                    "Une belle journée ensoleillée",
-                    "Un café délicieux ce matin",
-                    "Un appel de ma famille"
-                ),
-                mood = "😊 Joyeux",
-                notes = "Une très belle journée dans l'ensemble !"
-            )
-        )
-
-        // Entrée d'avant-hier
-        val dayBefore = today.minusDays(2)
-        recentEntries.add(
-            JournalUiState.JournalEntry(
-                id = "entry_${dayBefore}",
-                date = dayBefore.toString(),
-                formattedDate = dayBefore.format(formatter),
-                gratitudes = listOf(
-                    "Terminé un projet important",
-                    "Dîner avec des amis",
-                    "Une bonne nuit de sommeil"
-                ),
-                mood = "🙏 Reconnaissant",
-                notes = "Productif et social, parfait !"
-            )
-        )
-
-        // Entrée il y a 3 jours
-        val threeDaysAgo = today.minusDays(3)
-        recentEntries.add(
-            JournalUiState.JournalEntry(
-                id = "entry_${threeDaysAgo}",
-                date = threeDaysAgo.toString(),
-                formattedDate = threeDaysAgo.format(formatter),
-                gratitudes = listOf(
-                    "Une séance de méditation apaisante",
-                    "Un bon livre découvert",
-                    "La santé de mes proches"
-                ),
-                mood = "😌 Paisible",
-                notes = "Moment de calme et de réflexion."
-            )
-        )
-
-        // Déterminer s'il y a une entrée aujourd'hui (simulons que non pour encourager l'utilisateur)
-        val todayEntry: JournalUiState.JournalEntry? = null
-
-        return JournalUiState(
-            todayEntry = todayEntry,
-            recentEntries = recentEntries,
-            totalEntries = 15,
-            gratitudeStreak = 3, // 3 jours consécutifs
-            thisMonthEntries = 8
+    /**
+     * Converts GratitudeEntry (data model) to JournalEntry (UI model)
+     */
+    private fun GratitudeEntry.toUiEntry(): JournalUiState.JournalEntry {
+        return JournalUiState.JournalEntry(
+            id = date, // Use date as ID
+            date = date,
+            formattedDate = getFormattedDate(),
+            gratitudes = gratitudes,
+            mood = mood ?: "",
+            notes = notes ?: "",
+            createdAt = createdAt?.toDate()?.time ?: System.currentTimeMillis(),
+            updatedAt = updatedAt?.toDate()?.time ?: System.currentTimeMillis()
         )
     }
 }
@@ -174,4 +202,5 @@ data class JournalUiState(
 sealed interface JournalUiEvent {
     data object LoadJournalData : JournalUiEvent
     data class DeleteEntry(val entryId: String) : JournalUiEvent
+    data class SaveGratitudes(val gratitudes: List<String>, val mood: String?, val notes: String?) : JournalUiEvent
 }

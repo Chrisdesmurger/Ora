@@ -17,16 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ora.wellbeing.presentation.theme.OraTheme
-
-// Couleurs spécifiques au mockup Library
-private val LibraryBackground = Color(0xFFFFF5F0) // Fond beige chaud
-private val LibraryCardBackground = Color(0xFFFFFBF8) // Card beige clair
-private val YogaColor = Color(0xFFF4B39D) // Rose-pêche clair
-private val PilatesColor = Color(0xFFE89876) // Orange-pêche
-private val RespirationColor = Color(0xFFA8C4B7) // Vert-bleu clair
-private val MeditationColor = Color(0xFF5C7965) // Vert foncé
-private val NewBadgeColor = Color(0xFFF4845F) // Orange vif pour badge NOUVEAU
+import com.ora.wellbeing.presentation.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,7 +36,7 @@ fun LibraryScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(LibraryBackground)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
         // Header avec recherche et filtres
@@ -85,7 +76,7 @@ private fun LibraryHeader(
             onClick = onSearchClick,
             modifier = Modifier.weight(1f),
             colors = CardDefaults.cardColors(
-                containerColor = LibraryCardBackground
+                containerColor = MaterialTheme.colorScheme.surface
             )
         ) {
             Row(
@@ -114,7 +105,7 @@ private fun LibraryHeader(
         FilledTonalIconButton(
             onClick = onFiltersClick,
             colors = IconButtonDefaults.filledTonalIconButtonColors(
-                containerColor = LibraryCardBackground,
+                containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = Color(0xFF6B4E3D)
             )
         ) {
@@ -138,7 +129,7 @@ private fun LibraryContent(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator(color = MeditationColor)
+            CircularProgressIndicator(color = CategoryMeditationLavender)
         }
         return
     }
@@ -207,10 +198,10 @@ private fun LibraryContent(
 @Composable
 private fun getCategoryColor(category: String): Color {
     return when (category.lowercase()) {
-        "yoga" -> YogaColor
-        "pilates" -> PilatesColor
-        "respiration", "breathing" -> RespirationColor
-        "méditation", "meditation" -> MeditationColor
+        "yoga" -> CategoryYogaGreen
+        "pilates" -> CategoryPilatesPeach
+        "respiration", "breathing" -> CategoryBreathingBlue
+        "méditation", "meditation" -> CategoryMeditationLavender
         else -> Color(0xFFB4A5D4) // Violet par défaut
     }
 }
@@ -239,8 +230,8 @@ private fun CategoriesSection(
                     label = { Text("Tout") },
                     selected = selectedCategory == null || selectedCategory.isEmpty(),
                     colors = FilterChipDefaults.filterChipColors(
-                        containerColor = LibraryCardBackground,
-                        selectedContainerColor = MeditationColor,
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        selectedContainerColor = CategoryMeditationLavender,
                         labelColor = Color(0xFF6B4E3D),
                         selectedLabelColor = Color.White
                     ),
@@ -296,8 +287,8 @@ private fun DurationFiltersSection(
                     label = { Text("Toutes") },
                     selected = selectedDuration == null || selectedDuration.isEmpty(),
                     colors = FilterChipDefaults.filterChipColors(
-                        containerColor = LibraryCardBackground,
-                        selectedContainerColor = MeditationColor,
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        selectedContainerColor = CategoryMeditationLavender,
                         labelColor = Color(0xFF6B4E3D),
                         selectedLabelColor = Color.White
                     ),
@@ -313,8 +304,8 @@ private fun DurationFiltersSection(
                     label = { Text(duration) },
                     selected = selectedDuration == duration,
                     colors = FilterChipDefaults.filterChipColors(
-                        containerColor = LibraryCardBackground,
-                        selectedContainerColor = RespirationColor,
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        selectedContainerColor = CategoryBreathingBlue,
                         labelColor = Color(0xFF6B4E3D),
                         selectedLabelColor = Color.White
                     ),
@@ -397,7 +388,7 @@ private fun ContentCard(
         onClick = onClick,
         modifier = modifier,
         colors = CardDefaults.cardColors(
-            containerColor = LibraryCardBackground
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Box {
@@ -407,7 +398,7 @@ private fun ContentCard(
                 // Badge NOUVEAU si nécessaire
                 if (showNewBadge) {
                     Surface(
-                        color = NewBadgeColor,
+                        color = MaterialTheme.colorScheme.primary,
                         shape = MaterialTheme.shapes.small,
                         modifier = Modifier.align(Alignment.Start)
                     ) {

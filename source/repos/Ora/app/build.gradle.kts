@@ -8,6 +8,8 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization") version "2.0.21"
     // FIX(auth): Apply Google Services plugin
     id("com.google.gms.google-services")
+    // FIX(user-dynamic): Detekt for code quality
+    id("io.gitlab.arturbosch.detekt") version "1.23.4"
 }
 
 android {
@@ -73,6 +75,13 @@ android {
         }
     }
 
+    // FIX(user-dynamic): Configuration assets pour feature flags
+    sourceSets {
+        getByName("main") {
+            assets.srcDirs("$rootDir/config")
+        }
+    }
+
     // Test options
     testOptions {
         unitTests {
@@ -92,6 +101,36 @@ ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
     arg("room.incremental", "true")
     arg("room.expandProjection", "true")
+}
+
+// FIX(user-dynamic): Configuration Detekt pour qualité de code
+detekt {
+    config.setFrom(files("$rootDir/config/detekt.yml"))
+    buildUponDefaultConfig = true
+    allRules = false
+
+    reports {
+        html {
+            required.set(true)
+            outputLocation.set(file("build/reports/detekt/detekt.html"))
+        }
+        xml {
+            required.set(false)
+        }
+        txt {
+            required.set(false)
+        }
+        sarif {
+            required.set(false)
+        }
+    }
+}
+
+// FIX(user-dynamic): Task pour vérifier qualité avant commit
+tasks.register("qualityCheck") {
+    dependsOn("test", "lint", "detekt")
+    group = "verification"
+    description = "Runs all quality checks (tests, lint, detekt)"
 }
 
 dependencies {
@@ -151,6 +190,12 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-auth")
 
+    // FIX(user-dynamic): Firebase Firestore for user data persistence
+    implementation("com.google.firebase:firebase-firestore-ktx")
+
+    // Firebase Analytics for practice session tracking
+    implementation("com.google.firebase:firebase-analytics-ktx")
+
     // FIX(auth): Google Sign-In with Credential Manager
     implementation("com.google.android.gms:play-services-auth:21.2.0")
     implementation("androidx.credentials:credentials:1.3.0")
@@ -175,6 +220,9 @@ dependencies {
     testImplementation("app.cash.turbine:turbine:1.0.0")
     testImplementation("com.google.truth:truth:1.1.4")
     testImplementation("com.google.dagger:hilt-android-testing:2.48.1")
+    testImplementation("io.mockk:mockk:1.13.8")
+    testImplementation("io.mockk:mockk-android:1.13.8")
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
     kspTest("com.google.dagger:hilt-android-compiler:2.48.1")
 
     // Android Testing
@@ -189,4 +237,7 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     debugImplementation("com.squareup.leakcanary:leakcanary-android:2.12")
+
+    // FIX(user-dynamic): Detekt plugins pour règles supplémentaires
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.4")
 }

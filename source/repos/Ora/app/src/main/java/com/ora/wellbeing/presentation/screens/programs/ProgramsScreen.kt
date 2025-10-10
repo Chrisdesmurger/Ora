@@ -17,22 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ora.wellbeing.presentation.theme.OraTheme
-
-// Ora Design System Colors (cohérents avec HomeScreen)
-private val OraBackground = Color(0xFFFFF5F0)
-private val OraOrange = Color(0xFFF4845F)
-private val OraGreen = Color(0xFF7BA089)
-private val OraRose = Color(0xFFFFB299)
-private val OraViolet = Color(0xFFB4A5D4)
-private val OraTextDark = Color(0xFF3D2C2C)
-private val OraTextMedium = Color(0xFF6B6B6B)
-private val OraCardBeige = Color(0xFFFFFBF8)
-private val OraProgressBackground = Color(0xFFFFE4D9)
-
-// Card backgrounds pour sections
-private val ActiveProgramBackground = Color(0xFFFFE8E1)  // Orange clair
-private val ChallengeBadgeBackground = Color(0xFFF4E8FF)  // Violet clair
+import com.ora.wellbeing.presentation.theme.*
 
 @Composable
 fun ProgramsScreen(
@@ -61,7 +46,7 @@ fun ProgramsScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = OraOrange)
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else {
             LazyColumn(
@@ -112,7 +97,7 @@ private fun ProgramsHeader() {
             text = "Programmes & Défis",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            color = OraTextDark
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Spacer(modifier = Modifier.height(4.dp))
@@ -120,7 +105,7 @@ private fun ProgramsHeader() {
         Text(
             text = "Suivez des programmes structurés pour développer vos habitudes de bien-être",
             style = MaterialTheme.typography.bodyMedium,
-            color = OraTextMedium
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -135,7 +120,7 @@ private fun ActiveProgramsSection(
             text = "Vos programmes en cours",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = OraTextDark,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
@@ -161,7 +146,7 @@ private fun ActiveProgramCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = ActiveProgramBackground
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -178,7 +163,7 @@ private fun ActiveProgramCard(
                         text = program.title,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = OraTextDark
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -186,7 +171,7 @@ private fun ActiveProgramCard(
                     Text(
                         text = program.description,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = OraTextMedium
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -194,7 +179,7 @@ private fun ActiveProgramCard(
                     text = "${program.progressPercentage}%",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = OraOrange
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
 
@@ -204,8 +189,8 @@ private fun ActiveProgramCard(
             LinearProgressIndicator(
                 progress = program.progressPercentage / 100f,
                 modifier = Modifier.fillMaxWidth(),
-                color = OraOrange,
-                trackColor = OraProgressBackground
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -219,13 +204,13 @@ private fun ActiveProgramCard(
                     text = "Jour ${program.currentDay}/${program.totalDays}",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
-                    color = OraTextMedium
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Button(
                     onClick = onContinueClick,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = OraOrange,
+                        containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = Color.White
                     )
                 ) {
@@ -254,7 +239,7 @@ private fun RecommendedProgramsSection(
             text = "Recommandés pour vous",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = OraTextDark,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
@@ -284,7 +269,7 @@ private fun PopularChallengesSection(
             text = "Défis populaires",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = OraTextDark,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
@@ -313,7 +298,7 @@ private fun AllProgramsSection(
                 text = category,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = OraTextDark,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(vertical = 12.dp)
             )
 
@@ -359,7 +344,7 @@ private fun ProgramCard(
         onClick = onClick,
         modifier = modifier,
         colors = CardDefaults.cardColors(
-            containerColor = OraCardBeige
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -372,28 +357,28 @@ private fun ProgramCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Surface(
-                    color = OraGreen.copy(alpha = 0.2f),
+                    color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f),
                     shape = MaterialTheme.shapes.small
                 ) {
                     Text(
                         text = "${program.duration} jours",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Medium,
-                        color = OraGreen,
+                        color = MaterialTheme.colorScheme.tertiary,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
 
                 if (!isCompact) {
                     Surface(
-                        color = OraViolet.copy(alpha = 0.2f),
+                        color = CategoryMeditationLavender.copy(alpha = 0.2f),
                         shape = MaterialTheme.shapes.small
                     ) {
                         Text(
                             text = program.level,
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Medium,
-                            color = OraViolet,
+                            color = CategoryMeditationLavender,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }
@@ -406,7 +391,7 @@ private fun ProgramCard(
                 text = program.title,
                 style = if (isCompact) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = OraTextDark
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -414,7 +399,7 @@ private fun ProgramCard(
             Text(
                 text = program.description,
                 style = MaterialTheme.typography.bodySmall,
-                color = OraTextMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = if (isCompact) 2 else 3
             )
 
@@ -428,7 +413,7 @@ private fun ProgramCard(
                         imageVector = Icons.Default.People,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
-                        tint = OraOrange
+                        tint = MaterialTheme.colorScheme.primary
                     )
 
                     Spacer(modifier = Modifier.width(4.dp))
@@ -436,7 +421,7 @@ private fun ProgramCard(
                     Text(
                         text = "${program.participantCount} participants",
                         style = MaterialTheme.typography.bodySmall,
-                        color = OraTextMedium
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -455,7 +440,7 @@ private fun ChallengeCard(
         onClick = onClick,
         modifier = modifier,
         colors = CardDefaults.cardColors(
-            containerColor = ChallengeBadgeBackground
+            containerColor = CategoryMeditationLavender
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -467,7 +452,7 @@ private fun ChallengeCard(
                 imageVector = Icons.Default.EmojiEvents,
                 contentDescription = null,
                 modifier = Modifier.size(32.dp),
-                tint = OraViolet
+                tint = CategoryMeditationLavender
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -476,7 +461,7 @@ private fun ChallengeCard(
                 text = challenge.title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = OraTextDark,
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             )
 
@@ -486,7 +471,7 @@ private fun ChallengeCard(
                 text = "${challenge.duration} jours",
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.Medium,
-                color = OraViolet
+                color = CategoryMeditationLavender
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -498,7 +483,7 @@ private fun ChallengeCard(
                     imageVector = Icons.Default.People,
                     contentDescription = null,
                     modifier = Modifier.size(14.dp),
-                    tint = OraTextMedium
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(modifier = Modifier.width(4.dp))
@@ -506,7 +491,7 @@ private fun ChallengeCard(
                 Text(
                     text = "${challenge.participantCount}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = OraTextMedium
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -517,7 +502,7 @@ private fun ChallengeCard(
 @Composable
 fun ProgramsScreenPreview() {
     OraTheme {
-        Surface(color = OraBackground) {
+        Surface(color = MaterialTheme.colorScheme.background) {
             ProgramsScreen(
                 onNavigateToProgram = {},
                 onNavigateToActiveProgram = {}
