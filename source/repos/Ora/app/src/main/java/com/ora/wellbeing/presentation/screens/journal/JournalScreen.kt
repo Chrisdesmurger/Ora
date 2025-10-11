@@ -120,7 +120,7 @@ private fun JournalHeader(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column {
+        Column(modifier = Modifier.weight(1f, fill = false)) {
             Text(
                 text = "Journal de gratitudes",
                 style = MaterialTheme.typography.headlineSmall,
@@ -140,7 +140,12 @@ private fun JournalHeader(
             }
         }
 
-        Row {
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             IconButton(onClick = onHistoryClick) {
                 Icon(
                     imageVector = Icons.Default.History,
@@ -149,20 +154,19 @@ private fun JournalHeader(
                 )
             }
 
-            FilledTonalButton(
+            // FIX: Use icon-only button for narrow screens to prevent text wrapping
+            FilledTonalIconButton(
                 onClick = onNewEntryClick,
-                colors = ButtonDefaults.filledTonalButtonColors(
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = Color.White
                 )
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
+                    contentDescription = "Nouvelle entrée",
+                    modifier = Modifier.size(24.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Nouvelle entrée")
             }
         }
     }
