@@ -160,6 +160,46 @@
     <string name="practice_notes_placeholder">Écrivez vos notes ici...</string>
     <string name="practice_in_progress">En cours...</string>
 
+    <!-- Player Screen (NEW) -->
+    <string name="player_loading">Chargement du lecteur...</string>
+    <string name="player_error">Erreur lors du chargement</string>
+    <string name="player_retry">Réessayer</string>
+    <string name="player_minimize">Minimiser</string>
+    <string name="player_expand">Agrandir</string>
+    <string name="player_fullscreen">Plein écran</string>
+    <string name="player_exit_fullscreen">Quitter le plein écran</string>
+    <string name="player_close">Fermer le lecteur</string>
+    <string name="player_play">Lecture</string>
+    <string name="player_pause">Pause</string>
+    <string name="player_seek_forward">Avancer de 15 secondes</string>
+    <string name="player_seek_backward">Reculer de 15 secondes</string>
+    <string name="player_speed">Vitesse de lecture</string>
+    <string name="player_speed_0_5x">0.5x</string>
+    <string name="player_speed_0_75x">0.75x</string>
+    <string name="player_speed_1x">1x (Normal)</string>
+    <string name="player_speed_1_25x">1.25x</string>
+    <string name="player_speed_1_5x">1.5x</string>
+    <string name="player_speed_2x">2x</string>
+    <string name="player_repeat_mode">Mode répétition</string>
+    <string name="player_repeat_off">Désactivé</string>
+    <string name="player_repeat_one">Une fois</string>
+    <string name="player_repeat_all">Infini</string>
+    <string name="player_advanced_controls">Contrôles avancés</string>
+    <string name="player_session_info">Informations de session</string>
+    <string name="player_discipline">Discipline</string>
+    <string name="player_level">Niveau</string>
+    <string name="player_planned_duration">Durée prévue</string>
+    <string name="player_elapsed_time">Temps écoulé</string>
+    <string name="player_network_error">Pas de connexion réseau</string>
+    <string name="player_buffering">Chargement en cours...</string>
+    <string name="player_pip_mode">Mode Picture-in-Picture</string>
+    <string name="player_audio_focus_lost">Lecture interrompue</string>
+    <string name="player_related_practices">Pratiques similaires</string>
+
+    <!-- Mini Player (NEW) -->
+    <string name="mini_player_expand">Développer le lecteur</string>
+    <string name="mini_player_close">Fermer</string>
+
     <!-- Moods -->
     <string name="mood_happy">Heureux</string>
     <string name="mood_good">Bien</string>
