@@ -12,6 +12,7 @@ import com.ora.wellbeing.data.repository.UserStatsRepository
 import com.ora.wellbeing.data.sync.SyncManager
 import com.ora.wellbeing.domain.model.PracticeStats
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,6 +23,7 @@ import javax.inject.Inject
 
 // FIX(user-dynamic): ProfileViewModel mis à jour pour utiliser les données Firestore
 // FIX(stats): Ajout de PracticeStatsRepository pour stats détaillées par type
+// FIX(crash): Consolidation des observers pour éviter les crashes
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val syncManager: SyncManager,
@@ -33,13 +35,13 @@ class ProfileViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
+    // FIX(crash): Job pour gérer les stats pratiques (éviter les fuites mémoire)
+    private var practiceStatsJob: Job? = null
+    private var lastActivityJob: Job? = null
+
     init {
-        // FIX(user-dynamic): S'abonner aux changements de profil et stats via SyncManager
-        observeUserData()
-        // FIX(stats): Observer les stats détaillées par pratique
-        observePracticeStats()
-        // FIX(stats): Observer la dernière activité
-        observeLastActivity()
+        // FIX(crash): Un seul observateur pour toutes les données
+        observeAllData()
     }
 
     fun onEvent(event: ProfileUiEvent) {
@@ -63,82 +65,103 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    // FIX(user-dynamic): Observer les données utilisateur depuis le SyncManager
-    private fun observeUserData() {
+    // FIX(crash): Observer toutes les données en un seul Flow pour éviter les conflits
+    private fun observeAllData() {
         viewModelScope.launch {
-            combine(
-                syncManager.userProfile,
-                syncManager.userStats,
-                syncManager.syncState
-            ) { profile, stats, syncState ->
-                Triple(profile, stats, syncState)
-            }.collect { (profile, stats, syncState) ->
-                // FIX(user-dynamic): Transformer les données Firestore en UiState
-                _uiState.value = _uiState.value.copy(
-                    isLoading = syncState is com.ora.wellbeing.data.sync.SyncState.Syncing,
-                    error = if (syncState is com.ora.wellbeing.data.sync.SyncState.Error) {
-                        syncState.message
-                    } else null,
-                    userProfile = profile?.let {
-                        com.ora.wellbeing.presentation.screens.profile.UserProfile(
-                            name = it.displayName(),
-                            firstName = it.firstName ?: "",
-                            motto = it.motto ?: "Je prends soin de moi chaque jour",
-                            photoUrl = it.photoUrl,
-                            isPremium = it.isPremium,
-                            planTier = when(it.planTier) {
-                                "free" -> "Gratuit"
-                                "premium" -> "Premium"
-                                "lifetime" -> "Lifetime"
-                                else -> "Gratuit"
-                            }
-                        )
-                    },
-                    streak = stats?.streakDays ?: 0,
-                    totalTime = stats?.formatTotalTime() ?: "0min",
-                    hasGratitudeToday = false, // TODO: Implement gratitude tracking
-                    goals = buildGoalsFromStats(stats)
-                )
-
-                Timber.d("ProfileViewModel: UI State updated - ${profile?.firstName}, ${stats?.sessions} sessions")
-            }
-        }
-    }
-
-    // FIX(stats): Observer les stats détaillées par type de pratique
-    private fun observePracticeStats() {
-        viewModelScope.launch {
-            syncManager.userProfile.collect { profile ->
-                profile?.let { userProfile ->
-                    practiceStatsRepository.observePracticeStats(userProfile.uid)
-                        .collect { practiceStatsList ->
-                            _uiState.value = _uiState.value.copy(
-                                practiceTimes = buildPracticeTimesFromStats(practiceStatsList)
+            try {
+                combine(
+                    syncManager.userProfile,
+                    syncManager.userStats,
+                    syncManager.syncState
+                ) { profile, stats, syncState ->
+                    Triple(profile, stats, syncState)
+                }.collect { (profile, stats, syncState) ->
+                    // FIX(user-dynamic): Transformer les données Firestore en UiState
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = syncState is com.ora.wellbeing.data.sync.SyncState.Syncing,
+                        error = if (syncState is com.ora.wellbeing.data.sync.SyncState.Error) {
+                            syncState.message
+                        } else null,
+                        userProfile = profile?.let {
+                            com.ora.wellbeing.presentation.screens.profile.UserProfile(
+                                name = it.displayName(),
+                                firstName = it.firstName ?: "",
+                                motto = it.motto ?: "Je prends soin de moi chaque jour",
+                                photoUrl = it.photoUrl,
+                                isPremium = it.isPremium,
+                                planTier = when(it.planTier) {
+                                    "free" -> "Gratuit"
+                                    "premium" -> "Premium"
+                                    "lifetime" -> "Lifetime"
+                                    else -> "Gratuit"
+                                }
                             )
-                            Timber.d("Practice stats updated: ${practiceStatsList.size} types")
-                        }
-                }
-            }
-        }
-    }
+                        },
+                        streak = stats?.streakDays ?: 0,
+                        totalTime = stats?.formatTotalTime() ?: "0min",
+                        hasGratitudeToday = false, // TODO: Implement gratitude tracking
+                        goals = buildGoalsFromStats(stats)
+                    )
 
-    // FIX(stats): Observer la dernière activité
-    private fun observeLastActivity() {
-        viewModelScope.launch {
-            syncManager.userProfile.collect { profile ->
-                profile?.let { userProfile ->
-                    val lastSessionResult = practiceStatsRepository.getLastSession(userProfile.uid)
-                    lastSessionResult.onSuccess { session ->
-                        val activityText = session?.let {
-                            "${it.contentTitle} - ${it.durationMinutes} min"
-                        } ?: "Aucune activité récente"
+                    Timber.d("ProfileViewModel: UI State updated - ${profile?.firstName}, ${stats?.sessions} sessions")
 
-                        _uiState.value = _uiState.value.copy(
-                            lastActivity = activityText
-                        )
-                        Timber.d("Last activity updated: $activityText")
+                    // FIX(stats): Charger les stats détaillées par pratique si on a un profil
+                    profile?.let { userProfile ->
+                        loadPracticeStatsForUser(userProfile.uid)
                     }
                 }
+            } catch (e: Exception) {
+                Timber.e(e, "Error in observeAllData")
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "Erreur lors du chargement du profil"
+                )
+            }
+        }
+    }
+
+    // FIX(stats): Charger les stats détaillées en dehors du flow principal
+    // FIX(crash): Annuler les jobs précédents pour éviter les fuites mémoire
+    private fun loadPracticeStatsForUser(uid: String) {
+        // Annuler les anciens jobs s'ils existent
+        practiceStatsJob?.cancel()
+        lastActivityJob?.cancel()
+
+        // Observer les stats par type de pratique
+        practiceStatsJob = viewModelScope.launch {
+            try {
+                practiceStatsRepository.observePracticeStats(uid)
+                    .collect { practiceStatsList ->
+                        _uiState.value = _uiState.value.copy(
+                            practiceTimes = buildPracticeTimesFromStats(practiceStatsList)
+                        )
+                        Timber.d("Practice stats updated: ${practiceStatsList.size} types")
+                    }
+            } catch (e: Exception) {
+                Timber.e(e, "Error loading practice stats")
+                // Garder les valeurs par défaut si erreur
+            }
+        }
+
+        // Charger la dernière activité
+        lastActivityJob = viewModelScope.launch {
+            try {
+                val lastSessionResult = practiceStatsRepository.getLastSession(uid)
+                lastSessionResult.onSuccess { session ->
+                    val activityText = session?.let {
+                        "${it.contentTitle} - ${it.durationMinutes} min"
+                    } ?: "Aucune activité récente"
+
+                    _uiState.value = _uiState.value.copy(
+                        lastActivity = activityText
+                    )
+                    Timber.d("Last activity updated: $activityText")
+                }.onFailure { error ->
+                    Timber.e(error, "Error getting last session")
+                    // Garder la valeur par défaut
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error loading last activity")
             }
         }
     }
