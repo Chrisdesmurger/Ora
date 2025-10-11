@@ -6,10 +6,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ora.wellbeing.data.model.PlanTier
+import com.ora.wellbeing.data.repository.PracticeStatsRepository
 import com.ora.wellbeing.data.repository.UserProfileRepository
 import com.ora.wellbeing.data.repository.UserStatsRepository
 import com.ora.wellbeing.data.sync.SyncManager
+import com.ora.wellbeing.domain.model.PracticeStats
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,19 +22,26 @@ import timber.log.Timber
 import javax.inject.Inject
 
 // FIX(user-dynamic): ProfileViewModel mis à jour pour utiliser les données Firestore
+// FIX(stats): Ajout de PracticeStatsRepository pour stats détaillées par type
+// FIX(crash): Consolidation des observers pour éviter les crashes
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val syncManager: SyncManager,
     private val userProfileRepository: UserProfileRepository,
+    private val practiceStatsRepository: PracticeStatsRepository,
     private val userStatsRepository: UserStatsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
+    // FIX(crash): Job pour gérer les stats pratiques (éviter les fuites mémoire)
+    private var practiceStatsJob: Job? = null
+    private var lastActivityJob: Job? = null
+
     init {
-        // FIX(user-dynamic): S'abonner aux changements de profil et stats via SyncManager
-        observeUserData()
+        // FIX(crash): Un seul observateur pour toutes les données
+        observeAllData()
     }
 
     fun onEvent(event: ProfileUiEvent) {
@@ -55,45 +65,103 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    // FIX(user-dynamic): Observer les données utilisateur depuis le SyncManager
-    private fun observeUserData() {
+    // FIX(crash): Observer toutes les données en un seul Flow pour éviter les conflits
+    private fun observeAllData() {
         viewModelScope.launch {
-            combine(
-                syncManager.userProfile,
-                syncManager.userStats,
-                syncManager.syncState
-            ) { profile, stats, syncState ->
-                Triple(profile, stats, syncState)
-            }.collect { (profile, stats, syncState) ->
-                // FIX(user-dynamic): Transformer les données Firestore en UiState
-                _uiState.value = _uiState.value.copy(
-                    isLoading = syncState is com.ora.wellbeing.data.sync.SyncState.Syncing,
-                    error = if (syncState is com.ora.wellbeing.data.sync.SyncState.Error) {
-                        syncState.message
-                    } else null,
-                    userProfile = profile?.let {
-                        com.ora.wellbeing.presentation.screens.profile.UserProfile(
-                            name = it.displayName(),
-                            motto = it.motto ?: "Je prends soin de moi chaque jour",
-                            photoUrl = it.photoUrl,
-                            isPremium = it.isPremium,
-                            planTier = when(it.planTier) {
-                                "free" -> "Gratuit"
-                                "premium" -> "Premium"
-                                "lifetime" -> "Lifetime"
-                                else -> "Gratuit"
-                            }
-                        )
-                    },
-                    practiceTimes = stats?.let { buildPracticeTimes(it) } ?: emptyList(),
-                    streak = stats?.streakDays ?: 0,
-                    totalTime = stats?.formatTotalTime() ?: "0min",
-                    lastActivity = "Aucune activité récente", // TODO: Implémenter
-                    hasGratitudeToday = false, // TODO: Implement gratitude tracking
-                    goals = buildGoalsFromStats(stats)
-                )
+            try {
+                combine(
+                    syncManager.userProfile,
+                    syncManager.userStats,
+                    syncManager.syncState
+                ) { profile, stats, syncState ->
+                    Triple(profile, stats, syncState)
+                }.collect { (profile, stats, syncState) ->
+                    // FIX(user-dynamic): Transformer les données Firestore en UiState
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = syncState is com.ora.wellbeing.data.sync.SyncState.Syncing,
+                        error = if (syncState is com.ora.wellbeing.data.sync.SyncState.Error) {
+                            syncState.message
+                        } else null,
+                        userProfile = profile?.let {
+                            com.ora.wellbeing.presentation.screens.profile.UserProfile(
+                                name = it.displayName(),
+                                firstName = it.firstName ?: "",
+                                motto = it.motto ?: "Je prends soin de moi chaque jour",
+                                photoUrl = it.photoUrl,
+                                isPremium = it.isPremium,
+                                planTier = when(it.planTier) {
+                                    "free" -> "Gratuit"
+                                    "premium" -> "Premium"
+                                    "lifetime" -> "Lifetime"
+                                    else -> "Gratuit"
+                                }
+                            )
+                        },
+                        streak = stats?.streakDays ?: 0,
+                        totalTime = stats?.formatTotalTime() ?: "0min",
+                        hasGratitudeToday = false, // TODO: Implement gratitude tracking
+                        goals = buildGoalsFromStats(stats)
+                    )
 
-                Timber.d("ProfileViewModel: UI State updated - ${profile?.firstName}, ${stats?.sessions} sessions")
+                    Timber.d("ProfileViewModel: UI State updated - ${profile?.firstName}, ${stats?.sessions} sessions")
+
+                    // FIX(stats): Charger les stats détaillées par pratique si on a un profil
+                    profile?.let { userProfile ->
+                        loadPracticeStatsForUser(userProfile.uid)
+                    }
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error in observeAllData")
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "Erreur lors du chargement du profil"
+                )
+            }
+        }
+    }
+
+    // FIX(stats): Charger les stats détaillées en dehors du flow principal
+    // FIX(crash): Annuler les jobs précédents pour éviter les fuites mémoire
+    private fun loadPracticeStatsForUser(uid: String) {
+        // Annuler les anciens jobs s'ils existent
+        practiceStatsJob?.cancel()
+        lastActivityJob?.cancel()
+
+        // Observer les stats par type de pratique
+        practiceStatsJob = viewModelScope.launch {
+            try {
+                practiceStatsRepository.observePracticeStats(uid)
+                    .collect { practiceStatsList ->
+                        _uiState.value = _uiState.value.copy(
+                            practiceTimes = buildPracticeTimesFromStats(practiceStatsList)
+                        )
+                        Timber.d("Practice stats updated: ${practiceStatsList.size} types")
+                    }
+            } catch (e: Exception) {
+                Timber.e(e, "Error loading practice stats")
+                // Garder les valeurs par défaut si erreur
+            }
+        }
+
+        // Charger la dernière activité
+        lastActivityJob = viewModelScope.launch {
+            try {
+                val lastSessionResult = practiceStatsRepository.getLastSession(uid)
+                lastSessionResult.onSuccess { session ->
+                    val activityText = session?.let {
+                        "${it.contentTitle} - ${it.durationMinutes} min"
+                    } ?: "Aucune activité récente"
+
+                    _uiState.value = _uiState.value.copy(
+                        lastActivity = activityText
+                    )
+                    Timber.d("Last activity updated: $activityText")
+                }.onFailure { error ->
+                    Timber.e(error, "Error getting last session")
+                    // Garder la valeur par défaut
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error loading last activity")
             }
         }
     }
@@ -148,43 +216,41 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    // TODO: Implement per-category tracking (for now showing total divided by 4)
-    private fun buildPracticeTimes(stats: com.ora.wellbeing.domain.model.UserStats): List<PracticeTime> {
+    // FIX(stats): Construire les PracticeTime depuis les vraies stats Firestore
+    private fun buildPracticeTimesFromStats(practiceStatsList: List<PracticeStats>): List<PracticeTime> {
         val orangeColor = Color(0xFFF4845F)
         val orangeLightColor = Color(0xFFFDB5A0)
         val greenColor = Color(0xFF7BA089)
         val greenLightColor = Color(0xFFB4D4C3)
 
-        // Temporary: distribute total time equally across categories
-        val timePerCategory = stats.totalMinutes / 4
-        val timeText = if (timePerCategory > 0) "$timePerCategory min ce mois-ci" else "0 min ce mois-ci"
+        val statsMap = practiceStatsList.associateBy { it.practiceType }
 
         return listOf(
             PracticeTime(
                 id = "yoga",
                 name = "Yoga",
-                time = timeText,
+                time = statsMap["yoga"]?.formatMonthTime() ?: "0min ce mois-ci",
                 color = orangeColor,
                 icon = Icons.Default.SelfImprovement
             ),
             PracticeTime(
                 id = "pilates",
                 name = "Pilates",
-                time = timeText,
+                time = statsMap["pilates"]?.formatMonthTime() ?: "0min ce mois-ci",
                 color = orangeLightColor,
                 icon = Icons.Default.FitnessCenter
             ),
             PracticeTime(
                 id = "meditation",
                 name = "Méditation",
-                time = timeText,
+                time = statsMap["meditation"]?.formatMonthTime() ?: "0min ce mois-ci",
                 color = greenColor,
                 icon = Icons.Default.Spa
             ),
             PracticeTime(
                 id = "breathing",
                 name = "Respiration",
-                time = timeText,
+                time = statsMap["breathing"]?.formatMonthTime() ?: "0min ce mois-ci",
                 color = greenLightColor,
                 icon = Icons.Default.Air
             )

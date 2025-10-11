@@ -1,6 +1,7 @@
 package com.ora.wellbeing.di
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -18,6 +19,7 @@ import com.ora.wellbeing.domain.repository.FirestoreUserStatsRepository
 import com.ora.wellbeing.domain.repository.GratitudeRepository
 import com.ora.wellbeing.domain.repository.ProgramRepository
 import com.ora.wellbeing.domain.repository.UserProgramRepository
+import com.ora.wellbeing.data.repository.UserStatsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -137,5 +139,23 @@ object FirestoreModule {
     fun provideFirebaseStorage(): FirebaseStorage {
         Timber.d("provideFirebaseStorage: Initializing Firebase Storage")
         return Firebase.storage
+    }
+
+    /**
+     * Fournit le repository pour les statistiques de pratique détaillées
+     */
+    @Provides
+    @Singleton
+    fun providePracticeStatsRepository(
+        firestore: FirebaseFirestore,
+        auth: FirebaseAuth,
+        userStatsRepository: UserStatsRepository
+    ): com.ora.wellbeing.data.repository.PracticeStatsRepository {
+        Timber.d("providePracticeStatsRepository: Creating repository")
+        return com.ora.wellbeing.data.repository.PracticeStatsRepository(
+            firestore,
+            auth,
+            userStatsRepository
+        )
     }
 }

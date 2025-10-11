@@ -21,6 +21,34 @@ service cloud.firestore {
       allow update: if request.auth != null
                     && request.auth.uid == uid
                     && validateUserProfile(request.resource.data);
+
+      // FIX(stats): Sous-collection users/{uid}/sessions - Historique des sessions
+      match /sessions/{sessionId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+
+        // Validation des champs à l'écriture
+        allow create: if request.auth != null
+                      && request.auth.uid == uid
+                      && validatePracticeSession(request.resource.data);
+
+        allow update: if request.auth != null
+                      && request.auth.uid == uid
+                      && validatePracticeSession(request.resource.data);
+      }
+
+      // FIX(stats): Sous-collection users/{uid}/practiceStats - Stats agrégées par type
+      match /practiceStats/{practiceType} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+
+        // Validation des champs à l'écriture
+        allow create: if request.auth != null
+                      && request.auth.uid == uid
+                      && validatePracticeStats(request.resource.data);
+
+        allow update: if request.auth != null
+                      && request.auth.uid == uid
+                      && validatePracticeStats(request.resource.data);
+      }
     }
 
     // Collection stats/{uid}
@@ -143,6 +171,51 @@ service cloud.firestore {
           && data.startedAt is timestamp
           && (data.lastSessionAt == null || data.lastSessionAt is timestamp)
           && (data.completedAt == null || data.completedAt is timestamp);
+    }
+
+    // FIX(stats): Valide une session de pratique
+    function validatePracticeSession(data) {
+      return data.uid is string
+          && data.uid.size() > 0
+          && data.contentId is string
+          && data.contentId.size() > 0
+          && data.contentTitle is string
+          && data.contentTitle.size() > 0
+          && data.practiceType in ['yoga', 'meditation', 'pilates', 'breathing']
+          && data.durationMinutes is int
+          && data.durationMinutes >= 0
+          && data.durationMinutes <= 180  // Max 3h
+          && data.plannedDurationMinutes is int
+          && data.plannedDurationMinutes >= 0
+          && data.completionPercentage is int
+          && data.completionPercentage >= 0
+          && data.completionPercentage <= 100
+          && data.completed is bool
+          && data.startedAt is int  // timestamp
+          && data.completedAt is int  // timestamp
+          && data.createdAt is int;  // timestamp
+    }
+
+    // FIX(stats): Valide les stats agrégées par type de pratique
+    function validatePracticeStats(data) {
+      return data.practiceType in ['yoga', 'meditation', 'pilates', 'breathing']
+          && data.totalMinutes is int
+          && data.totalMinutes >= 0
+          && data.totalSessions is int
+          && data.totalSessions >= 0
+          && data.completedSessions is int
+          && data.completedSessions >= 0
+          && data.minutesThisWeek is int
+          && data.minutesThisWeek >= 0
+          && data.minutesThisMonth is int
+          && data.minutesThisMonth >= 0
+          && data.sessionsThisWeek is int
+          && data.sessionsThisWeek >= 0
+          && data.sessionsThisMonth is int
+          && data.sessionsThisMonth >= 0
+          && data.averageDurationMinutes is int
+          && data.averageDurationMinutes >= 0
+          && data.updatedAt is int;  // timestamp
     }
 
     // Bloquer tout accès aux autres collections par défaut
