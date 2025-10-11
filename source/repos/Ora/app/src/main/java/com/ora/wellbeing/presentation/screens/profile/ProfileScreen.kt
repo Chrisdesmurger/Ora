@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ora.wellbeing.presentation.theme.*
+import com.ora.wellbeing.presentation.components.UserAvatar
 
 // FIX(user-dynamic): ProfileScreen mis à jour pour afficher les données Firestore
 @Composable
@@ -228,31 +229,20 @@ private fun ProfileHeader(
 }
 
 // FIX(user-dynamic): Afficher "Invité" si firstName/name est vide
+// FIX(avatar): Utilise UserAvatar avec photo ou initiale
 @Composable
 private fun ProfileUserInfo(profile: UserProfile) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth()
     ) {
-        // Photo de profil circulaire (grande)
-        Box(
-            modifier = Modifier
-                .size(140.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.tertiary),
-            contentAlignment = Alignment.Center
-        ) {
-            // TODO: Remplacer par AsyncImage quand l'URL sera disponible
-            val displayName = profile.name.ifBlank { "Invité" }
-            Text(
-                text = displayName.first().toString().uppercase(),
-                style = MaterialTheme.typography.displayLarge.copy(
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 60.sp
-                )
-            )
-        }
+        // Avatar circulaire avec photo ou initiale du prénom
+        UserAvatar(
+            firstName = profile.firstName.ifBlank { profile.name.ifBlank { "Invité" } },
+            photoUrl = profile.photoUrl,
+            size = 140.dp,
+            fontSize = 60.sp
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 

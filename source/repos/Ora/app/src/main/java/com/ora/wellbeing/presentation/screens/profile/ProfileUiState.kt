@@ -23,9 +23,11 @@ data class ProfileUiState(
 /**
  * Profil utilisateur simplifié selon mockup
  * FIX(user-dynamic): Ajout de isPremium et planTier
+ * FIX(avatar): Ajout de firstName pour l'avatar circulaire
  */
 data class UserProfile(
     val name: String,
+    val firstName: String = "",
     val motto: String,
     val photoUrl: String? = null,
     val isPremium: Boolean = false, // FIX(user-dynamic): Nouveau champ
