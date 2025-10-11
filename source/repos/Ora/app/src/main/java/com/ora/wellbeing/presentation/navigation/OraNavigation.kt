@@ -27,7 +27,7 @@ import com.ora.wellbeing.presentation.screens.journal.JournalScreen
 import com.ora.wellbeing.presentation.screens.programs.ProgramsScreen
 import com.ora.wellbeing.presentation.screens.profile.ProfileScreen
 import com.ora.wellbeing.presentation.screens.stats.PracticeStatsScreen
-// import com.ora.wellbeing.feature.practice.ui.PracticeDetailScreen // TODO: Replaced by PlayerScreen in content-player feature
+import com.ora.wellbeing.feature.practice.ui.PlayerScreen
 
 /**
  * FIX(auth): Navigation principale avec vérification d'authentification
@@ -177,9 +177,11 @@ fun OraNavigation(
                 arguments = OraDestinations.PracticeDetail.arguments
             ) { backStackEntry ->
                 val practiceId = backStackEntry.arguments?.getString("id") ?: return@composable
-                // TODO: Replace with PlayerScreen when ready
-                // PracticeDetailScreen removed in content-player feature
-                Text("Player screen - To be implemented")
+                PlayerScreen(
+                    practiceId = practiceId,
+                    onBack = { navController.popBackStack() },
+                    onMinimize = { navController.popBackStack() }
+                )
             }
 
             // TODO: Ajouter les autres destinations (ContentDetail, VideoPlayer, etc.)
