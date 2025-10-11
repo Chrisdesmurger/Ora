@@ -193,6 +193,9 @@ dependencies {
     // FIX(user-dynamic): Firebase Firestore for user data persistence
     implementation("com.google.firebase:firebase-firestore-ktx")
 
+    // FIX(profile-edit): Firebase Storage for profile photo uploads
+    implementation("com.google.firebase:firebase-storage-ktx")
+
     // Firebase Analytics for practice session tracking
     implementation("com.google.firebase:firebase-analytics-ktx")
 

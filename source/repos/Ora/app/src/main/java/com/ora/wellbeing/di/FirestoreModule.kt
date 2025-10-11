@@ -4,6 +4,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.ktx.storage
 import com.ora.wellbeing.data.repository.impl.ContentRepositoryImpl
 import com.ora.wellbeing.data.repository.impl.FirestoreUserProfileRepositoryImpl
 import com.ora.wellbeing.data.repository.impl.FirestoreUserStatsRepositoryImpl
@@ -125,5 +127,15 @@ object FirestoreModule {
     ): ContentRepository {
         Timber.d("provideContentRepository: Creating repository")
         return ContentRepositoryImpl(firestore)
+    }
+
+    /**
+     * Fournit l'instance Firebase Storage pour l'upload de photos de profil
+     */
+    @Provides
+    @Singleton
+    fun provideFirebaseStorage(): FirebaseStorage {
+        Timber.d("provideFirebaseStorage: Initializing Firebase Storage")
+        return Firebase.storage
     }
 }
