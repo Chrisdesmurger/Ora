@@ -26,6 +26,7 @@ import com.ora.wellbeing.presentation.screens.library.LibraryScreen
 import com.ora.wellbeing.presentation.screens.journal.JournalScreen
 import com.ora.wellbeing.presentation.screens.programs.ProgramsScreen
 import com.ora.wellbeing.presentation.screens.profile.ProfileScreen
+import com.ora.wellbeing.presentation.screens.profile.ProfileEditScreen
 import com.ora.wellbeing.presentation.screens.stats.PracticeStatsScreen
 import com.ora.wellbeing.feature.practice.ui.PlayerScreen
 
@@ -150,6 +151,15 @@ fun OraNavigation(
                     },
                     onNavigateToGratitudes = {
                         navController.navigate(OraDestinations.Journal.route)
+                    }
+                )
+            }
+
+            // FIX(profile-edit): Écran d'édition de profil
+            composable(OraDestinations.EditProfile.route) {
+                ProfileEditScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
                     }
                 )
             }
