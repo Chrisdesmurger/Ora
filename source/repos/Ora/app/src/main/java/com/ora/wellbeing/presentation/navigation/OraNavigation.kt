@@ -6,6 +6,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -26,7 +27,7 @@ import com.ora.wellbeing.presentation.screens.journal.JournalScreen
 import com.ora.wellbeing.presentation.screens.programs.ProgramsScreen
 import com.ora.wellbeing.presentation.screens.profile.ProfileScreen
 import com.ora.wellbeing.presentation.screens.stats.PracticeStatsScreen
-import com.ora.wellbeing.feature.practice.ui.PracticeDetailScreen
+// import com.ora.wellbeing.feature.practice.ui.PracticeDetailScreen // TODO: Replaced by PlayerScreen in content-player feature
 
 /**
  * FIX(auth): Navigation principale avec vérification d'authentification
@@ -176,12 +177,9 @@ fun OraNavigation(
                 arguments = OraDestinations.PracticeDetail.arguments
             ) { backStackEntry ->
                 val practiceId = backStackEntry.arguments?.getString("id") ?: return@composable
-                PracticeDetailScreen(
-                    practiceId = practiceId,
-                    onBack = {
-                        navController.popBackStack()
-                    }
-                )
+                // TODO: Replace with PlayerScreen when ready
+                // PracticeDetailScreen removed in content-player feature
+                Text("Player screen - To be implemented")
             }
 
             // TODO: Ajouter les autres destinations (ContentDetail, VideoPlayer, etc.)

@@ -28,6 +28,52 @@
     <string name="profile_total_time_label">en tout</string>
     <string name="profile_no_activity">Aucune activité récente</string>
 
+    <!-- FIX(profile-edit): Profile editing strings -->
+    <string name="profile_edit_title">Modifier le profil</string>
+    <string name="profile_edit_personal_info">Informations personnelles</string>
+    <string name="profile_edit_preferences">Préférences</string>
+    <string name="profile_edit_notifications">Notifications</string>
+    <string name="profile_edit_first_name">Prénom</string>
+    <string name="profile_edit_last_name">Nom</string>
+    <string name="profile_edit_display_name">Nom d\'affichage</string>
+    <string name="profile_edit_email">Email</string>
+    <string name="profile_edit_bio">Bio / Citation</string>
+    <string name="profile_edit_bio_placeholder">Je prends soin de moi chaque jour</string>
+    <string name="profile_edit_gender">Genre</string>
+    <string name="profile_edit_date_of_birth">Date de naissance</string>
+    <string name="profile_edit_language">Langue</string>
+    <string name="profile_edit_notifications_enabled">Notifications activées</string>
+    <string name="profile_edit_notifications_desc">Recevoir des rappels et notifications</string>
+    <string name="profile_edit_evening_reminder">Rappel du soir</string>
+    <string name="profile_edit_evening_reminder_desc">Rappel quotidien pour vos gratitudes</string>
+    <string name="profile_edit_choose_photo">Choisir une photo</string>
+    <string name="profile_edit_gallery">Galerie</string>
+    <string name="profile_edit_camera">Appareil photo</string>
+    <string name="profile_edit_remove_photo">Supprimer la photo</string>
+    <string name="profile_edit_unsaved_changes_title">Modifications non enregistrées</string>
+    <string name="profile_edit_unsaved_changes_message">Vous avez des modifications non enregistrées. Que souhaitez-vous faire ?</string>
+    <string name="profile_edit_discard">Abandonner</string>
+    <string name="profile_edit_save_success">Profil mis à jour avec succès</string>
+    <string name="profile_edit_uploading_photo">Téléchargement de la photo...</string>
+
+    <!-- FIX(profile-edit): Validation error messages -->
+    <string name="validation_first_name_required">Le prénom est requis</string>
+    <string name="validation_last_name_required">Le nom est requis</string>
+    <string name="validation_name_too_short">Doit contenir au moins %1$d caractères</string>
+    <string name="validation_name_too_long">Ne peut pas dépasser %1$d caractères</string>
+    <string name="validation_name_invalid_chars">Ne peut contenir que des lettres, espaces et tirets</string>
+    <string name="validation_bio_too_long">La bio ne peut pas dépasser %1$d caractères</string>
+    <string name="validation_age_too_young">Vous devez avoir au moins %1$d ans</string>
+    <string name="validation_date_future">La date ne peut pas être dans le futur</string>
+    <string name="validation_date_invalid">Date de naissance invalide</string>
+    <string name="validation_fix_errors">Veuillez corriger les erreurs avant de sauvegarder</string>
+
+    <!-- Gender options -->
+    <string name="gender_male">Homme</string>
+    <string name="gender_female">Femme</string>
+    <string name="gender_non_binary">Non-binaire</string>
+    <string name="gender_not_specified">Non spécifié</string>
+
     <!-- FIX(user-dynamic): Stats formatées -->
     <string name="stats_days_count">%1$d jours</string>
     <string name="stats_time_hours_minutes">%1$dh%2$02d</string>
@@ -79,7 +125,7 @@
     <string name="video_new_badge">NOUVEAU</string>
     <string name="video_play">Lire</string>
 
-    <!-- Practice Detail (NEW) -->
+    <!-- Practice Detail -->
     <string name="practice_start_session">Commencer la séance</string>
     <string name="practice_add_to_program">Ajouter au programme</string>
     <string name="practice_personal_notes">Notes personnelles</string>
@@ -98,6 +144,46 @@
     <string name="practice_notes_dialog_title">Notes personnelles</string>
     <string name="practice_notes_placeholder">Écrivez vos notes ici...</string>
     <string name="practice_in_progress">En cours...</string>
+
+    <!-- Player Screen (NEW) -->
+    <string name="player_loading">Chargement du lecteur...</string>
+    <string name="player_error">Erreur lors du chargement</string>
+    <string name="player_retry">Réessayer</string>
+    <string name="player_minimize">Minimiser</string>
+    <string name="player_expand">Agrandir</string>
+    <string name="player_fullscreen">Plein écran</string>
+    <string name="player_exit_fullscreen">Quitter le plein écran</string>
+    <string name="player_close">Fermer le lecteur</string>
+    <string name="player_play">Lecture</string>
+    <string name="player_pause">Pause</string>
+    <string name="player_seek_forward">Avancer de 15 secondes</string>
+    <string name="player_seek_backward">Reculer de 15 secondes</string>
+    <string name="player_speed">Vitesse de lecture</string>
+    <string name="player_speed_0_5x">0.5x</string>
+    <string name="player_speed_0_75x">0.75x</string>
+    <string name="player_speed_1x">1x (Normal)</string>
+    <string name="player_speed_1_25x">1.25x</string>
+    <string name="player_speed_1_5x">1.5x</string>
+    <string name="player_speed_2x">2x</string>
+    <string name="player_repeat_mode">Mode répétition</string>
+    <string name="player_repeat_off">Désactivé</string>
+    <string name="player_repeat_one">Une fois</string>
+    <string name="player_repeat_all">Infini</string>
+    <string name="player_advanced_controls">Contrôles avancés</string>
+    <string name="player_session_info">Informations de session</string>
+    <string name="player_discipline">Discipline</string>
+    <string name="player_level">Niveau</string>
+    <string name="player_planned_duration">Durée prévue</string>
+    <string name="player_elapsed_time">Temps écoulé</string>
+    <string name="player_network_error">Pas de connexion réseau</string>
+    <string name="player_buffering">Chargement en cours...</string>
+    <string name="player_pip_mode">Mode Picture-in-Picture</string>
+    <string name="player_audio_focus_lost">Lecture interrompue</string>
+    <string name="player_related_practices">Pratiques similaires</string>
+
+    <!-- Mini Player (NEW) -->
+    <string name="mini_player_expand">Développer le lecteur</string>
+    <string name="mini_player_close">Fermer</string>
 
     <!-- Moods -->
     <string name="mood_happy">Heureux</string>
@@ -119,6 +205,8 @@
     <string name="error_updating_goal">Erreur lors de la mise à jour de l\'objectif</string>
     <string name="error_updating_motto">Erreur lors de la mise à jour du motto</string>
     <string name="error_updating_photo">Erreur lors de la mise à jour de la photo</string>
+    <string name="error_uploading_photo">Erreur lors du téléchargement de la photo</string>
+    <string name="error_saving_profile">Erreur lors de la sauvegarde du profil</string>
     <string name="error_offline">Vous êtes hors ligne</string>
 
     <!-- Common -->

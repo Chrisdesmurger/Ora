@@ -124,15 +124,15 @@ status_android.json
 creator_brief.json
 database_schema.sql
 
-# Dossiers temporaires/obsolètes
-bus/
-status/
-tasks/
-component_library/
-core/
-feature/
-contracts/
-wireframes/
+# Dossiers temporaires/obsolètes (à la racine seulement)
+/bus/
+/status/
+/tasks/
+/component_library/
+/core/
+/feature/
+/contracts/
+/wireframes/
 
 # Fichiers à la racine qui devraient être dans docs/ ou config/
 /*.kt
