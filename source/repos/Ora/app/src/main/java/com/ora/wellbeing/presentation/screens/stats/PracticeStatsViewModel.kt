@@ -4,6 +4,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ora.wellbeing.data.repository.PracticeStatsRepository
+import com.ora.wellbeing.data.sync.SyncManager
+import com.ora.wellbeing.domain.model.PracticeStats
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,11 +14,19 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
+// FIX(stats): Connect to real Firestore data instead of mock data
 @HiltViewModel
 class PracticeStatsViewModel @Inject constructor(
-    private val savedStateHandle: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle,
+    private val practiceStatsRepository: PracticeStatsRepository,
+    private val syncManager: SyncManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PracticeStatsUiState())
@@ -42,27 +53,73 @@ class PracticeStatsViewModel @Inject constructor(
         }
     }
 
+    // FIX(stats): Load real data from Firestore instead of mock data
     private fun loadPracticeStats(practiceId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             try {
-                // Simuler un chargement réseau
-                delay(500)
-
-                // Données mock basées sur le practiceId
-                val mockData = getMockPracticeStats(practiceId)
-
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        practiceDetails = mockData.first,
-                        weeklyStats = mockData.second,
-                        practiceBreakdown = mockData.third,
-                        sessionHistory = mockData.fourth
-                    )
+                val profile = syncManager.userProfile.value
+                if (profile == null) {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "Utilisateur non connecté"
+                        )
+                    }
+                    return@launch
                 }
+
+                // Observer les stats pour ce type de pratique en temps réel
+                practiceStatsRepository.observePracticeStats(profile.uid)
+                    .collect { allStats ->
+                        // Filtrer pour obtenir les stats du type demandé
+                        val practiceStats = allStats.find { it.practiceType == practiceId }
+
+                        if (practiceStats != null) {
+                            // Charger les sessions récentes pour l'historique et le graphique
+                            val sessionsResult = practiceStatsRepository.getSessionsByType(
+                                uid = profile.uid,
+                                practiceType = practiceId,
+                                limit = 50
+                            )
+
+                            sessionsResult.onSuccess { sessions ->
+                                _uiState.update {
+                                    it.copy(
+                                        isLoading = false,
+                                        practiceDetails = buildPracticeDetails(practiceId, practiceStats),
+                                        weeklyStats = buildWeeklyStats(sessions),
+                                        practiceBreakdown = emptyList(), // TODO: Implement breakdown by content type
+                                        sessionHistory = buildSessionHistory(sessions)
+                                    )
+                                }
+                            }.onFailure { error ->
+                                Timber.e(error, "Error loading sessions")
+                                _uiState.update {
+                                    it.copy(
+                                        isLoading = false,
+                                        practiceDetails = buildPracticeDetails(practiceId, practiceStats),
+                                        weeklyStats = emptyList(),
+                                        sessionHistory = emptyList()
+                                    )
+                                }
+                            }
+                        } else {
+                            // Aucune donnée pour ce type de pratique - afficher 0
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                    practiceDetails = buildEmptyPracticeDetails(practiceId),
+                                    weeklyStats = emptyList(),
+                                    practiceBreakdown = emptyList(),
+                                    sessionHistory = emptyList()
+                                )
+                            }
+                        }
+                    }
             } catch (e: Exception) {
+                Timber.e(e, "Error loading practice stats")
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -73,193 +130,124 @@ class PracticeStatsViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Génère des données mock pour différentes pratiques
-     */
-    private fun getMockPracticeStats(practiceId: String): Quartet<
-            PracticeDetails,
-            List<WeeklyDataPoint>,
-            List<PracticeTypeBreakdown>,
-            List<SessionHistoryItem>
-            > {
-        return when (practiceId.lowercase()) {
-            "yoga" -> {
-                val details = PracticeDetails(
-                    id = "yoga",
-                    name = "Yoga",
-                    totalTime = "6h 30m",
-                    regularityDays = 18,
-                    sessionsCount = 9,
-                    monthlyTime = "3h 45 ce mois-ci",
-                    growthPercentage = 20
-                )
+    // FIX(stats): Build PracticeDetails from real Firestore data
+    private fun buildPracticeDetails(practiceId: String, stats: PracticeStats): PracticeDetails {
+        val practiceName = when (practiceId) {
+            "yoga" -> "Yoga"
+            "pilates" -> "Pilates"
+            "meditation" -> "Méditation"
+            "breathing" -> "Respiration"
+            else -> practiceId.replaceFirstChar { it.uppercase() }
+        }
 
-                val weeklyData = listOf(
-                    WeeklyDataPoint("L", 25, 1),
-                    WeeklyDataPoint("M", 30, 2),
-                    WeeklyDataPoint("M", 40, 3),
-                    WeeklyDataPoint("J", 42, 4),
-                    WeeklyDataPoint("V", 60, 5),
-                    WeeklyDataPoint("D", 35, 7)
-                )
+        return PracticeDetails(
+            id = practiceId,
+            name = practiceName,
+            totalTime = formatMinutesToTime(stats.totalMinutes),
+            regularityDays = 0, // TODO: Calculate from session dates
+            sessionsCount = stats.totalSessions,
+            monthlyTime = "${stats.minutesThisMonth} min ce mois-ci",
+            growthPercentage = 0 // TODO: Calculate growth percentage
+        )
+    }
 
-                val breakdown = listOf(
-                    PracticeTypeBreakdown("Yoga doux", 35, Color(0xFFF4845F), 140),
-                    PracticeTypeBreakdown("Yoga danse", 50, Color(0xFFFDB5A0), 200),
-                    PracticeTypeBreakdown("Yoga power", 15, Color(0xFF7BA089), 60)
-                )
+    // FIX(stats): Build empty PracticeDetails when no data exists
+    private fun buildEmptyPracticeDetails(practiceId: String): PracticeDetails {
+        val practiceName = when (practiceId) {
+            "yoga" -> "Yoga"
+            "pilates" -> "Pilates"
+            "meditation" -> "Méditation"
+            "breathing" -> "Respiration"
+            else -> practiceId.replaceFirstChar { it.uppercase() }
+        }
 
-                val history = listOf(
-                    SessionHistoryItem("1", "14 avr.", "45 min", "Yoga doux du matin"),
-                    SessionHistoryItem("2", "9 avr.", "20 min", "Yoga express"),
-                    SessionHistoryItem("3", "2 avr.", "40 min", "Yoga flow"),
-                )
+        return PracticeDetails(
+            id = practiceId,
+            name = practiceName,
+            totalTime = "0 min",
+            regularityDays = 0,
+            sessionsCount = 0,
+            monthlyTime = "0 min ce mois-ci",
+            growthPercentage = 0
+        )
+    }
 
-                Quartet(details, weeklyData, breakdown, history)
+    // FIX(stats): Build weekly stats from sessions
+    private fun buildWeeklyStats(sessions: List<com.ora.wellbeing.domain.model.PracticeSession>): List<WeeklyDataPoint> {
+        val calendar = Calendar.getInstance()
+        val today = calendar.time
+
+        // Obtenir le début de la semaine (lundi)
+        calendar.firstDayOfWeek = Calendar.MONDAY
+        calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val weekStart = calendar.timeInMillis
+
+        // Grouper les sessions par jour de la semaine
+        val sessionsByDay = sessions
+            .filter { it.completedAt >= weekStart }
+            .groupBy { session ->
+                val sessionCalendar = Calendar.getInstance().apply {
+                    timeInMillis = session.completedAt
+                }
+                sessionCalendar.get(Calendar.DAY_OF_WEEK)
             }
 
-            "pilates" -> {
-                val details = PracticeDetails(
-                    id = "pilates",
-                    name = "Pilates",
-                    totalTime = "4h 15m",
-                    regularityDays = 12,
-                    sessionsCount = 6,
-                    monthlyTime = "2h 15 ce mois-ci",
-                    growthPercentage = 15
-                )
+        // Créer les points de données pour chaque jour de la semaine
+        val dayLabels = listOf("L", "M", "M", "J", "V", "S", "D")
+        val weekDays = listOf(
+            Calendar.MONDAY,
+            Calendar.TUESDAY,
+            Calendar.WEDNESDAY,
+            Calendar.THURSDAY,
+            Calendar.FRIDAY,
+            Calendar.SATURDAY,
+            Calendar.SUNDAY
+        )
 
-                val weeklyData = listOf(
-                    WeeklyDataPoint("L", 20, 1),
-                    WeeklyDataPoint("M", 35, 2),
-                    WeeklyDataPoint("J", 30, 4),
-                    WeeklyDataPoint("V", 45, 5),
-                    WeeklyDataPoint("D", 25, 7)
-                )
+        return weekDays.mapIndexed { index, dayOfWeek ->
+            val minutesForDay = sessionsByDay[dayOfWeek]?.sumOf { it.durationMinutes } ?: 0
+            WeeklyDataPoint(
+                dayLabel = dayLabels[index],
+                minutes = minutesForDay,
+                dayOfWeek = dayOfWeek
+            )
+        }.filter { it.minutes > 0 } // Ne montrer que les jours avec des sessions
+    }
 
-                val breakdown = listOf(
-                    PracticeTypeBreakdown("Pilates classique", 60, Color(0xFFFDB5A0), 152),
-                    PracticeTypeBreakdown("Pilates reformer", 40, Color(0xFFB4D4C3), 103)
-                )
+    // FIX(stats): Build session history from sessions
+    private fun buildSessionHistory(sessions: List<com.ora.wellbeing.domain.model.PracticeSession>): List<SessionHistoryItem> {
+        val dateFormat = SimpleDateFormat("d MMM", Locale.FRENCH)
 
-                val history = listOf(
-                    SessionHistoryItem("1", "12 avr.", "30 min", "Pilates core"),
-                    SessionHistoryItem("2", "8 avr.", "25 min", "Pilates débutant"),
+        return sessions
+            .sortedByDescending { it.completedAt }
+            .take(10) // Limiter aux 10 dernières sessions
+            .map { session ->
+                SessionHistoryItem(
+                    id = session.id,
+                    date = dateFormat.format(Date(session.completedAt)),
+                    duration = "${session.durationMinutes} min",
+                    sessionName = session.contentTitle
                 )
-
-                Quartet(details, weeklyData, breakdown, history)
             }
+    }
 
-            "meditation" -> {
-                val details = PracticeDetails(
-                    id = "meditation",
-                    name = "Méditation",
-                    totalTime = "8h 20m",
-                    regularityDays = 25,
-                    sessionsCount = 30,
-                    monthlyTime = "5h 10 ce mois-ci",
-                    growthPercentage = 35
-                )
+    // Helper: Format minutes to "Xh Ym" format
+    private fun formatMinutesToTime(minutes: Int): String {
+        if (minutes == 0) return "0 min"
 
-                val weeklyData = listOf(
-                    WeeklyDataPoint("L", 15, 1),
-                    WeeklyDataPoint("M", 20, 2),
-                    WeeklyDataPoint("M", 15, 3),
-                    WeeklyDataPoint("J", 25, 4),
-                    WeeklyDataPoint("V", 20, 5),
-                    WeeklyDataPoint("S", 10, 6),
-                    WeeklyDataPoint("D", 30, 7)
-                )
+        val hours = minutes / 60
+        val mins = minutes % 60
 
-                val breakdown = listOf(
-                    PracticeTypeBreakdown("Méditation guidée", 45, Color(0xFF7BA089), 225),
-                    PracticeTypeBreakdown("Pleine conscience", 35, Color(0xFFB4D4C3), 175),
-                    PracticeTypeBreakdown("Méditation sommeil", 20, Color(0xFFF4845F), 100)
-                )
-
-                val history = listOf(
-                    SessionHistoryItem("1", "15 avr.", "10 min", "Méditation du matin"),
-                    SessionHistoryItem("2", "14 avr.", "15 min", "Scan corporel"),
-                    SessionHistoryItem("3", "13 avr.", "20 min", "Méditation du soir"),
-                )
-
-                Quartet(details, weeklyData, breakdown, history)
-            }
-
-            "respiration", "breathing" -> {
-                val details = PracticeDetails(
-                    id = "respiration",
-                    name = "Respiration",
-                    totalTime = "2h 45m",
-                    regularityDays = 15,
-                    sessionsCount = 20,
-                    monthlyTime = "1h 30 ce mois-ci",
-                    growthPercentage = 10
-                )
-
-                val weeklyData = listOf(
-                    WeeklyDataPoint("L", 10, 1),
-                    WeeklyDataPoint("M", 8, 2),
-                    WeeklyDataPoint("M", 12, 3),
-                    WeeklyDataPoint("J", 15, 4),
-                    WeeklyDataPoint("V", 10, 5),
-                    WeeklyDataPoint("S", 5, 6),
-                    WeeklyDataPoint("D", 8, 7)
-                )
-
-                val breakdown = listOf(
-                    PracticeTypeBreakdown("Respiration carrée", 40, Color(0xFF7BA089), 66),
-                    PracticeTypeBreakdown("Cohérence cardiaque", 35, Color(0xFFFDB5A0), 58),
-                    PracticeTypeBreakdown("Respiration anti-stress", 25, Color(0xFFB4D4C3), 41)
-                )
-
-                val history = listOf(
-                    SessionHistoryItem("1", "14 avr.", "5 min", "Respiration calme"),
-                    SessionHistoryItem("2", "10 avr.", "8 min", "Cohérence cardiaque"),
-                )
-
-                Quartet(details, weeklyData, breakdown, history)
-            }
-
-            else -> {
-                // Pratique par défaut
-                val details = PracticeDetails(
-                    id = practiceId,
-                    name = practiceId.replaceFirstChar { it.uppercase() },
-                    totalTime = "2h 00m",
-                    regularityDays = 8,
-                    sessionsCount = 5,
-                    monthlyTime = "1h 30 ce mois-ci",
-                    growthPercentage = 5
-                )
-
-                val weeklyData = listOf(
-                    WeeklyDataPoint("L", 15, 1),
-                    WeeklyDataPoint("M", 20, 2),
-                    WeeklyDataPoint("V", 25, 5)
-                )
-
-                val breakdown = listOf(
-                    PracticeTypeBreakdown("Type A", 60, Color(0xFFF4845F), 72),
-                    PracticeTypeBreakdown("Type B", 40, Color(0xFF7BA089), 48)
-                )
-
-                val history = listOf(
-                    SessionHistoryItem("1", "10 avr.", "30 min", "Séance 1"),
-                )
-
-                Quartet(details, weeklyData, breakdown, history)
-            }
+        return when {
+            hours == 0 -> "${mins} min"
+            mins == 0 -> "${hours}h"
+            else -> "${hours}h ${mins}m"
         }
     }
-}
 
-/**
- * Helper class pour retourner 4 valeurs
- */
-data class Quartet<A, B, C, D>(
-    val first: A,
-    val second: B,
-    val third: C,
-    val fourth: D
-)
+    // FIX(stats): Removed getMockPracticeStats() - now using real Firestore data
+}
