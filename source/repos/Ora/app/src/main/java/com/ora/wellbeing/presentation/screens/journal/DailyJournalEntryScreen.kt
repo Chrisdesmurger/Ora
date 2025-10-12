@@ -40,11 +40,11 @@ fun DailyJournalEntryScreen(
         }
     }
 
-    // Show success snackbar
+    // Navigate back after successful save
     LaunchedEffect(uiState.saveSuccess) {
         if (uiState.saveSuccess) {
             viewModel.clearSaveSuccess()
-            // Could show a snackbar here
+            onNavigateBack()
         }
     }
 
