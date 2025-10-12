@@ -205,6 +205,9 @@ class DailyJournalViewModel @Inject constructor(
                 val accomplishments = state.accomplishments.filter { it.isNotBlank() }
                 val improvements = state.improvements.filter { it.isNotBlank() }
 
+                Timber.d("saveEntry: Creating entry with uid=$uid, date=${state.currentDate}, mood=${state.mood}")
+                Timber.d("saveEntry: Gratitudes=${gratitudes.size}, Accomplishments=${accomplishments.size}")
+
                 val entry = DailyJournalEntry.createForDate(
                     uid = uid,
                     date = state.currentDate,
@@ -218,6 +221,7 @@ class DailyJournalViewModel @Inject constructor(
                     remindMeTomorrow = state.remindMeTomorrow
                 )
 
+                Timber.d("saveEntry: Calling repository.saveDailyEntry()")
                 val result = dailyJournalRepository.saveDailyEntry(entry)
                 result.fold(
                     onSuccess = {
@@ -226,14 +230,16 @@ class DailyJournalViewModel @Inject constructor(
                             saveSuccess = true,
                             isExistingEntry = true
                         )
-                        Timber.i("saveEntry: Entry saved successfully for ${state.currentDate}")
+                        Timber.i("saveEntry: ✅ SUCCESS! Entry saved to Firestore: users/$uid/dailyJournal/${state.currentDate}")
+                        println("JOURNAL DEBUG: ✅ Entry saved successfully to Firestore!")
                     },
                     onFailure = { error ->
                         _uiState.value = state.copy(
                             isSaving = false,
                             error = "Erreur lors de la sauvegarde: ${error.message}"
                         )
-                        Timber.e(error, "saveEntry: Error saving entry")
+                        Timber.e(error, "saveEntry: ❌ FAILED! Error saving entry")
+                        println("JOURNAL DEBUG: ❌ Error: ${error.message}")
                     }
                 )
             } catch (e: Exception) {
@@ -241,7 +247,8 @@ class DailyJournalViewModel @Inject constructor(
                     isSaving = false,
                     error = "Erreur: ${e.message}"
                 )
-                Timber.e(e, "saveEntry: Exception")
+                Timber.e(e, "saveEntry: ❌ Exception during save")
+                println("JOURNAL DEBUG: ❌ Exception: ${e.message}")
             }
         }
     }
