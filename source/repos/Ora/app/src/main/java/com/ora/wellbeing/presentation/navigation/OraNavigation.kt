@@ -23,6 +23,8 @@ import androidx.navigation.compose.rememberNavController
 import com.ora.wellbeing.presentation.screens.auth.AuthScreen
 import com.ora.wellbeing.presentation.screens.home.HomeScreen
 import com.ora.wellbeing.presentation.screens.library.LibraryScreen
+import com.ora.wellbeing.presentation.screens.journal.DailyJournalEntryScreen
+import com.ora.wellbeing.presentation.screens.journal.JournalCalendarScreen
 import com.ora.wellbeing.presentation.screens.journal.JournalScreen
 import com.ora.wellbeing.presentation.screens.programs.ProgramsScreen
 import com.ora.wellbeing.presentation.screens.profile.ProfileScreen
@@ -122,10 +124,12 @@ fun OraNavigation(
             composable(OraDestinations.Journal.route) {
                 JournalScreen(
                     onNavigateToEntry = { date ->
-                        navController.navigate(OraDestinations.JournalEntry.createRoute(date))
+                        // Navigate to daily journal instead of simple gratitude
+                        navController.navigate(OraDestinations.DailyJournalEntry.createRoute(date))
                     },
                     onNavigateToHistory = {
-                        navController.navigate(OraDestinations.JournalHistory.route)
+                        // Navigate to calendar view
+                        navController.navigate(OraDestinations.JournalCalendar.route)
                     }
                 )
             }
@@ -191,6 +195,32 @@ fun OraNavigation(
                     practiceId = practiceId,
                     onBack = { navController.popBackStack() },
                     onMinimize = { navController.popBackStack() }
+                )
+            }
+
+            // NEW: Daily Journal Entry Screen
+            composable(
+                route = OraDestinations.DailyJournalEntry.route,
+                arguments = OraDestinations.DailyJournalEntry.arguments
+            ) { backStackEntry ->
+                val date = backStackEntry.arguments?.getString("date")
+                DailyJournalEntryScreen(
+                    date = date,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            // NEW: Journal Calendar Screen
+            composable(OraDestinations.JournalCalendar.route) {
+                JournalCalendarScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onNavigateToEntry = { date ->
+                        navController.navigate(OraDestinations.DailyJournalEntry.createRoute(date))
+                    }
                 )
             }
 

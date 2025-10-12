@@ -49,6 +49,20 @@ service cloud.firestore {
                       && request.auth.uid == uid
                       && validatePracticeStats(request.resource.data);
       }
+
+      // NEW: Sous-collection users/{uid}/dailyJournal - Entrées de journal quotidien
+      match /dailyJournal/{date} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+
+        // Validation des champs à l'écriture
+        allow create: if request.auth != null
+                      && request.auth.uid == uid
+                      && validateDailyJournalEntry(request.resource.data);
+
+        allow update: if request.auth != null
+                      && request.auth.uid == uid
+                      && validateDailyJournalEntry(request.resource.data);
+      }
     }
 
     // Collection stats/{uid}
@@ -152,6 +166,24 @@ service cloud.firestore {
           && data.gratitudes.size() >= 1
           && data.gratitudes.size() <= 3
           && (data.notes == null || (data.notes is string && data.notes.size() <= 500))
+          && data.createdAt is timestamp
+          && (data.updatedAt == null || data.updatedAt is timestamp);
+    }
+
+    // NEW: Valide une entrée de journal quotidien
+    function validateDailyJournalEntry(data) {
+      return data.uid is string
+          && data.uid.size() > 0
+          && data.date is string
+          && data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')  // Format YYYY-MM-DD
+          && (data.mood == null || data.mood in ['happy', 'neutral', 'sad', 'frustrated'])
+          && (data.shortNote == null || (data.shortNote is string && data.shortNote.size() <= 200))
+          && (data.dailyStory == null || (data.dailyStory is string && data.dailyStory.size() <= 2000))
+          && (data.gratitudes == null || (data.gratitudes is list && data.gratitudes.size() <= 3))
+          && (data.accomplishments == null || data.accomplishments is list)
+          && (data.improvements == null || (data.improvements is list && data.improvements.size() <= 3))
+          && (data.learnings == null || (data.learnings is string && data.learnings.size() <= 1000))
+          && (data.remindMeTomorrow == null || data.remindMeTomorrow is bool)
           && data.createdAt is timestamp
           && (data.updatedAt == null || data.updatedAt is timestamp);
     }
