@@ -3,22 +3,22 @@ package com.ora.wellbeing.presentation.screens.journal
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
-import com.ora.wellbeing.data.model.GratitudeEntry
-import com.ora.wellbeing.domain.repository.GratitudeRepository
+import com.ora.wellbeing.data.model.DailyJournalEntry
+import com.ora.wellbeing.domain.repository.DailyJournalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 @HiltViewModel
 class JournalViewModel @Inject constructor(
-    private val gratitudeRepository: GratitudeRepository,
+    private val dailyJournalRepository: DailyJournalRepository,
     private val auth: FirebaseAuth
 ) : ViewModel() {
 
@@ -42,7 +42,7 @@ class JournalViewModel @Inject constructor(
             Timber.e("observeGratitudeData: No authenticated user")
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
-                error = "Vous devez être connecté pour voir vos gratitudes"
+                error = "Vous devez être connecté pour voir votre journal"
             )
             return
         }
@@ -51,74 +51,78 @@ class JournalViewModel @Inject constructor(
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true)
 
-                // Combine today's entry, recent entries, and calculate stats
-                combine(
-                    gratitudeRepository.getTodayEntry(uid),
-                    gratitudeRepository.getRecentEntries(uid, limit = 10)
-                ) { todayEntry, recentEntries ->
-                    Triple(todayEntry, recentEntries, uid)
-                }.collect { (todayEntry, recentEntries, currentUid) ->
-                    // Calculate streak and stats
-                    val streak = gratitudeRepository.calculateStreak(currentUid)
-                    val totalCount = gratitudeRepository.getTotalEntryCount(currentUid)
-                    val thisMonthCount = recentEntries.count { entry ->
-                        val entryDate = LocalDate.parse(entry.date, DateTimeFormatter.ISO_LOCAL_DATE)
-                        entryDate.month == LocalDate.now().month && entryDate.year == LocalDate.now().year
-                    }
+                // Get today's date
+                val today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
 
-                    _uiState.value = JournalUiState(
-                        isLoading = false,
-                        error = null,
-                        todayEntry = todayEntry?.toUiEntry(),
-                        recentEntries = recentEntries.map { it.toUiEntry() },
-                        totalEntries = totalCount,
-                        gratitudeStreak = streak,
-                        thisMonthEntries = thisMonthCount
-                    )
+                // Get today's entry
+                val todayResult = dailyJournalRepository.getEntryByDate(uid, today)
+                val todayEntry = todayResult.getOrNull()
 
-                    Timber.d("observeGratitudeData: Updated UI state (total=$totalCount, streak=$streak)")
+                // Get recent entries (last 10)
+                val recentResult = dailyJournalRepository.getRecentEntries(uid, limit = 10)
+                val recentEntries = recentResult.getOrNull() ?: emptyList()
+
+                // Calculate streak (consecutive days with entries)
+                val currentMonth = YearMonth.now()
+                val monthEntriesResult = dailyJournalRepository.observeEntriesForMonth(
+                    uid,
+                    currentMonth.format(DateTimeFormatter.ofPattern("yyyy-MM"))
+                )
+
+                // Simple streak calculation: count how many of the last N days have entries
+                val streak = calculateSimpleStreak(recentEntries)
+                val totalCount = recentEntries.size
+                val thisMonthCount = recentEntries.count { entry ->
+                    val entryDate = LocalDate.parse(entry.date, DateTimeFormatter.ISO_LOCAL_DATE)
+                    entryDate.month == LocalDate.now().month && entryDate.year == LocalDate.now().year
                 }
+
+                _uiState.value = JournalUiState(
+                    isLoading = false,
+                    error = null,
+                    todayEntry = todayEntry?.toUiEntry(),
+                    recentEntries = recentEntries.map { it.toUiEntry() },
+                    totalEntries = totalCount,
+                    gratitudeStreak = streak,
+                    thisMonthEntries = thisMonthCount
+                )
+
+                Timber.d("observeGratitudeData: Updated UI state (total=$totalCount, streak=$streak)")
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     error = "Erreur lors du chargement du journal: ${e.message}"
                 )
-                Timber.e(e, "Error observing gratitude data")
+                Timber.e(e, "Error observing journal data")
             }
         }
     }
 
-    private fun saveGratitudes(gratitudes: List<String>, mood: String?, notes: String?) {
-        val uid = auth.currentUser?.uid ?: run {
-            Timber.e("saveGratitudes: No authenticated user")
-            _uiState.value = _uiState.value.copy(error = "Vous devez être connecté")
-            return
-        }
+    private fun calculateSimpleStreak(entries: List<DailyJournalEntry>): Int {
+        if (entries.isEmpty()) return 0
 
-        viewModelScope.launch {
-            try {
-                val entry = GratitudeEntry.createForToday(uid, gratitudes, mood, notes)
+        val sortedDates = entries.map {
+            LocalDate.parse(it.date, DateTimeFormatter.ISO_LOCAL_DATE)
+        }.sortedDescending()
 
-                val result = gratitudeRepository.createEntry(entry)
-                result.fold(
-                    onSuccess = {
-                        Timber.i("saveGratitudes: Entry saved successfully")
-                        // UI state will update automatically via Flow
-                    },
-                    onFailure = { error ->
-                        _uiState.value = _uiState.value.copy(
-                            error = "Erreur lors de la sauvegarde: ${error.message}"
-                        )
-                        Timber.e(error, "Error saving gratitude entry")
-                    }
-                )
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    error = "Erreur lors de la sauvegarde: ${e.message}"
-                )
-                Timber.e(e, "Error saving gratitude entry")
+        var streak = 0
+        var expectedDate = LocalDate.now()
+
+        for (date in sortedDates) {
+            if (date == expectedDate || date == expectedDate.minusDays(1)) {
+                streak++
+                expectedDate = date.minusDays(1)
+            } else {
+                break
             }
         }
+
+        return streak
+    }
+
+    private fun saveGratitudes(gratitudes: List<String>, mood: String?, notes: String?) {
+        // This method is deprecated - use DailyJournalEntryScreen instead
+        Timber.w("saveGratitudes: Deprecated method called, use DailyJournalEntryScreen instead")
     }
 
     private fun deleteEntry(entryId: String) {
@@ -130,11 +134,12 @@ class JournalViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 // Entry ID is the date (yyyy-MM-dd)
-                val result = gratitudeRepository.deleteEntry(uid, entryId)
+                val result = dailyJournalRepository.deleteEntry(uid, entryId)
                 result.fold(
                     onSuccess = {
                         Timber.i("deleteEntry: Entry $entryId deleted successfully")
-                        // UI state will update automatically via Flow
+                        // Reload data after deletion
+                        observeGratitudeData()
                     },
                     onFailure = { error ->
                         _uiState.value = _uiState.value.copy(
@@ -153,19 +158,36 @@ class JournalViewModel @Inject constructor(
     }
 
     /**
-     * Converts GratitudeEntry (data model) to JournalEntry (UI model)
+     * Converts DailyJournalEntry (data model) to JournalEntry (UI model)
      */
-    private fun GratitudeEntry.toUiEntry(): JournalUiState.JournalEntry {
+    private fun DailyJournalEntry.toUiEntry(): JournalUiState.JournalEntry {
+        val moodEmoji = when (mood) {
+            "happy" -> "😊"
+            "neutral" -> "😐"
+            "sad" -> "😕"
+            "frustrated" -> "😠"
+            else -> ""
+        }
+
         return JournalUiState.JournalEntry(
             id = date, // Use date as ID
             date = date,
             formattedDate = getFormattedDate(),
             gratitudes = gratitudes,
-            mood = mood ?: "",
-            notes = notes ?: "",
+            mood = moodEmoji,
+            notes = shortNote,
             createdAt = createdAt?.toDate()?.time ?: System.currentTimeMillis(),
             updatedAt = updatedAt?.toDate()?.time ?: System.currentTimeMillis()
         )
+    }
+
+    private fun DailyJournalEntry.getFormattedDate(): String {
+        return try {
+            val localDate = LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE)
+            localDate.format(DateTimeFormatter.ofPattern("d MMMM yyyy", java.util.Locale.FRENCH))
+        } catch (e: Exception) {
+            date
+        }
     }
 }
 
