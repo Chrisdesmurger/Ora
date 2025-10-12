@@ -8,12 +8,14 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.ktx.storage
 import com.ora.wellbeing.data.repository.impl.ContentRepositoryImpl
+import com.ora.wellbeing.data.repository.impl.DailyJournalRepositoryImpl
 import com.ora.wellbeing.data.repository.impl.FirestoreUserProfileRepositoryImpl
 import com.ora.wellbeing.data.repository.impl.FirestoreUserStatsRepositoryImpl
 import com.ora.wellbeing.data.repository.impl.GratitudeRepositoryImpl
 import com.ora.wellbeing.data.repository.impl.ProgramRepositoryImpl
 import com.ora.wellbeing.data.repository.impl.UserProgramRepositoryImpl
 import com.ora.wellbeing.domain.repository.ContentRepository
+import com.ora.wellbeing.domain.repository.DailyJournalRepository
 import com.ora.wellbeing.domain.repository.FirestoreUserProfileRepository
 import com.ora.wellbeing.domain.repository.FirestoreUserStatsRepository
 import com.ora.wellbeing.domain.repository.GratitudeRepository
@@ -93,6 +95,18 @@ object FirestoreModule {
     ): GratitudeRepository {
         Timber.d("provideGratitudeRepository: Creating repository")
         return GratitudeRepositoryImpl(firestore)
+    }
+
+    /**
+     * Fournit le repository pour les entrées de journal quotidien (NEW)
+     */
+    @Provides
+    @Singleton
+    fun provideDailyJournalRepository(
+        firestore: FirebaseFirestore
+    ): DailyJournalRepository {
+        Timber.d("provideDailyJournalRepository: Creating repository")
+        return DailyJournalRepositoryImpl(firestore)
     }
 
     /**

@@ -67,6 +67,7 @@ sealed class OraDestinations(
     }
 
     // Journal specific destinations
+    // Legacy gratitude entry (for backward compatibility)
     object JournalEntry : OraDestinations(
         route = "journal_entry/{date?}",
         arguments = listOf(
@@ -81,6 +82,25 @@ sealed class OraDestinations(
             return if (date != null) "journal_entry/$date" else "journal_entry"
         }
     }
+
+    // NEW: Daily Journal Entry (comprehensive journal)
+    object DailyJournalEntry : OraDestinations(
+        route = "daily_journal_entry/{date?}",
+        arguments = listOf(
+            navArgument("date") {
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null
+            }
+        )
+    ) {
+        fun createRoute(date: String? = null): String {
+            return if (date != null) "daily_journal_entry/$date" else "daily_journal_entry"
+        }
+    }
+
+    // NEW: Journal Calendar View
+    object JournalCalendar : OraDestinations("journal_calendar")
 
     object JournalHistory : OraDestinations("journal_history")
 
