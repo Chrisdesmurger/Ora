@@ -122,14 +122,18 @@ fun OraNavigation(
             }
 
             composable(OraDestinations.Journal.route) {
-                JournalScreen(
-                    onNavigateToEntry = { date ->
-                        // Navigate to daily journal instead of simple gratitude
-                        navController.navigate(OraDestinations.DailyJournalEntry.createRoute(date))
-                    },
-                    onNavigateToHistory = {
-                        // Navigate to calendar view
-                        navController.navigate(OraDestinations.JournalCalendar.route)
+                // Show daily journal entry form directly instead of list view
+                DailyJournalEntryScreen(
+                    date = null, // Today's entry
+                    onNavigateBack = {
+                        // Navigate back to home when closing from bottom nav
+                        navController.navigate(OraDestinations.Home.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 )
             }
