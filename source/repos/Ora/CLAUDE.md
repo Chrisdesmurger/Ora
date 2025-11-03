@@ -6,6 +6,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Ora is a Android wellbeing application built with Jetpack Compose, implementing clean architecture principles with MVVM pattern. The app focuses on meditation, yoga, journaling, and personal development programs with **complete offline support**.
 
+### Project Ecosystem
+
+**This repository (Ora)** contains the **Android mobile application** (user-facing app).
+
+There is a separate project for the **Admin Web Portal**:
+- **Repository**: `OraWebApp` (Next.js admin portal)
+- **Location**: `C:\Users\chris\source\repos\OraWebApp`
+- **Purpose**: Web-based admin interface for managing users, programs, lessons, and content
+- **Tech Stack**: Next.js 15, TypeScript, Firebase Admin SDK, Tailwind CSS
+- **Users**: Administrators and teachers (not end users)
+
+**Key Differences**:
+
+| Aspect | Ora (Android) | OraWebApp (Admin Portal) |
+|--------|---------------|--------------------------|
+| **Platform** | Android mobile app | Web application |
+| **Users** | End users (meditation/wellbeing seekers) | Admins, teachers (content managers) |
+| **Main Purpose** | Consume content, track progress, journal | Manage users, content, programs, analytics |
+| **Data Access** | Offline-first (Room + Firestore sync) | Online-only (direct Firestore access) |
+| **Authentication** | Firebase Auth (user accounts) | Firebase Auth (admin/teacher roles with RBAC) |
+| **Firestore Fields** | Uses **camelCase** (firstName, photoUrl) | Backend uses **snake_case** (first_name, photo_url), API maps to camelCase |
+
+**Important**: When working on Firestore data models, be aware that:
+- **Android app** expects Firestore fields in **camelCase**
+- **Admin portal** queries Firestore with **snake_case** field names, then maps to camelCase for the frontend
+- Both projects share the same Firestore database but may use different field naming conventions
+
 ## Architecture
 
 ### Clean Architecture Layers
@@ -239,12 +266,35 @@ For offline support: [docs/OFFLINE_SUPPORT_GUIDE.md](docs/OFFLINE_SUPPORT_GUIDE.
 
 ## Build Commands
 
-- **Build**: `./gradlew build`
-- **Debug**: `./gradlew assembleDebug`
-- **Install**: `./gradlew installDebug`
-- **Clean Build**: `./gradlew clean assembleDebug installDebug`
-- **Test**: `./gradlew test`
-- **Lint**: `./gradlew lint`
+### Gradle Commands (Windows)
+- **Build**: `./gradlew.bat build`
+- **Debug**: `./gradlew.bat assembleDebug`
+- **Install on Device**: `./gradlew.bat installDebug`
+- **Clean Build**: `./gradlew.bat clean assembleDebug installDebug`
+- **Test**: `./gradlew.bat test`
+- **Lint**: `./gradlew.bat lint`
+
+### ADB Commands (Device Management)
+- **List Devices**: `adb devices`
+- **Install APK**: `adb install app/build/outputs/apk/debug/app-debug.apk`
+- **View Logs**: `adb logcat`
+- **Filter Logs**: `adb logcat | grep -i "OraApp"`
+- **Clear App Data**: `adb shell pm clear com.ora.wellbeing`
+- **Uninstall App**: `adb uninstall com.ora.wellbeing`
+
+### Common Build Issues
+
+**Issue**: Gradle build fails with "AAPT2 error"
+- **Solution**: Clean and rebuild: `./gradlew.bat clean assembleDebug`
+
+**Issue**: "Duplicate class" errors
+- **Solution**: Check for conflicting dependencies in `build.gradle.kts`
+
+**Issue**: Hilt compilation errors
+- **Solution**: Make sure all `@HiltViewModel` classes have `@Inject constructor()`
+
+**Issue**: Room schema changes causing crashes
+- **Solution**: Uninstall app or clear data with `adb shell pm clear com.ora.wellbeing`
 
 ## Firebase Commands
 
@@ -318,6 +368,20 @@ sealed class SyncState {
 - **Design System**: [docs/DESIGN_SYSTEM_SUMMARY.md](docs/DESIGN_SYSTEM_SUMMARY.md)
 
 ## Recent Changes
+
+### Daily Journal Navigation Fix (2025-10-23)
+
+Fixed journal entry navigation and save behavior:
+- ✅ Added automatic navigation after successful save in `DailyJournalEntryScreen`
+- ✅ Journal tab now shows `DailyJournalEntryScreen` directly (simplified flow)
+- ✅ Added detailed logging for save operations debugging
+- ✅ Improved error handling in journal save flow
+
+**Key Behavior**: After saving a journal entry, the app automatically navigates back to the journal list. This provides better UX feedback and prevents confusion about whether the entry was saved.
+
+See commits:
+- `a16013e` - fix(journal): Add automatic navigation after successful save
+- `458abdf` - refactor(journal): Show DailyJournalEntryScreen directly on Journal tab
 
 ### Offline Support Implementation (2025-10-11)
 
