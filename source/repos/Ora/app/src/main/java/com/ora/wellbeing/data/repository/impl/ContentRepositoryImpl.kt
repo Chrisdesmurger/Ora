@@ -12,7 +12,9 @@ import com.ora.wellbeing.data.model.ContentItem
 import com.ora.wellbeing.data.model.firestore.LessonDocument
 import com.ora.wellbeing.domain.repository.ContentRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 import java.time.Instant
@@ -257,265 +259,176 @@ class ContentRepositoryImpl @Inject constructor(
     // Repository Interface Implementation (Offline-First)
     // ============================================================================
 
-    override fun getAllContent(): Flow<List<ContentItem>> = flow {
-        Timber.d("getAllContent: Fetching content (offline-first)")
+    // FIX(build-debug-android): Remove .collect{} inside flow{} to prevent infinite loops
+    // Use .map{} + .onStart{} pattern like ProgramRepositoryImpl
 
-        // 1. Emit cached data immediately
-        val cachedContent = contentDao.getAllContentFlow()
-        cachedContent.collect { contentList ->
-            if (contentList.isNotEmpty()) {
-                Timber.d("getAllContent: Emitting ${contentList.size} cached items")
-                emit(contentList.map { it.toContentItem() })
+    override fun getAllContent(): Flow<List<ContentItem>> {
+        Timber.d("getAllContent: Returning offline-first Flow")
+
+        return contentDao.getAllContentFlow()
+            .map { contentList ->
+                contentList.map { it.toContentItem() }
             }
-        }
-
-        // 2. Sync from Firestore if needed
-        if (shouldSync()) {
-            Timber.d("getAllContent: Cache stale, syncing from Firestore")
-            syncAllLessonsFromFirestore()
-
-            // Emit fresh data after sync
-            val freshContent = contentDao.getAllContentFlow()
-            freshContent.collect { contentList ->
-                Timber.d("getAllContent: Emitting ${contentList.size} fresh items after sync")
-                emit(contentList.map { it.toContentItem() })
+            .onStart {
+                // Trigger sync in background if needed
+                if (shouldSync()) {
+                    Timber.d("getAllContent: Triggering background sync")
+                    syncAllLessonsFromFirestore()
+                }
             }
-        }
     }
 
-    override fun getContentByCategory(category: String): Flow<List<ContentItem>> = flow {
+    override fun getContentByCategory(category: String): Flow<List<ContentItem>> {
         require(category.isNotBlank()) { "Category cannot be blank" }
-        Timber.d("getContentByCategory: category=$category (offline-first)")
+        Timber.d("getContentByCategory: Returning offline-first Flow for category=$category")
 
         // Map string category to Room Category enum
         val roomCategory = mapStringToCategory(category)
 
-        // 1. Emit cached data immediately
-        contentDao.getContentByCategoryFlow(roomCategory).collect { contentList ->
-            if (contentList.isNotEmpty()) {
-                Timber.d("getContentByCategory: Emitting ${contentList.size} cached items")
-                emit(contentList.map { it.toContentItem() })
+        return contentDao.getContentByCategoryFlow(roomCategory)
+            .map { contentList ->
+                contentList.map { it.toContentItem() }
             }
-        }
-
-        // 2. Sync from Firestore if needed
-        if (shouldSync()) {
-            Timber.d("getContentByCategory: Cache stale, syncing from Firestore")
-            syncAllLessonsFromFirestore()
-
-            // Emit fresh data after sync
-            contentDao.getContentByCategoryFlow(roomCategory).collect { contentList ->
-                Timber.d("getContentByCategory: Emitting ${contentList.size} fresh items after sync")
-                emit(contentList.map { it.toContentItem() })
-            }
-        }
-    }
-
-    override fun getContent(contentId: String): Flow<ContentItem?> = flow {
-        require(contentId.isNotBlank()) { "Content ID cannot be blank" }
-        Timber.d("getContent: contentId=$contentId (offline-first)")
-
-        // 1. Emit cached data immediately
-        contentDao.getContentByIdFlow(contentId).collect { content ->
-            if (content != null) {
-                Timber.d("getContent: Emitting cached content")
-                emit(content.toContentItem())
-            }
-        }
-
-        // 2. Sync from Firestore if needed
-        if (shouldSync()) {
-            Timber.d("getContent: Cache stale, syncing from Firestore")
-            syncLessonFromFirestore(contentId)
-
-            // Emit fresh data after sync
-            contentDao.getContentByIdFlow(contentId).collect { content ->
-                if (content != null) {
-                    Timber.d("getContent: Emitting fresh content after sync")
-                    emit(content.toContentItem())
+            .onStart {
+                // Trigger sync in background if needed
+                if (shouldSync()) {
+                    Timber.d("getContentByCategory: Triggering background sync for category=$category")
+                    syncAllLessonsFromFirestore()
                 }
             }
-        }
     }
 
-    override fun getPopularContent(limit: Int): Flow<List<ContentItem>> = flow {
+    override fun getContent(contentId: String): Flow<ContentItem?> {
+        require(contentId.isNotBlank()) { "Content ID cannot be blank" }
+        Timber.d("getContent: Returning offline-first Flow for id=$contentId")
+
+        return contentDao.getContentByIdFlow(contentId)
+            .map { content ->
+                content?.toContentItem()
+            }
+            .onStart {
+                // Trigger sync in background if needed
+                if (shouldSync()) {
+                    Timber.d("getContent: Triggering background sync for id=$contentId")
+                    syncLessonFromFirestore(contentId)
+                }
+            }
+    }
+
+    override fun getPopularContent(limit: Int): Flow<List<ContentItem>> {
         require(limit > 0) { "Limit must be > 0" }
-        Timber.d("getPopularContent: limit=$limit (offline-first)")
+        Timber.d("getPopularContent: Returning offline-first Flow (limit=$limit)")
 
         // Note: "isPopular" is computed from user activity, not stored in Room
         // For now, return all content and let UI/ViewModel filter by popularity
         // TODO: Add isPopular field to Content entity and update during sync
 
-        // 1. Emit cached data immediately
-        contentDao.getAllContentFlow().collect { contentList ->
-            val limited = contentList.take(limit)
-            if (limited.isNotEmpty()) {
-                Timber.d("getPopularContent: Emitting ${limited.size} cached items")
-                emit(limited.map { it.toContentItem() })
+        return contentDao.getAllContentFlow()
+            .map { contentList ->
+                contentList.take(limit).map { it.toContentItem() }
             }
-        }
-
-        // 2. Sync from Firestore if needed
-        if (shouldSync()) {
-            Timber.d("getPopularContent: Cache stale, syncing from Firestore")
-            syncAllLessonsFromFirestore()
-
-            // Emit fresh data after sync
-            contentDao.getAllContentFlow().collect { contentList ->
-                val limited = contentList.take(limit)
-                Timber.d("getPopularContent: Emitting ${limited.size} fresh items after sync")
-                emit(limited.map { it.toContentItem() })
+            .onStart {
+                // Trigger sync in background if needed
+                if (shouldSync()) {
+                    Timber.d("getPopularContent: Triggering background sync")
+                    syncAllLessonsFromFirestore()
+                }
             }
-        }
     }
 
-    override fun getNewContent(limit: Int): Flow<List<ContentItem>> = flow {
+    override fun getNewContent(limit: Int): Flow<List<ContentItem>> {
         require(limit > 0) { "Limit must be > 0" }
-        Timber.d("getNewContent: limit=$limit (offline-first)")
+        Timber.d("getNewContent: Returning offline-first Flow (limit=$limit)")
 
-        // 1. Emit cached data immediately (filter by recent updatedAt)
-        contentDao.getAllContentFlow().collect { contentList ->
-            val recentContent = contentList
-                .filter { isRecentFromTimestamp(it.updatedAt) }
-                .take(limit)
-
-            if (recentContent.isNotEmpty()) {
-                Timber.d("getNewContent: Emitting ${recentContent.size} cached items")
-                emit(recentContent.map { it.toContentItem() })
-            }
-        }
-
-        // 2. Sync from Firestore if needed
-        if (shouldSync()) {
-            Timber.d("getNewContent: Cache stale, syncing from Firestore")
-            syncAllLessonsFromFirestore()
-
-            // Emit fresh data after sync
-            contentDao.getAllContentFlow().collect { contentList ->
-                val recentContent = contentList
+        return contentDao.getAllContentFlow()
+            .map { contentList ->
+                contentList
                     .filter { isRecentFromTimestamp(it.updatedAt) }
                     .take(limit)
-
-                Timber.d("getNewContent: Emitting ${recentContent.size} fresh items after sync")
-                emit(recentContent.map { it.toContentItem() })
+                    .map { it.toContentItem() }
             }
-        }
+            .onStart {
+                // Trigger sync in background if needed
+                if (shouldSync()) {
+                    Timber.d("getNewContent: Triggering background sync")
+                    syncAllLessonsFromFirestore()
+                }
+            }
     }
 
-    override fun getContentByDuration(minMinutes: Int, maxMinutes: Int): Flow<List<ContentItem>> = flow {
-        Timber.d("getContentByDuration: min=$minMinutes, max=$maxMinutes (offline-first)")
+    override fun getContentByDuration(minMinutes: Int, maxMinutes: Int): Flow<List<ContentItem>> {
+        Timber.d("getContentByDuration: Returning offline-first Flow (min=$minMinutes, max=$maxMinutes)")
 
-        // 1. Emit cached data immediately
-        contentDao.getContentByMaxDurationFlow(maxMinutes).collect { contentList ->
-            val filtered = contentList.filter { it.durationMinutes >= minMinutes }
-
-            if (filtered.isNotEmpty()) {
-                Timber.d("getContentByDuration: Emitting ${filtered.size} cached items")
-                emit(filtered.map { it.toContentItem() })
+        return contentDao.getContentByMaxDurationFlow(maxMinutes)
+            .map { contentList ->
+                contentList
+                    .filter { it.durationMinutes >= minMinutes }
+                    .map { it.toContentItem() }
             }
-        }
-
-        // 2. Sync from Firestore if needed
-        if (shouldSync()) {
-            Timber.d("getContentByDuration: Cache stale, syncing from Firestore")
-            syncAllLessonsFromFirestore()
-
-            // Emit fresh data after sync
-            contentDao.getContentByMaxDurationFlow(maxMinutes).collect { contentList ->
-                val filtered = contentList.filter { it.durationMinutes >= minMinutes }
-
-                Timber.d("getContentByDuration: Emitting ${filtered.size} fresh items after sync")
-                emit(filtered.map { it.toContentItem() })
+            .onStart {
+                // Trigger sync in background if needed
+                if (shouldSync()) {
+                    Timber.d("getContentByDuration: Triggering background sync")
+                    syncAllLessonsFromFirestore()
+                }
             }
-        }
     }
 
-    override fun searchContent(query: String): Flow<List<ContentItem>> = flow {
-        Timber.d("searchContent: query='$query' (offline-first, client-side)")
+    override fun searchContent(query: String): Flow<List<ContentItem>> {
+        Timber.d("searchContent: Returning offline-first Flow for query='$query'")
 
-        if (query.isBlank()) {
+        return if (query.isBlank()) {
             // Empty query returns all content
-            getAllContent().collect { emit(it) }
+            getAllContent()
         } else {
-            // 1. Search in cache immediately
-            contentDao.searchContentFlow(query).collect { contentList ->
-                if (contentList.isNotEmpty()) {
-                    Timber.d("searchContent: Found ${contentList.size} cached matches")
-                    emit(contentList.map { it.toContentItem() })
+            contentDao.searchContentFlow(query)
+                .map { contentList ->
+                    contentList.map { it.toContentItem() }
                 }
-            }
-
-            // 2. Sync from Firestore if needed, then search again
-            if (shouldSync()) {
-                Timber.d("searchContent: Cache stale, syncing from Firestore")
-                syncAllLessonsFromFirestore()
-
-                // Search in fresh data
-                contentDao.searchContentFlow(query).collect { contentList ->
-                    Timber.d("searchContent: Found ${contentList.size} fresh matches after sync")
-                    emit(contentList.map { it.toContentItem() })
+                .onStart {
+                    // Trigger sync in background if needed
+                    if (shouldSync()) {
+                        Timber.d("searchContent: Triggering background sync for query='$query'")
+                        syncAllLessonsFromFirestore()
+                    }
                 }
-            }
         }
     }
 
-    override fun getContentByInstructor(instructor: String): Flow<List<ContentItem>> = flow {
+    override fun getContentByInstructor(instructor: String): Flow<List<ContentItem>> {
         require(instructor.isNotBlank()) { "Instructor cannot be blank" }
-        Timber.d("getContentByInstructor: instructor='$instructor' (offline-first)")
+        Timber.d("getContentByInstructor: Returning offline-first Flow for instructor='$instructor'")
 
         // Room doesn't have direct instructor query, so filter client-side
-
-        // 1. Emit cached data immediately
-        contentDao.getAllContentFlow().collect { contentList ->
-            val filtered = contentList.filter {
-                it.instructorName?.equals(instructor, ignoreCase = true) == true
+        return contentDao.getAllContentFlow()
+            .map { contentList ->
+                contentList
+                    .filter { it.instructorName?.equals(instructor, ignoreCase = true) == true }
+                    .map { it.toContentItem() }
             }
-
-            if (filtered.isNotEmpty()) {
-                Timber.d("getContentByInstructor: Emitting ${filtered.size} cached items")
-                emit(filtered.map { it.toContentItem() })
-            }
-        }
-
-        // 2. Sync from Firestore if needed
-        if (shouldSync()) {
-            Timber.d("getContentByInstructor: Cache stale, syncing from Firestore")
-            syncAllLessonsFromFirestore()
-
-            // Emit fresh data after sync
-            contentDao.getAllContentFlow().collect { contentList ->
-                val filtered = contentList.filter {
-                    it.instructorName?.equals(instructor, ignoreCase = true) == true
+            .onStart {
+                // Trigger sync in background if needed
+                if (shouldSync()) {
+                    Timber.d("getContentByInstructor: Triggering background sync for instructor='$instructor'")
+                    syncAllLessonsFromFirestore()
                 }
-
-                Timber.d("getContentByInstructor: Emitting ${filtered.size} fresh items after sync")
-                emit(filtered.map { it.toContentItem() })
             }
-        }
     }
 
     override suspend fun getTotalContentCount(): Int {
         return try {
             Timber.d("getTotalContentCount: Fetching from cache")
 
-            // Get from cache
-            val cachedCount = contentDao.getContentById("count")?.let { 1 } ?: 0
-
-            // If cache is stale, sync and recount
+            // Sync if needed
             if (shouldSync()) {
                 Timber.d("getTotalContentCount: Cache stale, syncing from Firestore")
                 syncAllLessonsFromFirestore()
             }
 
-            // Count from cache (post-sync if needed)
-            val snapshot = firestore
-                .collection(COLLECTION_LESSONS)
-                .whereEqualTo("status", STATUS_READY)
-                .get()
-                .await()
-
-            Timber.d("getTotalContentCount: ${snapshot.size()} total lessons")
-            snapshot.size()
+            // Count from cache using .first() to get single value
+            val count = contentDao.getAllContentFlow().first().size
+            Timber.d("getTotalContentCount: $count total lessons")
+            count
         } catch (e: Exception) {
             Timber.e(e, "getTotalContentCount: Error, returning 0")
             0
@@ -532,17 +445,11 @@ class ContentRepositoryImpl @Inject constructor(
                 syncAllLessonsFromFirestore()
             }
 
-            // Get unique instructors from Firestore
-            val snapshot = firestore
-                .collection(COLLECTION_LESSONS)
-                .whereEqualTo("status", STATUS_READY)
-                .get()
-                .await()
-
-            val instructors = snapshot.documents
-                .mapNotNull { doc ->
-                    val lessonDoc = doc.toObject(LessonDocument::class.java)
-                    lessonDoc?.tags?.find { it.startsWith("instructor:", ignoreCase = true) }
+            // Get unique instructors from cache using .first()
+            val instructors = contentDao.getAllContentFlow()
+                .first()
+                .mapNotNull { content ->
+                    content.tags.find { it.startsWith("instructor:", ignoreCase = true) }
                         ?.substringAfter("instructor:")
                 }
                 .distinct()
