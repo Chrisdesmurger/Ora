@@ -1,12 +1,14 @@
 package com.ora.wellbeing.data.local.database
 
 import androidx.room.TypeConverter
+import com.google.firebase.Timestamp
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.util.Date
 
 class Converters {
 
@@ -55,5 +57,16 @@ class Converters {
     fun toStringList(value: String): List<String> {
         val listType = object : TypeToken<List<String>>() {}.type
         return gson.fromJson(value, listType) ?: emptyList()
+    }
+
+    // Firebase Timestamp converters (for Firestore sync)
+    @TypeConverter
+    fun fromTimestamp(value: Timestamp?): Long? {
+        return value?.toDate()?.time
+    }
+
+    @TypeConverter
+    fun toTimestamp(value: Long?): Timestamp? {
+        return value?.let { Timestamp(Date(it)) }
     }
 }

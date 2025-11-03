@@ -7,6 +7,8 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.ktx.storage
+import com.ora.wellbeing.data.local.dao.ContentDao
+import com.ora.wellbeing.data.local.dao.ProgramDao
 import com.ora.wellbeing.data.repository.impl.ContentRepositoryImpl
 import com.ora.wellbeing.data.repository.impl.DailyJournalRepositoryImpl
 import com.ora.wellbeing.data.repository.impl.FirestoreUserProfileRepositoryImpl
@@ -111,14 +113,16 @@ object FirestoreModule {
 
     /**
      * Fournit le repository pour le catalogue de programmes
+     * UPDATED: Now uses offline-first pattern with Room cache + Firestore sync
      */
     @Provides
     @Singleton
     fun provideProgramRepository(
-        firestore: FirebaseFirestore
+        firestore: FirebaseFirestore,
+        programDao: ProgramDao
     ): ProgramRepository {
-        Timber.d("provideProgramRepository: Creating repository")
-        return ProgramRepositoryImpl(firestore)
+        Timber.d("provideProgramRepository: Creating offline-first repository")
+        return ProgramRepositoryImpl(firestore, programDao)
     }
 
     /**
@@ -135,14 +139,16 @@ object FirestoreModule {
 
     /**
      * Fournit le repository pour le catalogue de contenu (méditations, vidéos yoga)
+     * UPDATED: Now uses offline-first pattern with Room cache + Firestore sync
      */
     @Provides
     @Singleton
     fun provideContentRepository(
-        firestore: FirebaseFirestore
+        firestore: FirebaseFirestore,
+        contentDao: ContentDao
     ): ContentRepository {
-        Timber.d("provideContentRepository: Creating repository")
-        return ContentRepositoryImpl(firestore)
+        Timber.d("provideContentRepository: Creating offline-first repository")
+        return ContentRepositoryImpl(firestore, contentDao)
     }
 
     /**

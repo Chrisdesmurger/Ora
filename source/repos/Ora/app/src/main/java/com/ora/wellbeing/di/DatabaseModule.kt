@@ -55,6 +55,14 @@ object DatabaseModule {
     }
 
     /**
+     * Fournit le DAO pour les programmes
+     */
+    @Provides
+    fun provideProgramDao(database: OraDatabase): ProgramDao {
+        return database.programDao()
+    }
+
+    /**
      * Fournit le DAO pour les entrées de journal
      */
     @Provides

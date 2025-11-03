@@ -13,13 +13,14 @@ import com.ora.wellbeing.data.local.entities.*
         User::class,
         JournalEntry::class,
         Content::class,
+        ProgramEntity::class,
         UserActivity::class,
         UserFavorite::class,
         UserStats::class,
         Settings::class,
         NotificationPreference::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -28,6 +29,7 @@ abstract class OraDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun journalDao(): JournalDao
     abstract fun contentDao(): ContentDao
+    abstract fun programDao(): ProgramDao
     abstract fun userActivityDao(): UserActivityDao
     abstract fun userFavoriteDao(): UserFavoriteDao
     abstract fun userStatsDao(): UserStatsDao
@@ -45,7 +47,7 @@ abstract class OraDatabase : RoomDatabase() {
                     OraDatabase::class.java,
                     "ora_database"
                 )
-                    .fallbackToDestructiveMigration()
+                    .addMigrations(Migrations.MIGRATION_1_2)
                     .build()
                 INSTANCE = instance
                 instance

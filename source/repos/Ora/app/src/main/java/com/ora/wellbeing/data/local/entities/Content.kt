@@ -24,7 +24,13 @@ data class Content(
     val benefits: List<String> = emptyList(),
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val isOfflineAvailable: Boolean = false,
-    val downloadSize: Long? = null
+    val downloadSize: Long? = null,
+
+    // NEW FIELDS - Phase 2.2: Firestore sync support
+    val programId: String? = null, // ID of program this lesson belongs to
+    val order: Int = 0, // Order/position within program (0-indexed)
+    val status: String = "ready", // Firestore status: draft|uploading|processing|ready|failed
+    val updatedAt: Long = System.currentTimeMillis() // Timestamp for sync tracking
 )
 
 enum class ContentType {
