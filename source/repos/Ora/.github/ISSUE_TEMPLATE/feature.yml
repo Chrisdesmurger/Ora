@@ -1,0 +1,132 @@
+name: 🚀 Feature Request (Spec-Driven)
+description: Propose a new feature for Ora Android app
+title: "[FEATURE] "
+labels: ["feature", "spec-needed"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 📝 Feature Specification
+        Please provide detailed information about the feature. This template is designed to be **AI-readable** for automated spec generation.
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 🎯 Context & Motivation
+      description: Why is this feature needed? What problem does it solve? Who benefits from it?
+      placeholder: |
+        Example: Currently, users cannot set custom meditation timers. This limits flexibility for experienced meditators who want specific session lengths...
+    validations:
+      required: true
+
+  - type: textarea
+    id: user_story
+    attributes:
+      label: 📖 User Story
+      description: Describe the feature from the user's perspective
+      placeholder: |
+        As a [role]
+        I want [capability]
+        So that [benefit]
+
+        Example:
+        As a meditation practitioner
+        I want to set custom timer durations (5, 10, 15, 20, 30 min)
+        So that I can practice meditation for my preferred length
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: ✅ Acceptance Criteria (Gherkin)
+      description: Define testable criteria using Given/When/Then format
+      placeholder: |
+        Scenario: Set custom meditation timer
+          Given I am on the meditation player screen
+          And I can see timer options
+          When I select "15 minutes"
+          Then the timer should be set to 15:00
+          And the meditation should play for 15 minutes
+          And I should receive a notification when complete
+      value: |
+        Scenario: [Scenario name]
+          Given [precondition]
+          When [action]
+          Then [expected outcome]
+    validations:
+      required: true
+
+  - type: textarea
+    id: impacts
+    attributes:
+      label: 🔍 Technical Impacts
+      description: What systems/components will be affected?
+      placeholder: |
+        - UI: Add timer picker component to MeditationPlayerScreen
+        - ViewModel: Update MeditationPlayerViewModel with timer logic
+        - Database: Store user's preferred timer duration in Room
+        - Notification: Schedule timer completion notification with WorkManager
+        - ExoPlayer: Implement playback controls for timed sessions
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 📊 Priority
+      description: How urgent is this feature?
+      options:
+        - 🔴 Critical (P0)
+        - 🟠 High (P1)
+        - 🟡 Medium (P2)
+        - 🟢 Low (P3)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: complexity
+    attributes:
+      label: 🧩 Estimated Complexity
+      description: Initial complexity estimate
+      options:
+        - 🐭 XS (1-2 hours)
+        - 🐱 S (2-4 hours)
+        - 🐕 M (1-2 days)
+        - 🐘 L (3-5 days)
+        - 🦕 XL (1+ week)
+    validations:
+      required: false
+
+  - type: dropdown
+    id: platform_scope
+    attributes:
+      label: 📱 Platform Scope
+      description: Which platforms should this feature support?
+      options:
+        - Android only
+        - Android + iOS (cross-platform)
+        - Android + Web Portal (admin)
+      multiple: false
+    validations:
+      required: false
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: 🎨 UI Mockups / Wireframes (optional)
+      description: Attach images or link to Figma/design files
+      placeholder: Drag and drop images here or paste URLs
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 💡 Additional Notes
+      description: Any other context, dependencies, or considerations
+      placeholder: |
+        - Related to issue #123
+        - Requires backend API changes in OraWebApp
+        - Should sync with Firestore for cross-device support
+        - Offline-first implementation required
