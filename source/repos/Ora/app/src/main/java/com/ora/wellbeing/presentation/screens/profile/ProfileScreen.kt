@@ -31,6 +31,7 @@ fun ProfileScreen(
     onNavigateToEditProfile: () -> Unit = {},
     onNavigateToPracticeStats: (String) -> Unit = {},
     onNavigateToGratitudes: () -> Unit = {},
+    onNavigateToDebug: () -> Unit = {}, // NEW: Debug navigation
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -86,6 +87,7 @@ fun ProfileScreen(
                     viewModel.onEvent(ProfileUiEvent.NavigateToGratitudes)
                     onNavigateToGratitudes()
                 },
+                onDebugClick = onNavigateToDebug, // NEW: Pass debug navigation
                 modifier = Modifier.padding(paddingValues)
             )
         }
@@ -98,6 +100,7 @@ private fun ProfileContent(
     onEditProfileClick: () -> Unit,
     onPracticeClick: (String) -> Unit,
     onGoalToggle: (String) -> Unit,
+    onDebugClick: () -> Unit = {}, // NEW: Debug navigation
     onGratitudesClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -162,6 +165,25 @@ private fun ProfileContent(
                 totalTime = uiState.totalTime,
                 lastActivity = uiState.lastActivity
             )
+        }
+
+        // Debug button (only in development)
+        item {
+            Button(
+                onClick = onDebugClick,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.BugReport,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("🔍 Firestore Debug (Dev Only)")
+            }
         }
 
         item { Spacer(modifier = Modifier.height(16.dp)) }

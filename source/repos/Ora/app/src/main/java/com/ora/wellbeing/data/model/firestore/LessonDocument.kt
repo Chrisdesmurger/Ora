@@ -142,13 +142,34 @@ class LessonDocument() {
 
     /**
      * Lesson creation timestamp (set automatically by Firestore)
+     * CRITICAL: OraWebApp stores this as ISO 8601 String (e.g., "2025-11-04T10:30:00.000Z")
+     * but Android expects Timestamp. This property accepts both formats.
      */
-    var created_at: Timestamp? = null
+    @get:com.google.firebase.firestore.PropertyName("created_at")
+    @set:com.google.firebase.firestore.PropertyName("created_at")
+    var created_at: Any? = null
+        set(value) {
+            field = when (value) {
+                is String -> parseIsoStringToTimestamp(value)
+                is Timestamp -> value
+                else -> null
+            }
+        }
 
     /**
      * Last update timestamp (set automatically by Firestore)
+     * CRITICAL: OraWebApp stores this as ISO 8601 String
      */
-    var updated_at: Timestamp? = null
+    @get:com.google.firebase.firestore.PropertyName("updated_at")
+    @set:com.google.firebase.firestore.PropertyName("updated_at")
+    var updated_at: Any? = null
+        set(value) {
+            field = when (value) {
+                is String -> parseIsoStringToTimestamp(value)
+                is Timestamp -> value
+                else -> null
+            }
+        }
 
     // ============================================================================
     // Authorship
@@ -168,16 +189,52 @@ class LessonDocument() {
      * Scheduled publish timestamp (optional)
      * Lesson will become "ready" at this time
      */
-    var scheduled_publish_at: Timestamp? = null
+    @get:com.google.firebase.firestore.PropertyName("scheduled_publish_at")
+    @set:com.google.firebase.firestore.PropertyName("scheduled_publish_at")
+    var scheduled_publish_at: Any? = null
+        set(value) {
+            field = when (value) {
+                is String -> parseIsoStringToTimestamp(value)
+                is Timestamp -> value
+                else -> null
+            }
+        }
 
     /**
      * Scheduled archive timestamp (optional)
      * Lesson will be hidden after this time
      */
-    var scheduled_archive_at: Timestamp? = null
+    @get:com.google.firebase.firestore.PropertyName("scheduled_archive_at")
+    @set:com.google.firebase.firestore.PropertyName("scheduled_archive_at")
+    var scheduled_archive_at: Any? = null
+        set(value) {
+            field = when (value) {
+                is String -> parseIsoStringToTimestamp(value)
+                is Timestamp -> value
+                else -> null
+            }
+        }
 
     /**
      * Whether auto-publishing is enabled for this lesson
      */
     var auto_publish_enabled: Boolean = false
+
+    // ============================================================================
+    // Helper Functions
+    // ============================================================================
+
+    /**
+     * Converts ISO 8601 string to Firestore Timestamp
+     * Example: "2025-11-04T10:30:00.000Z" -> Timestamp(seconds, nanoseconds)
+     */
+    private fun parseIsoStringToTimestamp(isoString: String): Timestamp? {
+        return try {
+            val instant = java.time.Instant.parse(isoString)
+            Timestamp(instant.epochSecond, instant.nano)
+        } catch (e: Exception) {
+            timber.log.Timber.w(e, "Failed to parse ISO timestamp: $isoString")
+            null
+        }
+    }
 }

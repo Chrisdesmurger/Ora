@@ -132,6 +132,9 @@ sealed class OraDestinations(
     object Badges : OraDestinations("badges")
     object About : OraDestinations("about")
 
+    // Debug destinations
+    object FirestoreDebug : OraDestinations("firestore_debug")
+
     // Programs specific destinations
     object ProgramDetail : OraDestinations(
         route = "program_detail/{programId}",

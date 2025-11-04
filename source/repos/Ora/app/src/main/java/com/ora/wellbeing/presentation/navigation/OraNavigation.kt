@@ -31,6 +31,7 @@ import com.ora.wellbeing.presentation.screens.profile.ProfileScreen
 import com.ora.wellbeing.presentation.screens.profile.ProfileEditScreen
 import com.ora.wellbeing.presentation.screens.stats.PracticeStatsScreen
 import com.ora.wellbeing.feature.practice.ui.PlayerScreen
+import com.ora.wellbeing.presentation.screens.debug.FirestoreDebugScreen
 
 /**
  * FIX(auth): Navigation principale avec vérification d'authentification
@@ -159,6 +160,9 @@ fun OraNavigation(
                     },
                     onNavigateToGratitudes = {
                         navController.navigate(OraDestinations.Journal.route)
+                    },
+                    onNavigateToDebug = {
+                        navController.navigate(OraDestinations.FirestoreDebug.route)
                     }
                 )
             }
@@ -226,6 +230,11 @@ fun OraNavigation(
                         navController.navigate(OraDestinations.DailyJournalEntry.createRoute(date))
                     }
                 )
+            }
+
+            // Debug Screen - Firestore Diagnostic
+            composable(OraDestinations.FirestoreDebug.route) {
+                FirestoreDebugScreen()
             }
 
             // TODO: Ajouter les autres destinations (ContentDetail, VideoPlayer, etc.)

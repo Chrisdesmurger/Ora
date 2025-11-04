@@ -45,14 +45,14 @@ object LessonMapper {
             this.audioUrl = extractBestAudioUrl(doc.audio_variants)
             this.isPremiumOnly = false // TODO: Determine from program settings
             this.isPopular = false // TODO: Calculate from usage stats
-            this.isNew = isRecent(doc.created_at)
+            this.isNew = isRecent(doc.created_at as? Timestamp)
             this.rating = 0.0f // TODO: Fetch from ratings collection
             this.completionCount = 0 // TODO: Fetch from stats
             this.tags = doc.tags
             this.isActive = doc.status == "ready"
-            this.createdAt = doc.created_at
-            this.updatedAt = doc.updated_at
-            this.publishedAt = doc.scheduled_publish_at
+            this.createdAt = doc.created_at as? Timestamp
+            this.updatedAt = doc.updated_at as? Timestamp
+            this.publishedAt = doc.scheduled_publish_at as? Timestamp
         }
     }
 
