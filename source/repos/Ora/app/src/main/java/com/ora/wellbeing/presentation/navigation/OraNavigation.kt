@@ -150,19 +150,11 @@ fun OraNavigation(
                 )
             }
 
+            // REDESIGNED: Profile screen with new UI (Issue #64)
             composable(OraDestinations.Profile.route) {
                 ProfileScreen(
-                    onNavigateToEditProfile = {
+                    onNavigateToSettings = {
                         navController.navigate(OraDestinations.EditProfile.route)
-                    },
-                    onNavigateToPracticeStats = { practiceId ->
-                        navController.navigate(OraDestinations.PracticeStats.createRoute(practiceId))
-                    },
-                    onNavigateToGratitudes = {
-                        navController.navigate(OraDestinations.Journal.route)
-                    },
-                    onNavigateToDebug = {
-                        navController.navigate(OraDestinations.FirestoreDebug.route)
                     }
                 )
             }

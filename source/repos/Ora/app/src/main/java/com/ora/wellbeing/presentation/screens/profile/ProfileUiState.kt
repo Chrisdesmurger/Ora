@@ -5,13 +5,31 @@ import androidx.compose.ui.graphics.vector.ImageVector
 
 /**
  * État de l'interface utilisateur pour l'écran Profile
- * Modélise exactement le mockup image9.png
- * FIX(user-dynamic): Ajout de champs isPremium et planTier
+ * Redesign basé sur le mockup (Issue #64)
  */
 data class ProfileUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val userProfile: UserProfile? = null,
+
+    // Monthly completion stats
+    val currentMonthName: String = "",
+    val currentMonthCompletionPercent: Int = 0,
+    val previousMonthStats: List<MonthlyCompletion> = emptyList(),
+
+    // My Statistics
+    val completedWorkouts: Int = 0,
+    val challengesInProgress: Int = 0,
+    val completedChallenges: Int = 0,
+
+    // Challenge in Progress
+    val activeChallenge: ActiveChallenge? = null,
+
+    // Favorites
+    val favoriteWorkoutsCount: Int = 0,
+    val favoriteChallengesCount: Int = 0,
+
+    // Legacy fields (kept for backward compatibility)
     val practiceTimes: List<PracticeTime> = emptyList(),
     val streak: Int = 0,
     val totalTime: String = "",
@@ -21,21 +39,38 @@ data class ProfileUiState(
 )
 
 /**
- * Profil utilisateur simplifié selon mockup
- * FIX(user-dynamic): Ajout de isPremium et planTier
- * FIX(avatar): Ajout de firstName pour l'avatar circulaire
+ * Profil utilisateur
  */
 data class UserProfile(
     val name: String,
     val firstName: String = "",
     val motto: String,
     val photoUrl: String? = null,
-    val isPremium: Boolean = false, // FIX(user-dynamic): Nouveau champ
-    val planTier: String = "Gratuit" // FIX(user-dynamic): Nouveau champ
+    val isPremium: Boolean = false,
+    val planTier: String = "Gratuit"
 )
 
 /**
- * Temps de pratique par activité
+ * Monthly completion statistics
+ */
+data class MonthlyCompletion(
+    val monthName: String, // e.g., "June", "May"
+    val completionPercent: Int // 0-100
+)
+
+/**
+ * Active challenge data
+ */
+data class ActiveChallenge(
+    val id: String,
+    val name: String,
+    val progressPercent: Int, // 0-100
+    val currentDay: Int,
+    val totalDays: Int
+)
+
+/**
+ * Temps de pratique par activité (legacy)
  */
 data class PracticeTime(
     val id: String,
@@ -46,7 +81,7 @@ data class PracticeTime(
 )
 
 /**
- * Objectif utilisateur avec état de complétion
+ * Objectif utilisateur avec état de complétion (legacy)
  */
 data class Goal(
     val id: String,
