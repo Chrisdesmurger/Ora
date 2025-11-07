@@ -245,7 +245,7 @@ private fun CurrentMonthBadge(monthName: String) {
 }
 
 /**
- * Completed Calendar Section (compact, vertical layout like mockup)
+ * Completed Calendar Section (compact, vertical layout with card background like mockup)
  */
 @Composable
 private fun CompletedCalendarSection(
@@ -255,6 +255,7 @@ private fun CompletedCalendarSection(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
+        // Title outside card
         Text(
             text = "Completed",
             style = MaterialTheme.typography.titleMedium.copy(
@@ -273,6 +274,19 @@ private fun CompletedCalendarSection(
         )
 
         Spacer(modifier = Modifier.height(12.dp))
+
+        // Card with white/pale background
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFAF5)), // Very pale peach
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
 
         // Current month percentage (LARGE with orange curve accent like mockup)
         Column(horizontalAlignment = Alignment.Start) {
@@ -348,12 +362,14 @@ private fun CompletedCalendarSection(
                     )
                 }
             }
+                }
+            }
         }
     }
 }
 
 /**
- * My Statistics Section (large numbers on left like mockup)
+ * My Statistics Section (large numbers on left with card background like mockup)
  */
 @Composable
 private fun MyStatisticsSection(
@@ -363,6 +379,7 @@ private fun MyStatisticsSection(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
+        // Title outside card
         Text(
             text = "My",
             style = MaterialTheme.typography.titleMedium.copy(
@@ -380,27 +397,39 @@ private fun MyStatisticsSection(
             )
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        // Stats with large numbers on left
-        Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            StatisticItemLarge(
-                value = completedWorkouts,
-                label = "completed\nworkouts",
-                color = Color(0xFFF18D5C)
-            )
+        // Card with white/pale background
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFAF5)), // Very pale peach
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                StatisticItemLarge(
+                    value = completedWorkouts,
+                    label = "completed\nworkouts",
+                    color = Color(0xFFF18D5C)
+                )
 
-            StatisticItemLarge(
-                value = challengesInProgress,
-                label = "challenges\nin progress",
-                color = Color(0xFFFDB5A0)
-            )
+                StatisticItemLarge(
+                    value = challengesInProgress,
+                    label = "challenges\nin progress",
+                    color = Color(0xFFFDB5A0)
+                )
 
-            StatisticItemLarge(
-                value = completedChallenges,
-                label = "completed\nchallenges",
-                color = Color(0xFF7BA089)
-            )
+                StatisticItemLarge(
+                    value = completedChallenges,
+                    label = "completed\nchallenges",
+                    color = Color(0xFF7BA089)
+                )
+            }
         }
     }
 }
@@ -442,11 +471,12 @@ private fun StatisticItemLarge(
 }
 
 /**
- * Challenge in Progress Section (horizontal layout like mockup)
+ * Challenge in Progress Section (horizontal layout with card background like mockup)
  */
 @Composable
 private fun ChallengeProgressSection(challenge: ActiveChallenge) {
     Column(modifier = Modifier.fillMaxWidth()) {
+        // Title outside card
         Text(
             text = "Challenge",
             style = MaterialTheme.typography.titleMedium.copy(
@@ -466,44 +496,58 @@ private fun ChallengeProgressSection(challenge: ActiveChallenge) {
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Challenge name on left, percentage on right
-        Row(
+        // Card with white/pale background
+        Card(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFAF5)), // Very pale peach
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
-            Text(
-                text = challenge.name,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 16.sp
-                ),
-                modifier = Modifier.weight(1f)
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                // Challenge name on left, percentage on right
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = challenge.name,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 16.sp
+                        ),
+                        modifier = Modifier.weight(1f)
+                    )
 
-            Text(
-                text = "${challenge.progressPercent}%",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFF18D5C),
-                    fontSize = 16.sp
+                    Text(
+                        text = "${challenge.progressPercent}%",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFF18D5C),
+                            fontSize = 16.sp
+                        )
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Progress bar
+                LinearProgressIndicator(
+                    progress = challenge.progressPercent / 100f,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = Color(0xFFFF9B7A), // Orange from mockup
+                    trackColor = Color(0xFFFFE5D9)
                 )
-            )
+            }
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Progress bar
-        LinearProgressIndicator(
-            progress = challenge.progressPercent / 100f,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(6.dp)
-                .clip(RoundedCornerShape(3.dp)),
-            color = Color(0xFFFF9B7A), // Orange from mockup
-            trackColor = Color(0xFFFFE5D9)
-        )
     }
 }
 
