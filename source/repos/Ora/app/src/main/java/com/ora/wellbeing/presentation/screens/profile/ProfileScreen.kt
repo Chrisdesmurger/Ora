@@ -13,7 +13,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -271,29 +274,52 @@ private fun CompletedCalendarSection(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Current month percentage (smaller, with curved indicator)
+        // Current month percentage (LARGE with orange curve accent like mockup)
         Column(horizontalAlignment = Alignment.Start) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // Curved percentage indicator
-                Box(
-                    modifier = Modifier
-                        .size(60.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFFFF9F0)),
-                    contentAlignment = Alignment.Center
+            // Large percentage with decorative curve
+            Box(
+                modifier = Modifier
+                    .drawBehind {
+                        // Draw orange decorative arc (like in mockup)
+                        val strokeWidth = 8.dp.toPx()
+                        val arcSize = size.width * 0.3f
+
+                        drawArc(
+                            color = Color(0xFFF18D5C),
+                            startAngle = -135f,
+                            sweepAngle = 90f,
+                            useCenter = false,
+                            style = Stroke(width = strokeWidth),
+                            topLeft = Offset(-arcSize * 0.2f, -arcSize * 0.1f),
+                            size = androidx.compose.ui.geometry.Size(arcSize, arcSize)
+                        )
+                    }
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "$currentMonthPercent%",
-                        style = MaterialTheme.typography.titleLarge.copy(
+                        text = "$currentMonthPercent",
+                        style = MaterialTheme.typography.displayLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFF18D5C), // Coral orange
-                            fontSize = 24.sp
+                            fontSize = 64.sp
                         )
+                    )
+                    Text(
+                        text = "%",
+                        style = MaterialTheme.typography.displayMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFF18D5C),
+                            fontSize = 48.sp
+                        ),
+                        modifier = Modifier.offset(y = 8.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Previous months (vertical list like mockup)
             previousMonthStats.forEach { monthStat ->
@@ -354,10 +380,10 @@ private fun MyStatisticsSection(
             )
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Stats with large numbers on left
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
             StatisticItemLarge(
                 value = completedWorkouts,
                 label = "completed\nworkouts",
@@ -391,15 +417,15 @@ private fun StatisticItemLarge(
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Large number on left
+        // Very large number on left (like mockup)
         Text(
             text = value.toString(),
-            style = MaterialTheme.typography.displayMedium.copy(
+            style = MaterialTheme.typography.displayLarge.copy(
                 fontWeight = FontWeight.Bold,
                 color = color,
-                fontSize = 48.sp
+                fontSize = 56.sp
             )
         )
 
@@ -408,8 +434,8 @@ private fun StatisticItemLarge(
             text = label,
             style = MaterialTheme.typography.bodyMedium.copy(
                 color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 14.sp,
-                lineHeight = 18.sp
+                fontSize = 15.sp,
+                lineHeight = 19.sp
             )
         )
     }
