@@ -64,6 +64,13 @@ android {
         )
     }
 
+    // FIX(build-debug-android): Configure Compose Compiler Extension Version for Kotlin 2.0.21 compatibility
+    // This ensures the Kotlin Compose Compiler plugin is properly configured with Compose libraries
+    // Required when using Kotlin 2.0+ with Compose 1.6.11+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.6.11"
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true

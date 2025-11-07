@@ -82,9 +82,9 @@ private fun ProfileContent(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        item { Spacer(modifier = Modifier.height(8.dp)) }
+        item { Spacer(modifier = Modifier.height(4.dp)) }
 
         // Header: "Hi, Name" on left, photo on right, settings icon
         item {
@@ -134,7 +134,7 @@ private fun ProfileContent(
             )
         }
 
-        item { Spacer(modifier = Modifier.height(16.dp)) }
+        item { Spacer(modifier = Modifier.height(8.dp)) }
     }
 }
 
@@ -196,51 +196,6 @@ private fun ProfileHeader(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Current month badge
-        CurrentMonthBadge(monthName = currentMonthName)
-    }
-}
-
-/**
- * Current month badge with calendar icon (like mockup)
- */
-@Composable
-private fun CurrentMonthBadge(monthName: String) {
-    Surface(
-        color = Color(0xFFFDB5A0), // Light peach from mockup
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.CalendarToday,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(20.dp)
-            )
-            Column {
-                Text(
-                    text = "Current month",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = Color.White,
-                        fontSize = 11.sp
-                    )
-                )
-                Text(
-                    text = monthName,
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        fontSize = 14.sp
-                    )
-                )
-            }
-        }
     }
 }
 
@@ -255,25 +210,38 @@ private fun CompletedCalendarSection(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
-        // Title outside card
-        Text(
-            text = "Completed",
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 16.sp
+        // Title outside card: "Current month [MonthName]" with calendar icon
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.CalendarToday,
+                contentDescription = null,
+                tint = Color(0xFFF18D5C),
+                modifier = Modifier.size(22.dp)
             )
-        )
-        Text(
-            text = "Calendar",
-            style = MaterialTheme.typography.titleLarge.copy(
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 22.sp
-            )
-        )
+            Column {
+                Text(
+                    text = "Current month",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 16.sp
+                    )
+                )
+                Text(
+                    text = currentMonthName,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 22.sp
+                    )
+                )
+            }
+        }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         // Card with white/pale background
         Card(
@@ -285,7 +253,7 @@ private fun CompletedCalendarSection(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(12.dp)
             ) {
 
         // Current month percentage (LARGE with orange curve accent like mockup)
@@ -295,8 +263,8 @@ private fun CompletedCalendarSection(
                 modifier = Modifier
                     .drawBehind {
                         // Draw orange decorative arc (like in mockup)
-                        val strokeWidth = 8.dp.toPx()
-                        val arcSize = size.width * 0.3f
+                        val strokeWidth = 6.dp.toPx()
+                        val arcSize = size.width * 0.28f
 
                         drawArc(
                             color = Color(0xFFF18D5C),
@@ -318,7 +286,7 @@ private fun CompletedCalendarSection(
                         style = MaterialTheme.typography.displayLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFF18D5C), // Coral orange
-                            fontSize = 64.sp
+                            fontSize = 56.sp
                         )
                     )
                     Text(
@@ -326,14 +294,14 @@ private fun CompletedCalendarSection(
                         style = MaterialTheme.typography.displayMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFF18D5C),
-                            fontSize = 48.sp
+                            fontSize = 42.sp
                         ),
-                        modifier = Modifier.offset(y = 8.dp)
+                        modifier = Modifier.offset(y = 6.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Previous months (vertical list like mockup)
             previousMonthStats.forEach { monthStat ->
@@ -397,7 +365,7 @@ private fun MyStatisticsSection(
             )
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         // Card with white/pale background
         Card(
@@ -409,8 +377,8 @@ private fun MyStatisticsSection(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 StatisticItemLarge(
                     value = completedWorkouts,
@@ -446,7 +414,7 @@ private fun StatisticItemLarge(
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // Very large number on left (like mockup)
         Text(
@@ -454,7 +422,7 @@ private fun StatisticItemLarge(
             style = MaterialTheme.typography.displayLarge.copy(
                 fontWeight = FontWeight.Bold,
                 color = color,
-                fontSize = 56.sp
+                fontSize = 48.sp
             )
         )
 
@@ -463,8 +431,8 @@ private fun StatisticItemLarge(
             text = label,
             style = MaterialTheme.typography.bodyMedium.copy(
                 color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 15.sp,
-                lineHeight = 19.sp
+                fontSize = 14.sp,
+                lineHeight = 17.sp
             )
         )
     }
@@ -494,7 +462,7 @@ private fun ChallengeProgressSection(challenge: ActiveChallenge) {
             )
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         // Card with white/pale background
         Card(
@@ -506,7 +474,7 @@ private fun ChallengeProgressSection(challenge: ActiveChallenge) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(12.dp)
             ) {
                 // Challenge name on left, percentage on right
                 Row(
@@ -595,7 +563,7 @@ private fun FavoriteCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.height(120.dp),
+        modifier = modifier.height(110.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -603,7 +571,7 @@ private fun FavoriteCard(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(12.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Icon(
@@ -629,10 +597,11 @@ private fun FavoriteCard(
                     text = label,
                     style = MaterialTheme.typography.bodyMedium.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp,
-                        lineHeight = 14.sp
+                        fontSize = 11.sp,
+                        lineHeight = 13.sp
                     ),
-                    maxLines = 2
+                    maxLines = 2,
+                    softWrap = true
                 )
             }
         }
