@@ -54,6 +54,7 @@ class UserProfile {
     @set:PropertyName("updated_at")
     @ServerTimestamp
     var updatedAt: Date? = null
+
     /**
      * Retourne le nom complet ou "Invité" si vide
      */
@@ -81,20 +82,5 @@ class UserProfile {
     @Exclude
     fun isPremium(): Boolean {
         return planTier == "PREMIUM" || planTier == "LIFETIME"
-    }
-}
-
-/**
- * Niveaux d'abonnement
- */
-enum class PlanTier {
-    FREE,
-    PREMIUM,
-    LIFETIME;
-
-    fun getDisplayName(): String = when (this) {
-        FREE -> "Gratuit"
-        PREMIUM -> "Premium"
-        LIFETIME -> "Lifetime"
     }
 }

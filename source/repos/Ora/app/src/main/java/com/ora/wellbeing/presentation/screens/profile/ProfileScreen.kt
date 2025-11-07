@@ -13,11 +13,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -25,19 +26,19 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ora.wellbeing.presentation.theme.*
 import com.ora.wellbeing.presentation.components.UserAvatar
 
-// FIX(user-dynamic): ProfileScreen mis à jour pour afficher les données Firestore
+/**
+ * ProfileScreen - Complete redesign based on mockup (Issue #64)
+ * Shows monthly stats, challenge progress, and favorites
+ */
 @Composable
 fun ProfileScreen(
-    onNavigateToEditProfile: () -> Unit = {},
-    onNavigateToPracticeStats: (String) -> Unit = {},
-    onNavigateToGratitudes: () -> Unit = {},
-    onNavigateToDebug: () -> Unit = {}, // NEW: Debug navigation
+    onNavigateToSettings: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // FIX(user-dynamic): Afficher les erreurs dans un Snackbar
+    // Show errors in Snackbar
     LaunchedEffect(uiState.error) {
         uiState.error?.let { errorMessage ->
             snackbarHostState.showSnackbar(
@@ -51,7 +52,6 @@ fun ProfileScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
-        // FIX(user-dynamic): Afficher un loader pendant le chargement initial
         if (uiState.isLoading && uiState.userProfile == null) {
             Box(
                 modifier = Modifier
@@ -59,35 +59,12 @@ fun ProfileScreen(
                     .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "Chargement du profil...",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else {
             ProfileContent(
                 uiState = uiState,
-                onEditProfileClick = {
-                    viewModel.onEvent(ProfileUiEvent.NavigateToEditProfile)
-                    onNavigateToEditProfile()
-                },
-                onPracticeClick = { practiceId ->
-                    viewModel.onEvent(ProfileUiEvent.NavigateToPracticeStats(practiceId))
-                    onNavigateToPracticeStats(practiceId)
-                },
-                onGoalToggle = { goalId ->
-                    viewModel.onEvent(ProfileUiEvent.ToggleGoal(goalId))
-                },
-                onGratitudesClick = {
-                    viewModel.onEvent(ProfileUiEvent.NavigateToGratitudes)
-                    onNavigateToGratitudes()
-                },
-                onDebugClick = onNavigateToDebug, // NEW: Pass debug navigation
+                onSettingsClick = onNavigateToSettings,
                 modifier = Modifier.padding(paddingValues)
             )
         }
@@ -97,11 +74,7 @@ fun ProfileScreen(
 @Composable
 private fun ProfileContent(
     uiState: ProfileUiState,
-    onEditProfileClick: () -> Unit,
-    onPracticeClick: (String) -> Unit,
-    onGoalToggle: (String) -> Unit,
-    onDebugClick: () -> Unit = {}, // NEW: Debug navigation
-    onGratitudesClick: () -> Unit,
+    onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -109,537 +82,531 @@ private fun ProfileContent(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        item { Spacer(modifier = Modifier.height(8.dp)) }
+        item { Spacer(modifier = Modifier.height(4.dp)) }
 
-        // Header avec logo et icône edit
+        // Header: "Hi, Name" on left, photo on right, settings icon
         item {
             ProfileHeader(
-                isPremium = uiState.userProfile?.isPremium ?: false,
-                onEditClick = onEditProfileClick
+                userProfile = uiState.userProfile,
+                currentMonthName = uiState.currentMonthName,
+                onSettingsClick = onSettingsClick
             )
         }
 
-        // Photo de profil et nom
-        item {
-            uiState.userProfile?.let { profile ->
-                ProfileUserInfo(profile = profile)
-            }
-        }
-
-        // Section "MON TEMPS PAR PRATIQUE"
-        item {
-            PracticeTimeSection(
-                practiceTimes = uiState.practiceTimes,
-                onPracticeClick = onPracticeClick
-            )
-        }
-
-        // Section GRATITUDES et OBJECTIFS côte à côte
+        // Calendar and Statistics side by side (like mockup)
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // GRATITUDES (gauche)
-                GratitudesCard(
-                    modifier = Modifier.weight(1f),
-                    hasGratitudeToday = uiState.hasGratitudeToday,
-                    onClick = onGratitudesClick
+                // Left: Completed Calendar
+                CompletedCalendarSection(
+                    currentMonthName = uiState.currentMonthName,
+                    currentMonthPercent = uiState.currentMonthCompletionPercent,
+                    previousMonthStats = uiState.previousMonthStats,
+                    modifier = Modifier.weight(1f)
                 )
 
-                // OBJECTIFS (droite)
-                GoalsCard(
-                    modifier = Modifier.weight(1f),
-                    goals = uiState.goals,
-                    onGoalToggle = onGoalToggle
+                // Right: My Statistics
+                MyStatisticsSection(
+                    completedWorkouts = uiState.completedWorkouts,
+                    challengesInProgress = uiState.challengesInProgress,
+                    completedChallenges = uiState.completedChallenges,
+                    modifier = Modifier.weight(1f)
                 )
             }
         }
 
-        // Barre de stats en bas
+        // Challenge in Progress Section
+        uiState.activeChallenge?.let { challenge ->
+            item {
+                ChallengeProgressSection(challenge = challenge)
+            }
+        }
+
+        // Favorites Section
         item {
-            BottomStatsBar(
-                streak = uiState.streak,
-                totalTime = uiState.totalTime,
-                lastActivity = uiState.lastActivity
+            FavoritesSection(
+                favoriteWorkoutsCount = uiState.favoriteWorkoutsCount,
+                favoriteChallengesCount = uiState.favoriteChallengesCount
             )
         }
 
-        // Debug button (only in development)
-        item {
-            Button(
-                onClick = onDebugClick,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
-                )
-            ) {
-                Icon(
-                    imageVector = Icons.Default.BugReport,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("🔍 Firestore Debug (Dev Only)")
-            }
-        }
-
-        item { Spacer(modifier = Modifier.height(16.dp)) }
+        item { Spacer(modifier = Modifier.height(8.dp)) }
     }
 }
 
-// FIX(user-dynamic): Header avec badge Premium si applicable
+/**
+ * Header with "Hi, Name" on left, photo on right (like mockup)
+ */
 @Composable
 private fun ProfileHeader(
-    isPremium: Boolean,
-    onEditClick: () -> Unit
+    userProfile: UserProfile?,
+    currentMonthName: String,
+    onSettingsClick: () -> Unit
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Logo ORA avec effet soleil
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = "☀️",
-                style = MaterialTheme.typography.headlineSmall
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = "ORA",
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    letterSpacing = 2.sp
-                )
-            )
-
-            // FIX(user-dynamic): Badge Premium
-            if (isPremium) {
-                Spacer(modifier = Modifier.width(8.dp))
-                Surface(
-                    color = MaterialTheme.colorScheme.primary,
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        text = "PREMIUM",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            fontSize = 10.sp,
-                            letterSpacing = 1.sp
-                        ),
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
-                }
-            }
-        }
-
-        // Icône edit
-        IconButton(onClick = onEditClick) {
-            Icon(
-                imageVector = Icons.Default.Edit,
-                contentDescription = "Modifier le profil",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
-            )
-        }
-    }
-}
-
-// FIX(user-dynamic): Afficher "Invité" si firstName/name est vide
-// FIX(avatar): Utilise UserAvatar avec photo ou initiale
-@Composable
-private fun ProfileUserInfo(profile: UserProfile) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        // Avatar circulaire avec photo ou initiale du prénom
-        UserAvatar(
-            firstName = profile.firstName.ifBlank { profile.name.ifBlank { "Invité" } },
-            photoUrl = profile.photoUrl,
-            size = 140.dp,
-            fontSize = 60.sp
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // FIX(user-dynamic): Nom en grand titre serif (ou "Invité")
-        Text(
-            text = profile.name.ifBlank { "Invité" },
-            style = MaterialTheme.typography.displaySmall.copy(
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 48.sp
-            )
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Motto
-        Text(
-            text = profile.motto,
-            style = MaterialTheme.typography.bodyLarge.copy(
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                fontSize = 16.sp
-            )
-        )
-
-        // FIX(user-dynamic): Afficher le plan tier
-        if (profile.planTier.isNotBlank() && profile.planTier != "Gratuit") {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Plan: ${profile.planTier}",
-                style = MaterialTheme.typography.bodySmall.copy(
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold
-                )
-            )
-        }
-    }
-}
-
-@Composable
-private fun PracticeTimeSection(
-    practiceTimes: List<PracticeTime>,
-    onPracticeClick: (String) -> Unit
-) {
-    Column {
-        Text(
-            text = "MON TEMPS PAR PRATIQUE",
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.2.sp,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 14.sp
-            ),
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
-
-        practiceTimes.forEach { practice ->
-            PracticeCard(
-                practice = practice,
-                onClick = { onPracticeClick(practice.id) }
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-    }
-}
-
-@Composable
-private fun PracticeCard(
-    practice: PracticeTime,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = practice.color),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        // Top row: "Hi, Name" on left, Settings icon + Photo on right
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                practice.icon?.let {
-                    Icon(
-                        imageVector = it,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+            // Left: "Hi, Name"
+            Column {
                 Text(
-                    text = practice.name,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White,
+                    text = "Hi,",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 18.sp
                     )
                 )
+                Text(
+                    text = userProfile?.firstName?.ifBlank { userProfile.name } ?: "Invité",
+                    style = MaterialTheme.typography.displaySmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 32.sp
+                    )
+                )
             }
 
-            Text(
-                text = practice.time,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = Color.White.copy(alpha = 0.9f),
-                    fontSize = 14.sp
-                )
-            )
-        }
-    }
-}
+            // Right: Settings icon + Profile photo
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                IconButton(onClick = onSettingsClick) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Settings",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
 
-@Composable
-private fun GratitudesCard(
-    modifier: Modifier = Modifier,
-    hasGratitudeToday: Boolean,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = modifier
-            .clickable(onClick = onClick)
-            .height(180.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "GRATITUDES",
-                style = MaterialTheme.typography.titleSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 12.sp
-                )
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = if (hasGratitudeToday) "✓ Complété" else "Aujourd'hui",
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    color = if (hasGratitudeToday) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = if (hasGratitudeToday) FontWeight.SemiBold else FontWeight.Normal,
-                    fontSize = 16.sp
-                ),
-                modifier = Modifier.weight(1f)
-            )
-        }
-    }
-}
-
-@Composable
-private fun GoalsCard(
-    modifier: Modifier = Modifier,
-    goals: List<Goal>,
-    onGoalToggle: (String) -> Unit
-) {
-    Card(
-        modifier = modifier.height(180.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            Text(
-                text = "OBJECTIFS",
-                style = MaterialTheme.typography.titleSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 12.sp
-                )
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            goals.forEach { goal ->
-                GoalItem(
-                    goal = goal,
-                    onToggle = { onGoalToggle(goal.id) }
+                UserAvatar(
+                    firstName = userProfile?.firstName?.ifBlank { userProfile.name.ifBlank { "Invité" } } ?: "Invité",
+                    photoUrl = userProfile?.photoUrl,
+                    size = 80.dp,
+                    fontSize = 36.sp
                 )
             }
         }
+
     }
 }
 
+/**
+ * Completed Calendar Section (compact, vertical layout with card background like mockup)
+ */
 @Composable
-private fun GoalItem(
-    goal: Goal,
-    onToggle: () -> Unit
+private fun CompletedCalendarSection(
+    currentMonthName: String,
+    currentMonthPercent: Int,
+    previousMonthStats: List<MonthlyCompletion>,
+    modifier: Modifier = Modifier
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 2.dp)
-    ) {
-        Checkbox(
-            checked = goal.isCompleted,
-            onCheckedChange = { onToggle() },
-            colors = CheckboxDefaults.colors(
-                checkedColor = MaterialTheme.colorScheme.tertiary,
-                uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant
-            ),
-            modifier = Modifier.size(20.dp)
-        )
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        Text(
-            text = goal.text,
-            style = MaterialTheme.typography.bodySmall.copy(
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 12.sp
-            )
-        )
-    }
-}
-
-@Composable
-private fun BottomStatsBar(
-    streak: Int,
-    totalTime: String,
-    lastActivity: String
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
+    Column(modifier = modifier) {
+        // Title outside card: "Current month [MonthName]" with calendar icon
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            StatCard(
-                modifier = Modifier.weight(1f),
-                value = "$streak jours",
-                label = "d'affilée"
+            Icon(
+                imageVector = Icons.Default.CalendarToday,
+                contentDescription = null,
+                tint = Color(0xFFF18D5C),
+                modifier = Modifier.size(22.dp)
             )
-
-            StatCard(
-                modifier = Modifier.weight(1f),
-                value = totalTime,
-                label = "en tout"
-            )
+            Column {
+                Text(
+                    text = "Current month",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 16.sp
+                    )
+                )
+                Text(
+                    text = currentMonthName,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 22.sp
+                    )
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // Card with white/pale background
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            shape = RoundedCornerShape(12.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFAF5)), // Very pale peach
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(12.dp)
             ) {
-                Text(
-                    text = "Dernière activité:",
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp
+
+        // Current month percentage (LARGE with orange curve accent like mockup)
+        Column(horizontalAlignment = Alignment.Start) {
+            // Large percentage with decorative curve
+            Box(
+                modifier = Modifier
+                    .drawBehind {
+                        // Draw orange decorative arc (like in mockup)
+                        val strokeWidth = 6.dp.toPx()
+                        val arcSize = size.width * 0.28f
+
+                        drawArc(
+                            color = Color(0xFFF18D5C),
+                            startAngle = -135f,
+                            sweepAngle = 90f,
+                            useCenter = false,
+                            style = Stroke(width = strokeWidth),
+                            topLeft = Offset(-arcSize * 0.2f, -arcSize * 0.1f),
+                            size = androidx.compose.ui.geometry.Size(arcSize, arcSize)
+                        )
+                    }
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "$currentMonthPercent",
+                        style = MaterialTheme.typography.displayLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFF18D5C), // Coral orange
+                            fontSize = 56.sp
+                        )
                     )
+                    Text(
+                        text = "%",
+                        style = MaterialTheme.typography.displayMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFF18D5C),
+                            fontSize = 42.sp
+                        ),
+                        modifier = Modifier.offset(y = 6.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Previous months (vertical list like mockup)
+            previousMonthStats.forEach { monthStat ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = monthStat.monthName,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 14.sp
+                        )
+                    )
+                    Text(
+                        text = "${monthStat.completionPercent}%",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFF18D5C),
+                            fontSize = 14.sp
+                        )
+                    )
+                }
+            }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * My Statistics Section (large numbers on left with card background like mockup)
+ */
+@Composable
+private fun MyStatisticsSection(
+    completedWorkouts: Int,
+    challengesInProgress: Int,
+    completedChallenges: Int,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        // Title outside card
+        Text(
+            text = "My",
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 16.sp
+            )
+        )
+        Text(
+            text = "Statistics",
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 22.sp
+            )
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Card with white/pale background
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFAF5)), // Very pale peach
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                StatisticItemLarge(
+                    value = completedWorkouts,
+                    label = "completed\nworkouts",
+                    color = Color(0xFFF18D5C)
                 )
-                Text(
-                    text = lastActivity,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 14.sp
-                    )
+
+                StatisticItemLarge(
+                    value = challengesInProgress,
+                    label = "challenges\nin progress",
+                    color = Color(0xFFFDB5A0)
+                )
+
+                StatisticItemLarge(
+                    value = completedChallenges,
+                    label = "completed\nchallenges",
+                    color = Color(0xFF7BA089)
                 )
             }
         }
     }
 }
 
+/**
+ * Individual statistic item with large number (like mockup)
+ */
 @Composable
-private fun StatCard(
-    modifier: Modifier = Modifier,
-    value: String,
-    label: String
+private fun StatisticItemLarge(
+    value: Int,
+    label: String,
+    color: Color
 ) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        // Very large number on left (like mockup)
+        Text(
+            text = value.toString(),
+            style = MaterialTheme.typography.displayLarge.copy(
+                fontWeight = FontWeight.Bold,
+                color = color,
+                fontSize = 48.sp
+            )
+        )
+
+        // Label on right
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 14.sp,
+                lineHeight = 17.sp
+            )
+        )
+    }
+}
+
+/**
+ * Challenge in Progress Section (horizontal layout with card background like mockup)
+ */
+@Composable
+private fun ChallengeProgressSection(challenge: ActiveChallenge) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        // Title outside card
+        Text(
+            text = "Challenge",
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFF18D5C),
+                fontSize = 16.sp
+            )
+        )
+        Text(
+            text = "in progress",
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFF18D5C),
+                fontSize = 16.sp
+            )
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Card with white/pale background
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFAF5)), // Very pale peach
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 20.sp
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp)
+            ) {
+                // Challenge name on left, percentage on right
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = challenge.name,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 16.sp
+                        ),
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Text(
+                        text = "${challenge.progressPercent}%",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFF18D5C),
+                            fontSize = 16.sp
+                        )
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Progress bar
+                LinearProgressIndicator(
+                    progress = challenge.progressPercent / 100f,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = Color(0xFFFF9B7A), // Orange from mockup
+                    trackColor = Color(0xFFFFE5D9)
                 )
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodySmall.copy(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    fontSize = 12.sp
-                )
-            )
+            }
         }
     }
 }
 
-@Preview(showBackground = true)
+/**
+ * Favorites Section (two cards side by side)
+ */
 @Composable
-fun ProfileScreenPreview() {
-    OraTheme {
-        ProfileContent(
-            uiState = ProfileUiState(
-                userProfile = UserProfile(
-                    name = "Clara",
-                    motto = "Je prends soin de moi chaque jour",
-                    isPremium = true,
-                    planTier = "Premium"
-                ),
-                practiceTimes = listOf(
-                    PracticeTime(
-                        id = "yoga",
-                        name = "Yoga",
-                        time = "3h45 ce mois-ci",
-                        color = Color(0xFFF4845F),
-                        icon = Icons.Default.SelfImprovement
-                    ),
-                    PracticeTime(
-                        id = "pilates",
-                        name = "Pilates",
-                        time = "2h15 ce mois-ci",
-                        color = Color(0xFFFDB5A0),
-                        icon = Icons.Default.FitnessCenter
-                    )
-                ),
-                streak = 5,
-                totalTime = "24h10",
-                lastActivity = "Yoga doux - 25 min",
-                hasGratitudeToday = true,
-                goals = listOf(
-                    Goal("1", "Lire plus", true),
-                    Goal("2", "Arrêter l'alcool", true),
-                    Goal("3", "10 min de réseaux sociaux max", false)
-                )
-            ),
-            onEditProfileClick = {},
-            onPracticeClick = {},
-            onGoalToggle = {},
-            onGratitudesClick = {}
+private fun FavoritesSection(
+    favoriteWorkoutsCount: Int,
+    favoriteChallengesCount: Int
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Favorite Workouts
+        FavoriteCard(
+            count = favoriteWorkoutsCount,
+            label = "Favorite Workouts",
+            icon = Icons.Default.FavoriteBorder,
+            backgroundColor = Color(0xFFFFF9F0),
+            modifier = Modifier.weight(1f)
         )
+
+        // Favorite Challenges
+        FavoriteCard(
+            count = favoriteChallengesCount,
+            label = "Favorite Challenges",
+            icon = Icons.Default.Star,
+            backgroundColor = Color(0xFFFFF5F0),
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+/**
+ * Individual favorite card (compact layout like mockup)
+ */
+@Composable
+private fun FavoriteCard(
+    count: Int,
+    label: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    backgroundColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.height(120.dp),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(14.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = Color(0xFFF18D5C),
+                modifier = Modifier.size(26.dp)
+            )
+
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = count.toString(),
+                    style = MaterialTheme.typography.displaySmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 32.sp
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 10.sp,
+                        lineHeight = 12.sp
+                    ),
+                    maxLines = 2,
+                    softWrap = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
     }
 }
