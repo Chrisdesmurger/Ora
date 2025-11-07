@@ -563,7 +563,7 @@ private fun FavoriteCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.height(110.dp),
+        modifier = modifier.height(120.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -571,37 +571,40 @@ private fun FavoriteCard(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp),
+                .padding(14.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 tint = Color(0xFFF18D5C),
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(26.dp)
             )
 
-            Column {
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text(
                     text = count.toString(),
                     style = MaterialTheme.typography.displaySmall.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 36.sp
+                        fontSize = 32.sp
                     )
                 )
 
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.bodyMedium.copy(
+                    style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 11.sp,
-                        lineHeight = 13.sp
+                        fontSize = 10.sp,
+                        lineHeight = 12.sp
                     ),
                     maxLines = 2,
-                    softWrap = true
+                    softWrap = true,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }

@@ -11,7 +11,7 @@ import com.ora.wellbeing.data.repository.UserStatsRepository
 import com.ora.wellbeing.data.sync.SyncManager
 import com.ora.wellbeing.domain.model.PracticeStats
 import com.ora.wellbeing.domain.repository.UserProgramRepository
-import com.ora.wellbeing.data.model.UserProfile as FirestoreUserProfile
+import com.ora.wellbeing.domain.model.UserProfile as DomainUserProfile
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -79,8 +79,8 @@ class ProfileViewModel @Inject constructor(
                 ) { profile, stats, syncState ->
                     Triple(profile, stats, syncState)
                 }.collect { (profile, stats, syncState) ->
-                    // Cast profile to FirestoreUserProfile for access to extension methods
-                    val firestoreProfile = profile as? FirestoreUserProfile
+                    // Cast profile to DomainUserProfile for access to domain methods
+                    val domainProfile = profile as? DomainUserProfile
 
                     // Update UI state with basic user data
                     _uiState.value = _uiState.value.copy(
@@ -88,14 +88,14 @@ class ProfileViewModel @Inject constructor(
                         error = if (syncState is com.ora.wellbeing.data.sync.SyncState.Error) {
                             syncState.message
                         } else null,
-                        userProfile = firestoreProfile?.let { fp ->
+                        userProfile = domainProfile?.let { dp ->
                             UserProfile(
-                                name = fp.getDisplayName(),
-                                firstName = fp.firstName ?: "",
-                                motto = fp.motto ?: "Je prends soin de moi chaque jour",
-                                photoUrl = fp.photoUrl,
-                                isPremium = fp.isPremium(),
-                                planTier = when(fp.planTier) {
+                                name = dp.displayName().ifBlank { "Invité" },
+                                firstName = dp.firstName ?: "",
+                                motto = dp.motto ?: "Je prends soin de moi chaque jour",
+                                photoUrl = dp.photoUrl,
+                                isPremium = dp.isPremium,
+                                planTier = when(dp.planTier.uppercase()) {
                                     "FREE" -> "Gratuit"
                                     "PREMIUM" -> "Premium"
                                     "LIFETIME" -> "Lifetime"
@@ -114,12 +114,12 @@ class ProfileViewModel @Inject constructor(
                     calculateMonthlyCompletion(stats?.sessions ?: 0)
 
                     // Load detailed data if we have a profile
-                    firestoreProfile?.let { fp ->
-                        loadPracticeStatsForUser(fp.uid)
-                        loadProgramDataForUser(fp.uid)
+                    domainProfile?.let { dp ->
+                        loadPracticeStatsForUser(dp.uid)
+                        loadProgramDataForUser(dp.uid)
                     }
 
-                    Timber.d("ProfileViewModel: UI State updated - ${firestoreProfile?.firstName}, ${stats?.sessions} sessions")
+                    Timber.d("ProfileViewModel: UI State updated - ${domainProfile?.firstName}, ${stats?.sessions} sessions")
                 }
             } catch (e: Exception) {
                 Timber.e(e, "Error in observeAllData")
