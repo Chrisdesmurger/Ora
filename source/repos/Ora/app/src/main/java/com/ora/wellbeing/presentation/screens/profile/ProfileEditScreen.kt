@@ -15,6 +15,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -29,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -314,6 +317,29 @@ fun ProfileEditScreen(
                         viewModel.onEvent(ProfileEditUiEvent.ToggleEveningReminder(it))
                     }
                 )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Account Section
+                SectionHeader("Compte")
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Sign Out Button
+                Button(
+                    onClick = { viewModel.onEvent(ProfileEditUiEvent.SignOut) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFEF5350),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text(
+                        text = "Se déconnecter",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(32.dp))
 

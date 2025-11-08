@@ -125,8 +125,8 @@ fun DailyJournalEntryScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
                     .background(MaterialTheme.colorScheme.background),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 16.dp),  // Réduire le padding horizontal pour maximiser l'espace
+                verticalArrangement = Arrangement.spacedBy(16.dp)  // Réduire l'espacement entre les items
             ) {
                 // Error message
                 if (uiState.error != null) {

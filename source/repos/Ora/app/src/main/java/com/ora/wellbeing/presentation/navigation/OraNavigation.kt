@@ -1,7 +1,10 @@
 package com.ora.wellbeing.presentation.navigation
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -11,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -60,6 +64,7 @@ fun OraNavigation(
 
     Scaffold(
         modifier = modifier,
+        contentWindowInsets = WindowInsets(0.dp),  // Maximiser la surface d'écran - ne pas consommer les insets automatiquement
         bottomBar = {
             // Afficher la bottom bar seulement sur les écrans principaux et si authentifié
             if (isAuthenticated && NavigationUtils.isMainDestination(currentDestination?.route)) {
@@ -240,7 +245,9 @@ private fun OraBottomNavigationBar(
     navController: NavHostController,
     currentDestination: String?
 ) {
-    NavigationBar {
+    NavigationBar(
+        modifier = Modifier.height(64.dp)
+    ) {
         bottomNavigationItems.forEach { item ->
             val selected = currentDestination == item.route
 
@@ -248,7 +255,8 @@ private fun OraBottomNavigationBar(
                 icon = {
                     Icon(
                         imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
-                        contentDescription = item.label
+                        contentDescription = item.label,
+                        modifier = Modifier.size(22.dp)
                     )
                 },
                 selected = selected,

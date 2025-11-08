@@ -16,6 +16,7 @@ sealed class ProfileEditUiEvent {
     data class UploadPhoto(val uri: Uri) : ProfileEditUiEvent()
     object RemovePhoto : ProfileEditUiEvent()
     object Save : ProfileEditUiEvent()
+    object SignOut : ProfileEditUiEvent()
     object NavigateBack : ProfileEditUiEvent()
     object DismissError : ProfileEditUiEvent()
     object DismissSuccess : ProfileEditUiEvent()

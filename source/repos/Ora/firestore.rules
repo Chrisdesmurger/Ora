@@ -131,12 +131,15 @@ service cloud.firestore {
     function validateUserProfile(data) {
       return data.uid is string
           && data.uid.size() > 0
-          && (data.firstName == null || (data.firstName is string && data.firstName.size() <= 50))
-          && (data.photoUrl == null || data.photoUrl is string)
-          && data.planTier in ['free', 'premium']
-          && data.createdAt is timestamp
+          && (data.first_name == null || (data.first_name is string && data.first_name.size() <= 50))
+          && (data.last_name == null || (data.last_name is string && data.last_name.size() <= 50))
+          && (data.email == null || data.email is string)
+          && (data.photo_url == null || data.photo_url is string)
+          && (data.motto == null || (data.motto is string && data.motto.size() <= 200))
+          && (data.plan_tier == null || data.plan_tier in ['free', 'premium', 'lifetime'])
+          && (data.created_at == null || data.created_at is int)
           && (data.locale == null || data.locale in ['fr', 'en'])
-          && (data.updatedAt == null || data.updatedAt is timestamp);
+          && (data.updated_at == null || data.updated_at is int);
     }
 
     // Valide les statistiques utilisateur
