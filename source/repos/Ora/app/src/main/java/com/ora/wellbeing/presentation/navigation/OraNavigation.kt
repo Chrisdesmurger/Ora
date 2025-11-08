@@ -1,5 +1,6 @@
 package com.ora.wellbeing.presentation.navigation
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -63,6 +64,7 @@ fun OraNavigation(
 
     Scaffold(
         modifier = modifier,
+        contentWindowInsets = WindowInsets(0.dp),  // Maximiser la surface d'écran - ne pas consommer les insets automatiquement
         bottomBar = {
             // Afficher la bottom bar seulement sur les écrans principaux et si authentifié
             if (isAuthenticated && NavigationUtils.isMainDestination(currentDestination?.route)) {

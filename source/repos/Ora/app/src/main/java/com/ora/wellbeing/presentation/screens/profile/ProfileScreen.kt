@@ -48,15 +48,10 @@ fun ProfileScreen(
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { paddingValues ->
+    Box(modifier = Modifier.fillMaxSize()) {
         if (uiState.isLoading && uiState.userProfile == null) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
+                modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
@@ -64,10 +59,17 @@ fun ProfileScreen(
         } else {
             ProfileContent(
                 uiState = uiState,
-                onSettingsClick = onNavigateToSettings,
-                modifier = Modifier.padding(paddingValues)
+                onSettingsClick = onNavigateToSettings
             )
         }
+
+        // SnackbarHost positioned at the bottom
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 80.dp)  // Au-dessus de la navigation bar
+        )
     }
 }
 
@@ -81,10 +83,11 @@ private fun ProfileContent(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .statusBarsPadding()  // Respecter la zone de la barre de statut
+            .padding(horizontal = 16.dp),  // Réduire le padding horizontal pour maximiser l'espace
+        verticalArrangement = Arrangement.spacedBy(12.dp),  // Réduire l'espacement entre les items
+        contentPadding = PaddingValues(bottom = 16.dp)  // Padding en bas uniquement
     ) {
-        item { Spacer(modifier = Modifier.height(4.dp)) }
 
         // Header: "Hi, Name" on left, photo on right, settings icon
         item {

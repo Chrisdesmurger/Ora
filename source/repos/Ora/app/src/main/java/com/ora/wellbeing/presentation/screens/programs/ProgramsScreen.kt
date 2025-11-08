@@ -34,7 +34,8 @@ fun ProgramsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .statusBarsPadding()  // Respecter la zone de la barre de statut
+            .padding(horizontal = 12.dp)  // Réduire le padding horizontal pour maximiser l'espace
     ) {
         // Header
         ProgramsHeader()
