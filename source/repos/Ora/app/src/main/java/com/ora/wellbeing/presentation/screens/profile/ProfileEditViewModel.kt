@@ -35,7 +35,8 @@ class ProfileEditViewModel @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val firebaseStorage: FirebaseStorage,
     private val userProfileRepository: FirestoreUserProfileRepository,
-    private val syncManager: SyncManager
+    private val syncManager: SyncManager,
+    private val authRepository: com.ora.wellbeing.data.repository.AuthRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileEditUiState())
@@ -107,6 +108,7 @@ class ProfileEditViewModel @Inject constructor(
             is ProfileEditUiEvent.UploadPhoto -> uploadPhoto(event.uri)
             is ProfileEditUiEvent.RemovePhoto -> removePhoto()
             is ProfileEditUiEvent.Save -> saveProfile()
+            is ProfileEditUiEvent.SignOut -> signOut()
             is ProfileEditUiEvent.NavigateBack -> {} // Handled by UI
             is ProfileEditUiEvent.DismissError -> dismissError()
             is ProfileEditUiEvent.DismissSuccess -> dismissSuccess()
@@ -359,5 +361,34 @@ class ProfileEditViewModel @Inject constructor(
 
     private fun dismissSuccess() {
         _uiState.update { it.copy(successMessage = null) }
+    }
+
+    /**
+     * Sign out the current user
+     */
+    private fun signOut() {
+        viewModelScope.launch {
+            try {
+                Timber.d("ProfileEditViewModel: Signing out user")
+                val result = authRepository.signOut()
+
+                if (result.isSuccess) {
+                    Timber.d("ProfileEditViewModel: Sign out successful")
+                    // Stop sync manager
+                    syncManager.stopSync()
+
+                    _uiState.update {
+                        it.copy(successMessage = "Déconnexion réussie")
+                    }
+                } else {
+                    throw result.exceptionOrNull() ?: Exception("Sign out failed")
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "ProfileEditViewModel: Sign out error")
+                _uiState.update {
+                    it.copy(errorMessage = "Erreur lors de la déconnexion: ${e.message}")
+                }
+            }
+        }
     }
 }
