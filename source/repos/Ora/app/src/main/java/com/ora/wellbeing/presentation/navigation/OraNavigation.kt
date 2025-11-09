@@ -36,6 +36,8 @@ import com.ora.wellbeing.presentation.screens.profile.ProfileEditScreen
 import com.ora.wellbeing.presentation.screens.stats.PracticeStatsScreen
 import com.ora.wellbeing.feature.practice.ui.PlayerScreen
 import com.ora.wellbeing.presentation.screens.debug.FirestoreDebugScreen
+import com.ora.wellbeing.presentation.screens.onboarding.OnboardingScreen
+import com.ora.wellbeing.presentation.screens.onboarding.OnboardingCelebrationScreen
 
 /**
  * FIX(auth): Navigation principale avec vérification d'authentification
@@ -88,6 +90,33 @@ fun OraNavigation(
                     onAuthSuccess = {
                         navController.navigate(OraDestinations.Home.route) {
                             popUpTo(OraDestinations.Auth.route) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+
+            // Onboarding Flow
+            composable(OraDestinations.Onboarding.route) {
+                OnboardingScreen(
+                    onComplete = {
+                        navController.navigate(OraDestinations.OnboardingCelebration.route) {
+                            popUpTo(OraDestinations.Onboarding.route) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+
+            composable(OraDestinations.OnboardingCelebration.route) {
+                OnboardingCelebrationScreen(
+                    onContinue = {
+                        navController.navigate(OraDestinations.Home.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
                                 inclusive = true
                             }
                             launchSingleTop = true
