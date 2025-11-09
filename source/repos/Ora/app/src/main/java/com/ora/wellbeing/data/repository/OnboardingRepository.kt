@@ -130,7 +130,7 @@ class OnboardingRepository @Inject constructor(
 
             firestore.collection("users")
                 .document(uid)
-                .update("onboarding", onboardingData)
+                .set(mapOf("onboarding" to onboardingData), com.google.firebase.firestore.SetOptions.merge())
                 .await()
 
             Timber.d("OnboardingRepository: Response saved successfully")
@@ -158,7 +158,7 @@ class OnboardingRepository @Inject constructor(
 
             firestore.collection("users")
                 .document(uid)
-                .update("onboarding", onboardingData)
+                .set(mapOf("onboarding" to onboardingData), com.google.firebase.firestore.SetOptions.merge())
                 .await()
 
             Timber.d("OnboardingRepository: Onboarding started")

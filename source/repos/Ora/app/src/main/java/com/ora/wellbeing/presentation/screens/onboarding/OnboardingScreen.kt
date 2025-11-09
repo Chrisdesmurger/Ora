@@ -242,6 +242,7 @@ fun OnboardingQuestionCard(
         modifier = Modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
+            .background(MaterialTheme.colorScheme.surface)
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
