@@ -2,18 +2,31 @@ package com.ora.wellbeing.data.model.onboarding
 
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.IgnoreExtraProperties
+import com.google.firebase.firestore.PropertyName
 
 /**
  * User Onboarding Response Models
  * Stores user answers to onboarding questions
  * Saved to users/{uid} document under "onboarding" field
+ * IMPORTANT: Firestore uses snake_case field names
  */
 
 @IgnoreExtraProperties
 class UserOnboardingAnswer {
+    @get:PropertyName("question_id")
+    @set:PropertyName("question_id")
     var questionId: String = ""
-    var selectedOptions: List<String> = emptyList() // Option IDs
-    var textAnswer: String? = null // For text_input questions
+
+    @get:PropertyName("selected_options")
+    @set:PropertyName("selected_options")
+    var selectedOptions: List<String> = emptyList()
+
+    @get:PropertyName("text_answer")
+    @set:PropertyName("text_answer")
+    var textAnswer: String? = null
+
+    @get:PropertyName("answered_at")
+    @set:PropertyName("answered_at")
     var answeredAt: Timestamp? = null
 
     constructor()
@@ -33,9 +46,18 @@ class UserOnboardingAnswer {
 
 @IgnoreExtraProperties
 class OnboardingMetadata {
+    @get:PropertyName("device_type")
+    @set:PropertyName("device_type")
     var deviceType: String? = null
+
+    @get:PropertyName("app_version")
+    @set:PropertyName("app_version")
     var appVersion: String? = null
+
+    @get:PropertyName("total_time_seconds")
+    @set:PropertyName("total_time_seconds")
     var totalTimeSeconds: Int? = null
+
     var locale: String? = null
 
     constructor()
@@ -56,22 +78,55 @@ class OnboardingMetadata {
 @IgnoreExtraProperties
 class UserOnboardingResponse {
     var uid: String = ""
-    var configVersion: String = "" // Which config version they completed
+
+    @get:PropertyName("config_version")
+    @set:PropertyName("config_version")
+    var configVersion: String = ""
+
     var completed: Boolean = false
+
+    @get:PropertyName("completed_at")
+    @set:PropertyName("completed_at")
     var completedAt: Timestamp? = null
+
+    @get:PropertyName("started_at")
+    @set:PropertyName("started_at")
     var startedAt: Timestamp? = null
+
     var answers: List<UserOnboardingAnswer> = emptyList()
     var metadata: OnboardingMetadata? = null
 
     // Parsed responses for easy access
     var goals: List<String>? = null
+
+    @get:PropertyName("main_goal")
+    @set:PropertyName("main_goal")
     var mainGoal: String? = null
+
+    @get:PropertyName("experience_levels")
+    @set:PropertyName("experience_levels")
     var experienceLevels: Map<String, String>? = null
+
+    @get:PropertyName("daily_time_commitment")
+    @set:PropertyName("daily_time_commitment")
     var dailyTimeCommitment: String? = null
+
+    @get:PropertyName("preferred_times")
+    @set:PropertyName("preferred_times")
     var preferredTimes: List<String>? = null
+
+    @get:PropertyName("content_preferences")
+    @set:PropertyName("content_preferences")
     var contentPreferences: List<String>? = null
+
+    @get:PropertyName("practice_style")
+    @set:PropertyName("practice_style")
     var practiceStyle: String? = null
+
     var challenges: List<String>? = null
+
+    @get:PropertyName("support_preferences")
+    @set:PropertyName("support_preferences")
     var supportPreferences: List<String>? = null
 
     constructor()
@@ -94,9 +149,6 @@ class UserOnboardingResponse {
         this.metadata = metadata
     }
 
-    /**
-     * Parse answers into structured fields for personalization
-     */
     fun parseAnswers(config: OnboardingConfig) {
         val answersMap = answers.associateBy { it.questionId }
 
@@ -113,7 +165,6 @@ class UserOnboardingResponse {
                     }
                     QuestionCategory.EXPERIENCE -> {
                         if (question.title.contains("familiar", ignoreCase = true)) {
-                            // Parse experience levels
                             val levels = mutableMapOf<String, String>()
                             answer.selectedOptions.forEach { optionId ->
                                 val option = question.options.find { it.id == optionId }

@@ -2,11 +2,13 @@ package com.ora.wellbeing.data.model.onboarding
 
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.IgnoreExtraProperties
+import com.google.firebase.firestore.PropertyName
 
 /**
  * Onboarding Configuration Model
  * Represents a complete onboarding questionnaire
  * Fetched from Firebase onboarding_configs collection
+ * IMPORTANT: Firestore uses snake_case field names
  */
 
 enum class OnboardingStatus {
@@ -23,10 +25,25 @@ class OnboardingConfig {
     var status: String = "draft"
     var version: String = "1.0"
     var questions: List<OnboardingQuestion> = emptyList()
+
+    @get:PropertyName("created_at")
+    @set:PropertyName("created_at")
     var createdAt: Timestamp? = null
+
+    @get:PropertyName("updated_at")
+    @set:PropertyName("updated_at")
     var updatedAt: Timestamp? = null
+
+    @get:PropertyName("created_by")
+    @set:PropertyName("created_by")
     var createdBy: String = ""
+
+    @get:PropertyName("published_at")
+    @set:PropertyName("published_at")
     var publishedAt: Timestamp? = null
+
+    @get:PropertyName("published_by")
+    @set:PropertyName("published_by")
     var publishedBy: String? = null
 
     constructor()
@@ -57,9 +74,6 @@ class OnboardingConfig {
         this.publishedBy = publishedBy
     }
 
-    /**
-     * Get status enum
-     */
     fun getStatusEnum(): OnboardingStatus {
         return when (status.lowercase()) {
             "active" -> OnboardingStatus.ACTIVE
@@ -69,8 +83,5 @@ class OnboardingConfig {
         }
     }
 
-    /**
-     * Check if config is active
-     */
     fun isActive(): Boolean = getStatusEnum() == OnboardingStatus.ACTIVE
 }
