@@ -143,7 +143,7 @@ class OnboardingViewModel @Inject constructor(
     ): Boolean {
         if (!question.required) return true
 
-        return when (question.type.getKind()) {
+        return when (question.type.toKind()) {
             com.ora.wellbeing.data.model.onboarding.QuestionTypeKind.TEXT_INPUT -> {
                 !textAnswer.isNullOrBlank()
             }
@@ -253,7 +253,7 @@ class OnboardingViewModel @Inject constructor(
 
         if (!question.required) return true
 
-        return answer != null && when (question.type.getKind()) {
+        return answer != null && when (question.type.toKind()) {
             com.ora.wellbeing.data.model.onboarding.QuestionTypeKind.TEXT_INPUT -> {
                 !answer.textAnswer.isNullOrBlank()
             }

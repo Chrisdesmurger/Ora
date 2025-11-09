@@ -1,5 +1,6 @@
 package com.ora.wellbeing.data.model.onboarding
 
+import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.IgnoreExtraProperties
 
 /**
@@ -35,7 +36,8 @@ class QuestionTypeConfig {
         this.maxSelections = maxSelections
     }
 
-    fun getKind(): QuestionTypeKind {
+    @Exclude
+    fun toKind(): QuestionTypeKind {
         return when (kind) {
             "multiple_choice" -> QuestionTypeKind.MULTIPLE_CHOICE
             "rating" -> QuestionTypeKind.RATING

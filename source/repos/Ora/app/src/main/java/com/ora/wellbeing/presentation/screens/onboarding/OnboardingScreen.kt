@@ -282,7 +282,7 @@ fun OnboardingQuestionCard(
         Spacer(modifier = Modifier.height(8.dp))
 
         // Options based on question type
-        when (question.type.getKind()) {
+        when (question.type.toKind()) {
             QuestionTypeKind.MULTIPLE_CHOICE -> {
                 MultipleChoiceOptions(
                     options = question.options,
