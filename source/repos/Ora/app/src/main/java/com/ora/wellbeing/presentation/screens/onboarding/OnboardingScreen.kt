@@ -248,14 +248,16 @@ fun OnboardingQuestionCard(
         // Category badge
         Surface(
             shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.primaryContainer,
+            color = MaterialTheme.colorScheme.surface,
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            tonalElevation = 1.dp,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
             Text(
                 text = getCategoryLabel(question.category),
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
 
@@ -394,12 +396,14 @@ fun RatingOptions(
                     .size(64.dp)
                     .clickable { onSelectionChange(option.id) },
                 shape = RoundedCornerShape(16.dp),
-                color = if (isSelected) {
-                    MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.surface,
+                border = if (isSelected) {
+                    androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
                 } else {
-                    MaterialTheme.colorScheme.surfaceVariant
+                    androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                 },
-                tonalElevation = if (isSelected) 4.dp else 1.dp
+                tonalElevation = 2.dp,
+                shadowElevation = if (isSelected) 4.dp else 1.dp
             ) {
                 Box(
                     contentAlignment = Alignment.Center
@@ -407,11 +411,7 @@ fun RatingOptions(
                     Text(
                         text = option.icon ?: option.label,
                         style = MaterialTheme.typography.headlineMedium,
-                        color = if (isSelected) {
-                            MaterialTheme.colorScheme.onPrimary
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        }
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -430,17 +430,14 @@ fun OptionCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        color = if (isSelected) {
-            MaterialTheme.colorScheme.primaryContainer
-        } else {
-            MaterialTheme.colorScheme.surface
-        },
+        color = MaterialTheme.colorScheme.surface,
         border = if (isSelected) {
             androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
         } else {
-            null
+            androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
         },
-        tonalElevation = if (isSelected) 4.dp else 1.dp
+        tonalElevation = 2.dp,
+        shadowElevation = if (isSelected) 4.dp else 1.dp
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -460,6 +457,7 @@ fun OptionCard(
                 text = option.getLocalizedLabel(),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f)
             )
 
