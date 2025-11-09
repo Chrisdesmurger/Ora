@@ -24,6 +24,11 @@ class OraAuthViewModel @Inject constructor(
 ) : ViewModel() {
 
     /**
+     * Expose the user profile from SyncManager for onboarding check
+     */
+    val userProfile = syncManager.userProfile
+
+    /**
      * Flow qui émet true si l'utilisateur est authentifié, false sinon
      * FIX(user-dynamic): Démarre/arrête le SyncManager selon l'état d'authentification
      */

@@ -132,9 +132,10 @@ class UserProfile {
         planTier: String = this.planTier,
         createdAt: Long? = this.createdAt,
         updatedAt: Long? = this.updatedAt,
-        locale: String? = this.locale
+        locale: String? = this.locale,
+        hasCompletedOnboarding: Boolean = this.hasCompletedOnboarding
     ): UserProfile {
-        return UserProfile(
+        val newProfile = UserProfile(
             uid = uid,
             firstName = firstName,
             lastName = lastName,
@@ -146,5 +147,7 @@ class UserProfile {
             updatedAt = updatedAt,
             locale = locale
         )
+        newProfile.hasCompletedOnboarding = hasCompletedOnboarding
+        return newProfile
     }
 }

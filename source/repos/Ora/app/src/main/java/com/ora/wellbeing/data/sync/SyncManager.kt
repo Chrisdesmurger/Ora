@@ -137,6 +137,8 @@ class SyncManager @Inject constructor(
                 createdAt = System.currentTimeMillis(),
                 locale = null
             )
+            // Ensure hasCompletedOnboarding is set to false for new users
+            defaultProfile.hasCompletedOnboarding = false
 
             val result = userProfileRepository.createUserProfile(defaultProfile)
             if (result.isSuccess) {
