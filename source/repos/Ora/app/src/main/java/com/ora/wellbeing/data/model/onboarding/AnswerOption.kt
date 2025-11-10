@@ -30,6 +30,19 @@ class AnswerOption {
 
     var order: Int = 0
 
+    // For slider and circular picker types
+    @get:PropertyName("min_value")
+    @set:PropertyName("min_value")
+    var minValue: Int? = null
+
+    @get:PropertyName("max_value")
+    @set:PropertyName("max_value")
+    var maxValue: Int? = null
+
+    var step: Int? = null
+    var unit: String? = null  // "minutes", "days", "hours", etc.
+    var value: Int? = null     // Numeric value for this option
+
     constructor()
 
     constructor(
@@ -40,7 +53,12 @@ class AnswerOption {
         icon: String? = null,
         color: String? = null,
         imageUrl: String? = null,
-        order: Int = 0
+        order: Int = 0,
+        minValue: Int? = null,
+        maxValue: Int? = null,
+        step: Int? = null,
+        unit: String? = null,
+        value: Int? = null
     ) {
         this.id = id
         this.label = label
@@ -50,6 +68,11 @@ class AnswerOption {
         this.color = color
         this.imageUrl = imageUrl
         this.order = order
+        this.minValue = minValue
+        this.maxValue = maxValue
+        this.step = step
+        this.unit = unit
+        this.value = value
     }
 
     /**

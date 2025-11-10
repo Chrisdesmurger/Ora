@@ -10,21 +10,30 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ora.wellbeing.data.model.onboarding.AnswerOption
@@ -287,7 +296,47 @@ fun OnboardingQuestionCard(
         // Options based on question type
         when (question.type.toKind()) {
             QuestionTypeKind.MULTIPLE_CHOICE -> {
-                MultipleChoiceOptions(
+                if (question.type.displayMode == "grid") {
+                    GridSelectionOptions(
+                        options = question.options,
+                        selectedOptions = selectedOptions,
+                        allowMultiple = question.type.allowMultiple ?: false,
+                        gridColumns = question.type.gridColumns ?: 2,
+                        onSelectionChange = { newSelection ->
+                            onAnswerChange(newSelection, null)
+                        }
+                    )
+                } else {
+                    MultipleChoiceOptions(
+                        options = question.options,
+                        selectedOptions = selectedOptions,
+                        allowMultiple = question.type.allowMultiple ?: false,
+                        onSelectionChange = { newSelection ->
+                            onAnswerChange(newSelection, null)
+                        }
+                    )
+                }
+            }
+            QuestionTypeKind.TEXT_INPUT -> {
+                EnhancedTextInput(
+                    question = question,
+                    onTextChange = { text ->
+                        onAnswerChange(emptyList(), text)
+                    }
+                )
+            }
+            QuestionTypeKind.RATING -> {
+                RatingOptions(
+                    options = question.options,
+                    selectedOption = selectedOptions.firstOrNull(),
+                    showLabels = question.type.showLabels ?: false,
+                    onSelectionChange = { optionId ->
+                        onAnswerChange(listOf(optionId), null)
+                    }
+                )
+            }
+            QuestionTypeKind.TIME_SELECTION -> {
+                TimeSelectionOptions(
                     options = question.options,
                     selectedOptions = selectedOptions,
                     allowMultiple = question.type.allowMultiple ?: false,
@@ -296,36 +345,49 @@ fun OnboardingQuestionCard(
                     }
                 )
             }
-            QuestionTypeKind.TEXT_INPUT -> {
-                var textInput by remember { mutableStateOf("") }
-                OutlinedTextField(
-                    value = textInput,
-                    onValueChange = {
-                        textInput = it
-                        onAnswerChange(emptyList(), it)
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Votre réponse") },
-                    shape = RoundedCornerShape(16.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-            }
-            QuestionTypeKind.RATING -> {
-                RatingOptions(
-                    options = question.options,
-                    selectedOption = selectedOptions.firstOrNull(),
-                    onSelectionChange = { optionId ->
-                        onAnswerChange(listOf(optionId), null)
-                    }
-                )
-            }
-            QuestionTypeKind.TIME_SELECTION -> {
-                MultipleChoiceOptions(
+            QuestionTypeKind.GRID_SELECTION -> {
+                GridSelectionOptions(
                     options = question.options,
                     selectedOptions = selectedOptions,
                     allowMultiple = question.type.allowMultiple ?: false,
+                    gridColumns = question.type.gridColumns ?: 2,
+                    onSelectionChange = { newSelection ->
+                        onAnswerChange(newSelection, null)
+                    }
+                )
+            }
+            QuestionTypeKind.TOGGLE_LIST -> {
+                ToggleListOptions(
+                    options = question.options,
+                    selectedOptions = selectedOptions,
+                    onSelectionChange = { newSelection ->
+                        onAnswerChange(newSelection, null)
+                    }
+                )
+            }
+            QuestionTypeKind.SLIDER -> {
+                SliderOptions(
+                    question = question,
+                    onValueChange = { value ->
+                        onAnswerChange(listOf(value.toString()), null)
+                    }
+                )
+            }
+            QuestionTypeKind.CIRCULAR_PICKER -> {
+                CircularPickerOptions(
+                    question = question,
+                    initialValue = selectedOptions.firstOrNull()?.toIntOrNull(),
+                    onValueChange = { value ->
+                        onAnswerChange(listOf(value.toString()), null)
+                    }
+                )
+            }
+            QuestionTypeKind.IMAGE_CARD -> {
+                ImageCardOptions(
+                    options = question.options,
+                    selectedOptions = selectedOptions,
+                    allowMultiple = question.type.allowMultiple ?: false,
+                    gridColumns = question.type.gridColumns ?: 2,
                     onSelectionChange = { newSelection ->
                         onAnswerChange(newSelection, null)
                     }
@@ -383,36 +445,57 @@ fun MultipleChoiceOptions(
 fun RatingOptions(
     options: List<AnswerOption>,
     selectedOption: String?,
+    showLabels: Boolean = false,
     onSelectionChange: (String) -> Unit
 ) {
+    val optionCount = options.size
+    // Responsive sizing: smaller tiles for 8+ options
+    val tileSize = if (optionCount >= 8) 48.dp else 64.dp
+
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
+        horizontalArrangement = if (optionCount > 5) Arrangement.SpaceBetween else Arrangement.SpaceEvenly
     ) {
         options.sortedBy { it.order }.forEach { option ->
             val isSelected = selectedOption == option.id
 
-            Surface(
-                modifier = Modifier
-                    .size(64.dp)
-                    .clickable { onSelectionChange(option.id) },
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.surface,
-                border = if (isSelected) {
-                    androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-                } else {
-                    androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                },
-                tonalElevation = 2.dp,
-                shadowElevation = if (isSelected) 4.dp else 1.dp
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Box(
-                    contentAlignment = Alignment.Center
+                Surface(
+                    modifier = Modifier
+                        .size(tileSize)
+                        .clickable { onSelectionChange(option.id) },
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    border = if (isSelected) {
+                        androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+                    } else {
+                        androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    },
+                    tonalElevation = 2.dp,
+                    shadowElevation = if (isSelected) 4.dp else 1.dp
                 ) {
+                    Box(
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = option.icon ?: option.label,
+                            style = if (tileSize < 64.dp) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+
+                // Optional label below icon
+                if (showLabels) {
                     Text(
-                        text = option.icon ?: option.label,
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        text = option.getLocalizedLabel(),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                        textAlign = TextAlign.Center,
+                        maxLines = 1
                     )
                 }
             }
@@ -546,6 +629,486 @@ fun OnboardingNavigationButtons(
                 }
             }
         }
+    }
+}
+
+// ========== New Question Type Components ==========
+
+@Composable
+fun GridSelectionOptions(
+    options: List<AnswerOption>,
+    selectedOptions: List<String>,
+    allowMultiple: Boolean,
+    gridColumns: Int = 2,
+    onSelectionChange: (List<String>) -> Unit
+) {
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(gridColumns),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(options.sortedBy { it.order }) { option ->
+            val isSelected = selectedOptions.contains(option.id)
+
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clickable {
+                        val newSelection = if (allowMultiple) {
+                            if (isSelected) selectedOptions - option.id
+                            else selectedOptions + option.id
+                        } else {
+                            listOf(option.id)
+                        }
+                        onSelectionChange(newSelection)
+                    },
+                shape = RoundedCornerShape(20.dp),
+                color = option.color?.let { Color(android.graphics.Color.parseColor(it)) }
+                    ?: MaterialTheme.colorScheme.surface,
+                border = if (isSelected) {
+                    androidx.compose.foundation.BorderStroke(3.dp, MaterialTheme.colorScheme.primary)
+                } else null,
+                tonalElevation = 4.dp,
+                shadowElevation = if (isSelected) 8.dp else 2.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    option.icon?.let { emoji ->
+                        Text(
+                            text = emoji,
+                            style = MaterialTheme.typography.displaySmall,
+                            fontSize = 48.sp
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = option.getLocalizedLabel(),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ToggleListOptions(
+    options: List<AnswerOption>,
+    selectedOptions: List<String>,
+    onSelectionChange: (List<String>) -> Unit
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        options.sortedBy { it.order }.forEach { option ->
+            val isSelected = selectedOptions.contains(option.id)
+
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 1.dp
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = option.getLocalizedLabel(),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Switch(
+                        checked = isSelected,
+                        onCheckedChange = { checked ->
+                            val newSelection = if (checked) {
+                                selectedOptions + option.id
+                            } else {
+                                selectedOptions - option.id
+                            }
+                            onSelectionChange(newSelection)
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = MaterialTheme.colorScheme.primary,
+                            checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                        )
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SliderOptions(
+    question: OnboardingQuestion,
+    onValueChange: (Int) -> Unit
+) {
+    val minValue = question.type.sliderMin ?: 0
+    val maxValue = question.type.sliderMax ?: 100
+    val step = question.type.sliderStep ?: 1
+    val unit = question.type.sliderUnit ?: ""
+
+    var currentValue by remember { mutableStateOf(minValue.toFloat()) }
+
+    Column(
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Current value display
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.primaryContainer,
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text(
+                text = "${currentValue.toInt()} $unit",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
+            )
+        }
+
+        // Slider
+        Slider(
+            value = currentValue,
+            onValueChange = { currentValue = it },
+            onValueChangeFinished = {
+                onValueChange(currentValue.toInt())
+            },
+            valueRange = minValue.toFloat()..maxValue.toFloat(),
+            steps = ((maxValue - minValue) / step) - 1,
+            colors = SliderDefaults.colors(
+                thumbColor = MaterialTheme.colorScheme.primary,
+                activeTrackColor = MaterialTheme.colorScheme.primary
+            )
+        )
+
+        // Min/Max labels
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "$minValue $unit",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+            )
+            Text(
+                text = "$maxValue $unit",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+            )
+        }
+    }
+}
+
+@Composable
+fun CircularPickerOptions(
+    question: OnboardingQuestion,
+    initialValue: Int?,
+    onValueChange: (Int) -> Unit
+) {
+    val minValue = question.type.sliderMin ?: 1
+    val maxValue = question.type.sliderMax ?: 7
+    val step = question.type.sliderStep ?: 1
+    val unit = question.type.sliderUnit ?: "jours"
+
+    var currentValue by remember { mutableStateOf(initialValue ?: minValue) }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        // Circular display
+        Box(
+            modifier = Modifier
+                .size(200.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = currentValue.toString(),
+                    style = MaterialTheme.typography.displayLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Text(
+                    text = unit,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                )
+            }
+        }
+
+        // Increment/Decrement buttons
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FilledIconButton(
+                onClick = {
+                    if (currentValue > minValue) {
+                        currentValue -= step
+                        onValueChange(currentValue)
+                    }
+                },
+                enabled = currentValue > minValue,
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Remove,
+                    contentDescription = "Décrémenter"
+                )
+            }
+
+            FilledIconButton(
+                onClick = {
+                    if (currentValue < maxValue) {
+                        currentValue += step
+                        onValueChange(currentValue)
+                    }
+                },
+                enabled = currentValue < maxValue,
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Incrémenter"
+                )
+            }
+        }
+
+        // Quick select buttons (optional preset values)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            listOf(minValue, (minValue + maxValue) / 2, maxValue).forEach { presetValue ->
+                OutlinedButton(
+                    onClick = {
+                        currentValue = presetValue
+                        onValueChange(currentValue)
+                    },
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = if (currentValue == presetValue) {
+                            MaterialTheme.colorScheme.primaryContainer
+                        } else MaterialTheme.colorScheme.surface
+                    )
+                ) {
+                    Text("$presetValue")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ImageCardOptions(
+    options: List<AnswerOption>,
+    selectedOptions: List<String>,
+    allowMultiple: Boolean,
+    gridColumns: Int = 2,
+    onSelectionChange: (List<String>) -> Unit
+) {
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(gridColumns),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(options.sortedBy { it.order }) { option ->
+            val isSelected = selectedOptions.contains(option.id)
+
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        val newSelection = if (allowMultiple) {
+                            if (isSelected) selectedOptions - option.id
+                            else selectedOptions + option.id
+                        } else {
+                            listOf(option.id)
+                        }
+                        onSelectionChange(newSelection)
+                    },
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surface,
+                border = if (isSelected) {
+                    androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+                } else {
+                    androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                },
+                tonalElevation = 2.dp,
+                shadowElevation = if (isSelected) 4.dp else 1.dp
+            ) {
+                Column {
+                    // Image placeholder (Coil integration needed)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(16f / 9f)
+                            .background(
+                                option.color?.let { Color(android.graphics.Color.parseColor(it)) }
+                                    ?: MaterialTheme.colorScheme.surfaceVariant
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        option.icon?.let { emoji ->
+                            Text(
+                                text = emoji,
+                                style = MaterialTheme.typography.displayMedium
+                            )
+                        }
+                    }
+
+                    // Label
+                    Text(
+                        text = option.getLocalizedLabel(),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                        modifier = Modifier.padding(12.dp),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TimeSelectionOptions(
+    options: List<AnswerOption>,
+    selectedOptions: List<String>,
+    allowMultiple: Boolean,
+    onSelectionChange: (List<String>) -> Unit
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        options.sortedBy { it.order }.forEach { option ->
+            val isSelected = selectedOptions.contains(option.id)
+
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        val newSelection = if (allowMultiple) {
+                            if (isSelected) selectedOptions - option.id
+                            else selectedOptions + option.id
+                        } else {
+                            listOf(option.id)
+                        }
+                        onSelectionChange(newSelection)
+                    },
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surface,
+                border = if (isSelected) {
+                    androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+                } else {
+                    androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                },
+                tonalElevation = 2.dp,
+                shadowElevation = if (isSelected) 4.dp else 1.dp
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Clock icon
+                    Icon(
+                        imageVector = Icons.Default.Schedule,
+                        contentDescription = "Time",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(32.dp)
+                    )
+
+                    // Label
+                    Text(
+                        text = option.getLocalizedLabel(),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    // Checkmark
+                    AnimatedVisibility(visible = isSelected) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Selected",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun EnhancedTextInput(
+    question: OnboardingQuestion,
+    onTextChange: (String) -> Unit
+) {
+    var textInput by remember { mutableStateOf("") }
+    val maxLines = question.type.maxLines ?: 1
+    val maxCharacters = question.type.maxCharacters ?: 500
+    val placeholder = question.type.placeholder ?: question.getLocalizedSubtitle() ?: "Votre réponse"
+
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        OutlinedTextField(
+            value = textInput,
+            onValueChange = {
+                if (it.length <= maxCharacters) {
+                    textInput = it
+                    onTextChange(it)
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text(placeholder) },
+            placeholder = { Text(placeholder) },
+            maxLines = maxLines,
+            minLines = if (maxLines > 1) 3 else 1,
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+            )
+        )
+
+        // Character counter
+        Text(
+            text = "${textInput.length} / $maxCharacters caractères",
+            style = MaterialTheme.typography.bodySmall,
+            color = if (textInput.length >= maxCharacters) {
+                MaterialTheme.colorScheme.error
+            } else {
+                MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+            },
+            modifier = Modifier.align(Alignment.End)
+        )
     }
 }
 
