@@ -209,6 +209,9 @@ fun OnboardingQuestionnaireContent(
         // Question content with animation
         AnimatedContent(
             targetState = uiState.currentQuestionIndex,
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
             transitionSpec = {
                 if (targetState > initialState) {
                     slideInHorizontally { width -> width } + fadeIn() togetherWith
@@ -231,8 +234,6 @@ fun OnboardingQuestionnaireContent(
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f))
-
         // Navigation buttons
         OnboardingNavigationButtons(
             uiState = uiState,
@@ -247,10 +248,23 @@ fun OnboardingQuestionCard(
     selectedOptions: List<String>,
     onAnswerChange: (List<String>, String?) -> Unit
 ) {
+    // Check if question type uses LazyVerticalGrid (no vertical scroll needed)
+    val usesLazyGrid = question.type.toKind() in listOf(
+        QuestionTypeKind.GRID_SELECTION,
+        QuestionTypeKind.IMAGE_CARD
+    ) || (question.type.toKind() == QuestionTypeKind.MULTIPLE_CHOICE && question.type.displayMode == "grid")
+
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
+            .then(
+                if (usesLazyGrid) {
+                    Modifier.fillMaxSize()
+                } else {
+                    Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                }
+            )
             .background(MaterialTheme.colorScheme.surface)
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -644,6 +658,7 @@ fun GridSelectionOptions(
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(gridColumns),
+        modifier = Modifier.fillMaxHeight(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -933,6 +948,7 @@ fun ImageCardOptions(
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(gridColumns),
+        modifier = Modifier.fillMaxHeight(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
