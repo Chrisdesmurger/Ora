@@ -96,14 +96,19 @@ class OnboardingRepository @Inject constructor(
 
     /**
      * Save user onboarding response to Firestore
+     *
+     * DUAL WRITE: Saves to both locations for backward compatibility and performance
+     * 1. users/{uid}.onboarding (nested field - backward compatibility)
+     * 2. user_onboarding_responses/{uid}/responses/{configVersion} (dedicated collection - analytics)
      */
     suspend fun saveUserOnboardingResponse(
         uid: String,
         response: UserOnboardingResponse
     ): Result<Unit> {
         return try {
-            Timber.d("OnboardingRepository: Saving onboarding response for user $uid")
+            Timber.d("OnboardingRepository: Saving onboarding response for user $uid (dual write)")
 
+            // Prepare nested field data (for backward compatibility)
             val onboardingData = mapOf(
                 "uid" to response.uid,
                 "configVersion" to response.configVersion,
@@ -128,12 +133,27 @@ class OnboardingRepository @Inject constructor(
                 }
             )
 
-            firestore.collection("users")
-                .document(uid)
-                .set(mapOf("onboarding" to onboardingData), com.google.firebase.firestore.SetOptions.merge())
-                .await()
+            // Use batch write for atomicity
+            val batch = firestore.batch()
 
-            Timber.d("OnboardingRepository: Response saved successfully")
+            // 1. Write to nested field (backward compatibility)
+            val userRef = firestore.collection("users").document(uid)
+            batch.set(userRef, mapOf("onboarding" to onboardingData), com.google.firebase.firestore.SetOptions.merge())
+            Timber.d("OnboardingRepository: Queued write to users/$uid.onboarding")
+
+            // 2. Write to dedicated collection (new - uses @PropertyName for snake_case)
+            val responseRef = firestore
+                .collection("user_onboarding_responses")
+                .document(uid)
+                .collection("responses")
+                .document(response.configVersion)
+            batch.set(responseRef, response)
+            Timber.d("OnboardingRepository: Queued write to user_onboarding_responses/$uid/responses/${response.configVersion}")
+
+            // Commit both writes atomically
+            batch.commit().await()
+
+            Timber.d("OnboardingRepository: Response saved successfully to both locations")
             Result.success(Unit)
         } catch (e: Exception) {
             Timber.e(e, "OnboardingRepository: Failed to save response")

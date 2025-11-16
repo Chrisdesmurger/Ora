@@ -132,6 +132,21 @@ service cloud.firestore {
       allow write: if false; // Admin only (from OraWebApp)
     }
 
+    // Collection user_onboarding_responses/{uid}/responses/{configVersion}
+    // Règle: UID-based isolation - chaque utilisateur accède uniquement à ses propres réponses
+    match /user_onboarding_responses/{uid}/responses/{configVersion} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      // Validation des champs à l'écriture
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && validateOnboardingResponse(request.resource.data);
+
+      allow update: if request.auth != null
+                    && request.auth.uid == uid
+                    && validateOnboardingResponse(request.resource.data);
+    }
+
     // Fonctions de validation
 
     // Valide les données du profil utilisateur
@@ -260,6 +275,29 @@ service cloud.firestore {
           && data.averageDurationMinutes is int
           && data.averageDurationMinutes >= 0
           && data.updatedAt is int;  // timestamp
+    }
+
+    // Valide une réponse d'onboarding
+    function validateOnboardingResponse(data) {
+      return data.uid is string
+          && data.uid.size() > 0
+          && data.config_version is string
+          && data.config_version.size() > 0
+          && data.completed is bool
+          && data.started_at is timestamp
+          && (data.completed_at == null || data.completed_at is timestamp)
+          && data.answers is list
+          && data.answers.size() >= 0
+          && (data.metadata == null || data.metadata is map)
+          && (data.goals == null || data.goals is list)
+          && (data.main_goal == null || data.main_goal is string)
+          && (data.experience_levels == null || data.experience_levels is map)
+          && (data.daily_time_commitment == null || data.daily_time_commitment is string)
+          && (data.preferred_times == null || data.preferred_times is list)
+          && (data.content_preferences == null || data.content_preferences is list)
+          && (data.practice_style == null || data.practice_style is string)
+          && (data.challenges == null || data.challenges is list)
+          && (data.support_preferences == null || data.support_preferences is list);
     }
 
     // Bloquer tout accès aux autres collections par défaut
