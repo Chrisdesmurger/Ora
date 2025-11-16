@@ -3,12 +3,10 @@ package com.ora.wellbeing.domain.model
 import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.IgnoreExtraProperties
 import com.google.firebase.firestore.PropertyName
-
 // FIX(user-dynamic): Domain model pour le profil utilisateur
 // Correspond au schéma Firestore users/{uid} défini dans user_data_contract.yaml
 // IMPORTANT: Uses regular class (not data class) for Firestore compatibility
 // IMPORTANT: Firestore uses snake_case, so we need @PropertyName annotations
-
 /**
  * Profil utilisateur - entity du domaine
  * Source de vérité: Firestore collection "users"
@@ -28,47 +26,40 @@ import com.google.firebase.firestore.PropertyName
 class UserProfile {
     // uid is stored as both documentId AND field in Firestore
     var uid: String = ""
-
     // IMPORTANT: Firestore uses snake_case field names
     @get:PropertyName("first_name")
     @set:PropertyName("first_name")
     var firstName: String? = null
-
     @get:PropertyName("last_name")
     @set:PropertyName("last_name")
     var lastName: String? = null
-
     @get:PropertyName("email")
     @set:PropertyName("email")
     var email: String? = null
-
     @get:PropertyName("photo_url")
     @set:PropertyName("photo_url")
     var photoUrl: String? = null
-
     @get:PropertyName("motto")
     @set:PropertyName("motto")
     var motto: String? = null
-
     @get:PropertyName("plan_tier")
     @set:PropertyName("plan_tier")
     var planTier: String = "free"
-
     @get:PropertyName("created_at")
     @set:PropertyName("created_at")
     var createdAt: Long? = null
-
     @get:PropertyName("updated_at")
     @set:PropertyName("updated_at")
     var updatedAt: Long? = null
-
     @get:PropertyName("locale")
     @set:PropertyName("locale")
     var locale: String? = null
-
+    
+    @get:PropertyName("has_completed_onboarding")
+    @set:PropertyName("has_completed_onboarding")
+    var hasCompletedOnboarding: Boolean = false
     // No-arg constructor required by Firestore
     constructor()
-
     // Constructor for easy creation
     constructor(
         uid: String,
@@ -93,7 +84,6 @@ class UserProfile {
         this.updatedAt = updatedAt
         this.locale = locale
     }
-
     companion object {
         /**
          * Crée un profil par défaut pour un nouvel utilisateur
@@ -132,7 +122,6 @@ class UserProfile {
     /**
      * Copy function for immutability pattern
      */
-    @Exclude
     fun copy(
         uid: String = this.uid,
         firstName: String? = this.firstName,
@@ -143,9 +132,10 @@ class UserProfile {
         planTier: String = this.planTier,
         createdAt: Long? = this.createdAt,
         updatedAt: Long? = this.updatedAt,
-        locale: String? = this.locale
+        locale: String? = this.locale,
+        hasCompletedOnboarding: Boolean = this.hasCompletedOnboarding
     ): UserProfile {
-        return UserProfile(
+        val newProfile = UserProfile(
             uid = uid,
             firstName = firstName,
             lastName = lastName,
@@ -157,5 +147,7 @@ class UserProfile {
             updatedAt = updatedAt,
             locale = locale
         )
+        newProfile.hasCompletedOnboarding = hasCompletedOnboarding
+        return newProfile
     }
 }

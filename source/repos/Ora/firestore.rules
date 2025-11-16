@@ -125,6 +125,13 @@ service cloud.firestore {
       allow write: if false; // Admin only (future Cloud Functions)
     }
 
+    // Collection onboarding_configs/{configId}
+    // Règle: Lecture pour tous les utilisateurs authentifiés, écriture admin uniquement
+    match /onboarding_configs/{configId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Admin only (from OraWebApp)
+    }
+
     // Fonctions de validation
 
     // Valide les données du profil utilisateur
@@ -139,7 +146,9 @@ service cloud.firestore {
           && (data.plan_tier == null || data.plan_tier in ['free', 'premium', 'lifetime'])
           && (data.created_at == null || data.created_at is int)
           && (data.locale == null || data.locale in ['fr', 'en'])
-          && (data.updated_at == null || data.updated_at is int);
+          && (data.updated_at == null || data.updated_at is int)
+          && (data.has_completed_onboarding == null || data.has_completed_onboarding is bool)
+          && (data.onboarding == null || data.onboarding is map);
     }
 
     // Valide les statistiques utilisateur

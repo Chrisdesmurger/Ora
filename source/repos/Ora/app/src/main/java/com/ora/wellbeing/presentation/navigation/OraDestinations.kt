@@ -17,6 +17,10 @@ sealed class OraDestinations(
 ) {
     // FIX(auth): Destination d'authentification
     object Auth : OraDestinations("auth")
+    
+    // Onboarding destinations (NEW)
+    object Onboarding : OraDestinations("onboarding")
+    object OnboardingCelebration : OraDestinations("onboarding_celebration")
 
     // Main bottom navigation destinations
     object Home : OraDestinations("home")

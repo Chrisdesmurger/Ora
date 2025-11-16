@@ -36,6 +36,8 @@ import com.ora.wellbeing.presentation.screens.profile.ProfileEditScreen
 import com.ora.wellbeing.presentation.screens.stats.PracticeStatsScreen
 import com.ora.wellbeing.feature.practice.ui.PlayerScreen
 import com.ora.wellbeing.presentation.screens.debug.FirestoreDebugScreen
+import com.ora.wellbeing.presentation.screens.onboarding.OnboardingScreen
+import com.ora.wellbeing.presentation.screens.onboarding.OnboardingCelebrationScreen
 
 /**
  * FIX(auth): Navigation principale avec vérification d'authentification
@@ -49,6 +51,7 @@ fun OraNavigation(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val isAuthenticated by authViewModel.isAuthenticated.collectAsStateWithLifecycle()
+    val userProfile by authViewModel.userProfile.collectAsStateWithLifecycle()
 
     // FIX(auth): Redirection vers Auth si non connecté
     LaunchedEffect(isAuthenticated) {
@@ -58,6 +61,23 @@ fun OraNavigation(
                     inclusive = true
                 }
                 launchSingleTop = true
+            }
+        }
+    }
+
+    // FIX(onboarding): Redirection vers Onboarding si non complété
+    LaunchedEffect(isAuthenticated, userProfile) {
+        val profile = userProfile; if (isAuthenticated && profile != null && !profile.hasCompletedOnboarding) {
+            val currentRoute = currentDestination?.route
+            // Only redirect if not already on onboarding screens
+            if (currentRoute != OraDestinations.Onboarding.route &&
+                currentRoute != OraDestinations.OnboardingCelebration.route) {
+                navController.navigate(OraDestinations.Onboarding.route) {
+                    popUpTo(navController.graph.findStartDestination().id) {
+                        inclusive = true
+                    }
+                    launchSingleTop = true
+                }
             }
         }
     }
@@ -88,6 +108,33 @@ fun OraNavigation(
                     onAuthSuccess = {
                         navController.navigate(OraDestinations.Home.route) {
                             popUpTo(OraDestinations.Auth.route) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+
+            // Onboarding Flow
+            composable(OraDestinations.Onboarding.route) {
+                OnboardingScreen(
+                    onComplete = {
+                        navController.navigate(OraDestinations.OnboardingCelebration.route) {
+                            popUpTo(OraDestinations.Onboarding.route) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+
+            composable(OraDestinations.OnboardingCelebration.route) {
+                OnboardingCelebrationScreen(
+                    onContinue = {
+                        navController.navigate(OraDestinations.Home.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
                                 inclusive = true
                             }
                             launchSingleTop = true
