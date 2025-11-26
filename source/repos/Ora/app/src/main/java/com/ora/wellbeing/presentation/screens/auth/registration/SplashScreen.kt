@@ -64,7 +64,7 @@ fun SplashScreen(
         ) {
             // Logo ORA
             Image(
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                painter = painterResource(id = R.drawable.ora_logo),
                 contentDescription = "ORA Logo",
                 modifier = Modifier.size(200.dp)
             )
