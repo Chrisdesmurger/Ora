@@ -1,11 +1,18 @@
 package com.ora.wellbeing.presentation.screens.auth.registration
 
+import android.content.Context
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.ora.wellbeing.data.repository.AuthRepository
 import com.ora.wellbeing.domain.model.UserProfile
 import com.ora.wellbeing.domain.repository.FirestoreUserProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,13 +22,16 @@ import javax.inject.Inject
 
 /**
  * ViewModel pour l'écran de collecte d'email et création de compte
- * Gère Firebase Auth + création document Firestore users/{uid}
+ * Gère Firebase Auth (Email/Password + Google) + création document Firestore users/{uid}
  */
 @HiltViewModel
 class EmailCollectionViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val firestoreUserProfileRepository: FirestoreUserProfileRepository
+    private val firestoreUserProfileRepository: FirestoreUserProfileRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
+
+    private val credentialManager = CredentialManager.create(context)
 
     private val _uiState = MutableStateFlow(EmailCollectionUiState())
     val uiState: StateFlow<EmailCollectionUiState> = _uiState.asStateFlow()
@@ -47,6 +57,9 @@ class EmailCollectionViewModel @Inject constructor(
             }
             EmailCollectionUiEvent.CreateAccount -> {
                 createAccount()
+            }
+            EmailCollectionUiEvent.SignUpWithGoogle -> {
+                signUpWithGoogle()
             }
             EmailCollectionUiEvent.DismissError -> {
                 _uiState.value = _uiState.value.copy(error = null)
@@ -158,6 +171,142 @@ class EmailCollectionViewModel @Inject constructor(
             }
         }
     }
+
+    /**
+     * Inscription avec Google via Credential Manager
+     */
+    private fun signUpWithGoogle() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            Timber.d("EmailCollectionViewModel: Starting Google sign up")
+
+            try {
+                // Web Client ID extrait de google-services.json
+                val webClientId = "859432337771-4uvfmnga435mtjvtl5itfru63mrtagkt.apps.googleusercontent.com"
+
+                // Créer la requête Google ID
+                val googleIdOption = GetGoogleIdOption.Builder()
+                    .setFilterByAuthorizedAccounts(false)
+                    .setServerClientId(webClientId)
+                    .build()
+
+                val request = GetCredentialRequest.Builder()
+                    .addCredentialOption(googleIdOption)
+                    .build()
+
+                // Obtenir les credentials via Credential Manager
+                val result = credentialManager.getCredential(
+                    request = request,
+                    context = context
+                )
+
+                // Extraire le Google ID Token
+                val credential = result.credential
+                Timber.d("EmailCollectionViewModel: Credential type: ${credential.type}")
+
+                when {
+                    credential is GoogleIdTokenCredential -> {
+                        val idToken = credential.idToken
+                        Timber.d("EmailCollectionViewModel: Got Google ID token")
+
+                        // Authentifier avec Firebase
+                        authRepository.signInWithGoogle(idToken)
+                            .onSuccess { localUser ->
+                                Timber.d("EmailCollectionViewModel: Google sign up successful, uid=${localUser.id}")
+
+                                // Créer le profil Firestore
+                                val userProfile = UserProfile(
+                                    uid = localUser.id,
+                                    email = localUser.email,
+                                    firstName = null,
+                                    lastName = null,
+                                    planTier = "free",
+                                    createdAt = System.currentTimeMillis(),
+                                    updatedAt = System.currentTimeMillis()
+                                )
+
+                                firestoreUserProfileRepository.createUserProfile(userProfile)
+                                    .onSuccess {
+                                        Timber.i("EmailCollectionViewModel: Firestore profile created (Google)")
+                                        _uiState.value = _uiState.value.copy(
+                                            isLoading = false,
+                                            accountCreated = true
+                                        )
+                                    }
+                                    .onFailure {
+                                        // Continue même si Firestore échoue
+                                        Timber.e(it, "EmailCollectionViewModel: Firestore failed (Google), continuing")
+                                        _uiState.value = _uiState.value.copy(
+                                            isLoading = false,
+                                            accountCreated = true
+                                        )
+                                    }
+                            }
+                            .onFailure { exception ->
+                                Timber.e(exception, "EmailCollectionViewModel: Firebase auth with Google failed")
+                                _uiState.value = _uiState.value.copy(
+                                    isLoading = false,
+                                    error = "Échec de l'authentification Google"
+                                )
+                            }
+                    }
+                    credential.type == "com.google.android.libraries.identity.googleid.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL" -> {
+                        val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                        val idToken = googleIdTokenCredential.idToken
+
+                        authRepository.signInWithGoogle(idToken)
+                            .onSuccess { localUser ->
+                                val userProfile = UserProfile(
+                                    uid = localUser.id,
+                                    email = localUser.email,
+                                    firstName = null,
+                                    lastName = null,
+                                    planTier = "free",
+                                    createdAt = System.currentTimeMillis(),
+                                    updatedAt = System.currentTimeMillis()
+                                )
+
+                                firestoreUserProfileRepository.createUserProfile(userProfile)
+                                    .onSuccess {
+                                        _uiState.value = _uiState.value.copy(
+                                            isLoading = false,
+                                            accountCreated = true
+                                        )
+                                    }
+                                    .onFailure {
+                                        _uiState.value = _uiState.value.copy(
+                                            isLoading = false,
+                                            accountCreated = true
+                                        )
+                                    }
+                            }
+                            .onFailure {
+                                _uiState.value = _uiState.value.copy(
+                                    isLoading = false,
+                                    error = "Échec de l'authentification Google"
+                                )
+                            }
+                    }
+                    else -> {
+                        throw Exception("Type de credential inattendu: ${credential.type}")
+                    }
+                }
+
+            } catch (e: GetCredentialException) {
+                Timber.e(e, "EmailCollectionViewModel: Credential Manager error")
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "Connexion Google annulée"
+                )
+            } catch (e: Exception) {
+                Timber.e(e, "EmailCollectionViewModel: Google sign up error")
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "Erreur Google: ${e.message}"
+                )
+            }
+        }
+    }
 }
 
 /**
@@ -185,5 +334,6 @@ sealed class EmailCollectionUiEvent {
     data class PasswordChanged(val password: String) : EmailCollectionUiEvent()
     object TogglePasswordVisibility : EmailCollectionUiEvent()
     object CreateAccount : EmailCollectionUiEvent()
+    object SignUpWithGoogle : EmailCollectionUiEvent()
     object DismissError : EmailCollectionUiEvent()
 }
