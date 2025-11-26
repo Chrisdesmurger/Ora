@@ -69,17 +69,7 @@ fun SplashScreen(
                 modifier = Modifier.size(200.dp)
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Nom de l'app
-            Text(
-                text = "ORA",
-                style = MaterialTheme.typography.displayLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Tagline
             Text(
