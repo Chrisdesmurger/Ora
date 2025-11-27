@@ -29,6 +29,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -1211,7 +1212,7 @@ fun ProfileGroupContent(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        fields.sortedBy { it.id }.forEach { field ->
+        fields.sortedBy { it.order }.forEach { field ->
             when (field.getInputTypeEnum()) {
                 com.ora.wellbeing.data.model.onboarding.ProfileFieldInputType.TEXT -> {
                     OutlinedTextField(

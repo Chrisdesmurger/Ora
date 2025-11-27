@@ -22,6 +22,7 @@ class ProfileField {
     var placeholder: String? = null
     var maxLength: Int? = null
     var required: Boolean = false
+    var order: Int = 0
     var options: List<ProfileFieldOption>? = null
 
     constructor()
@@ -35,6 +36,7 @@ class ProfileField {
         placeholder: String? = null,
         maxLength: Int? = null,
         required: Boolean = false,
+        order: Int = 0,
         options: List<ProfileFieldOption>? = null
     ) {
         this.id = id
@@ -45,6 +47,7 @@ class ProfileField {
         this.placeholder = placeholder
         this.maxLength = maxLength
         this.required = required
+        this.order = order
         this.options = options
     }
 
