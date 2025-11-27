@@ -9,6 +9,7 @@ import com.ora.wellbeing.BuildConfig
 import com.ora.wellbeing.data.model.onboarding.OnboardingConfig
 import com.ora.wellbeing.data.model.onboarding.OnboardingMetadata
 import com.ora.wellbeing.data.model.onboarding.OnboardingQuestion
+import com.ora.wellbeing.data.model.onboarding.QuestionTypeKind
 import com.ora.wellbeing.data.model.onboarding.UserOnboardingAnswer
 import com.ora.wellbeing.data.model.onboarding.UserOnboardingResponse
 import com.ora.wellbeing.data.repository.OnboardingRepository
@@ -237,6 +238,11 @@ class OnboardingViewModel @Inject constructor(
         viewModelScope.launch {
             onboardingRepository.saveUserOnboardingResponse(uid, response)
                 .onSuccess {
+                    // Parse profile_group data and update user profile fields
+                    viewModelScope.launch {
+                        parseAndUpdateProfileGroupData(uid)
+                    }
+
                     // Update user profile to mark onboarding as completed
                     viewModelScope.launch {
                         userProfileRepository.getUserProfile(uid).collect { profile ->
@@ -260,6 +266,71 @@ class OnboardingViewModel @Inject constructor(
                     Timber.e(error, "Failed to save onboarding response")
                 }
         }
+    }
+
+    private suspend fun parseAndUpdateProfileGroupData(uid: String) {
+        try {
+            // Find profile_group question in config
+            val profileGroupQuestion = config?.questions?.find { question ->
+                question.type.toKind() == QuestionTypeKind.PROFILE_GROUP
+            }
+
+            if (profileGroupQuestion == null) {
+                Timber.d("No profile_group question found in onboarding config")
+                return
+            }
+
+            // Find corresponding answer
+            val profileGroupAnswer = answers[profileGroupQuestion.id]
+            if (profileGroupAnswer == null) {
+                Timber.w("No answer found for profile_group question ${profileGroupQuestion.id}")
+                return
+            }
+
+            // Parse JSON from textAnswer
+            val jsonString = profileGroupAnswer.textAnswer
+            if (jsonString.isNullOrBlank()) {
+                Timber.w("Profile group answer is empty")
+                return
+            }
+
+            Timber.d("Parsing profile_group JSON: $jsonString")
+
+            // Parse JSON manually (simple JSON parsing for our known structure)
+            val firstName = extractJsonValue(jsonString, "firstName")
+            val birthDate = extractJsonValue(jsonString, "birthDate")
+            val gender = extractJsonValue(jsonString, "gender")
+
+            Timber.d("Extracted profile data - firstName: $firstName, birthDate: $birthDate, gender: $gender")
+
+            // Update user profile with extracted data
+            val result = userProfileRepository.updateProfileGroup(
+                uid = uid,
+                firstName = firstName,
+                birthDate = birthDate,
+                gender = gender
+            )
+
+            result.onSuccess {
+                Timber.d("Profile group data updated successfully in users collection")
+            }.onFailure { error ->
+                Timber.e(error, "Failed to update profile group data")
+            }
+
+        } catch (e: Exception) {
+            Timber.e(e, "Error parsing profile_group data")
+        }
+    }
+
+    /**
+     * Simple JSON value extractor for our known profile_group structure
+     * Extracts value from JSON like: {"firstName":"John","birthDate":"01/01/1990","gender":"male"}
+     */
+    private fun extractJsonValue(json: String, key: String): String? {
+        val pattern = "\"$key\":\"([^\"]*)\""
+        val regex = Regex(pattern)
+        val matchResult = regex.find(json)
+        return matchResult?.groupValues?.getOrNull(1)
     }
 
     private fun getCurrentQuestion(): OnboardingQuestion? {

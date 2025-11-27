@@ -225,6 +225,48 @@ class FirestoreUserProfileRepositoryImpl @Inject constructor(
         Result.failure(e)
     }
 
+    // Mise à jour partielle - profile group (onboarding)
+    // IMPORTANT: Field names must match Firestore schema (snake_case)
+    override suspend fun updateProfileGroup(
+        uid: String,
+        firstName: String?,
+        birthDate: String?,
+        gender: String?
+    ): Result<Unit> {
+        return try {
+            require(uid.isNotBlank()) { "UID ne peut pas être vide" }
+
+            Timber.d("updateProfileGroup: uid=$uid, firstName=$firstName, birthDate=$birthDate, gender=$gender")
+
+            val updates = mutableMapOf<String, Any?>(
+                "updated_at" to System.currentTimeMillis()
+            )
+
+            firstName?.let { updates["first_name"] = it }
+            birthDate?.let { updates["birth_date"] = it }
+            gender?.let { updates["gender"] = it }
+
+            if (updates.size == 1) { // Only updated_at
+                Timber.w("updateProfileGroup: No profile group fields to update")
+                return Result.success(Unit)
+            }
+
+            firestore.collection(COLLECTION_USERS)
+                .document(uid)
+                .update(updates)
+                .await()
+
+            Timber.i("updateProfileGroup: Profile group data updated for $uid")
+            Result.success(Unit)
+        } catch (e: FirebaseFirestoreException) {
+            Timber.e(e, "updateProfileGroup: Erreur Firestore ${e.code}")
+            Result.failure(e)
+        } catch (e: Exception) {
+            Timber.e(e, "updateProfileGroup: Erreur inattendue")
+            Result.failure(e)
+        }
+    }
+
     // FIX(user-dynamic): Suppression profil (GDPR)
     override suspend fun deleteUserProfile(uid: String): Result<Unit> = try {
         require(uid.isNotBlank()) { "UID ne peut pas être vide" }
