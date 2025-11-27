@@ -1234,23 +1234,75 @@ fun ProfileGroupContent(
                     )
                 }
                 com.ora.wellbeing.data.model.onboarding.ProfileFieldInputType.DATE -> {
+                    // Date picker for birthDate
+                    var showDatePicker by remember { mutableStateOf(false) }
+                    val datePickerState = rememberDatePickerState()
+
+                    // Format displayed date (DD/MM/YYYY)
+                    val selectedDate = profileData[field.id] ?: ""
+
                     OutlinedTextField(
-                        value = profileData[field.id] ?: "",
-                        onValueChange = { value ->
-                            val newData = profileData.toMutableMap()
-                            newData[field.id] = value
-                            onProfileDataChange(newData)
-                        },
+                        value = selectedDate,
+                        onValueChange = { }, // Read-only, opens date picker on click
                         label = { Text(field.label) },
                         placeholder = field.placeholder?.let { { Text(it) } },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showDatePicker = true },
                         shape = RoundedCornerShape(16.dp),
                         singleLine = true,
+                        readOnly = true,
+                        enabled = false,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                        )
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                            disabledBorderColor = MaterialTheme.colorScheme.outline,
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        trailingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Schedule,
+                                contentDescription = "Sélectionner une date",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     )
+
+                    if (showDatePicker) {
+                        DatePickerDialog(
+                            onDismissRequest = { showDatePicker = false },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        datePickerState.selectedDateMillis?.let { millis ->
+                                            // Convert timestamp to DD/MM/YYYY format
+                                            val calendar = java.util.Calendar.getInstance()
+                                            calendar.timeInMillis = millis
+                                            val day = calendar.get(java.util.Calendar.DAY_OF_MONTH)
+                                            val month = calendar.get(java.util.Calendar.MONTH) + 1
+                                            val year = calendar.get(java.util.Calendar.YEAR)
+                                            val formattedDate = String.format("%02d/%02d/%04d", day, month, year)
+
+                                            val newData = profileData.toMutableMap()
+                                            newData[field.id] = formattedDate
+                                            onProfileDataChange(newData)
+                                        }
+                                        showDatePicker = false
+                                    }
+                                ) {
+                                    Text("OK")
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showDatePicker = false }) {
+                                    Text("Annuler")
+                                }
+                            }
+                        ) {
+                            DatePicker(state = datePickerState)
+                        }
+                    }
                 }
                 com.ora.wellbeing.data.model.onboarding.ProfileFieldInputType.RADIO -> {
                     // Radio button group for gender selection

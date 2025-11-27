@@ -147,6 +147,26 @@ class OnboardingViewModel @Inject constructor(
             com.ora.wellbeing.data.model.onboarding.QuestionTypeKind.TEXT_INPUT -> {
                 !textAnswer.isNullOrBlank()
             }
+            com.ora.wellbeing.data.model.onboarding.QuestionTypeKind.PROFILE_GROUP -> {
+                // For profile_group, validate that textAnswer (JSON) is not empty
+                // and contains all required fields
+                if (textAnswer.isNullOrBlank()) return false
+
+                // Parse JSON to check if all required fields are filled
+                try {
+                    val fields = question.type.fields ?: return false
+                    val requiredFields = fields.filter { it.required }
+
+                    // Simple validation: check that JSON contains all required field IDs with non-empty values
+                    requiredFields.all { field ->
+                        textAnswer.contains("\"${field.id}\":") &&
+                        !textAnswer.contains("\"${field.id}\":\"\"")
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e, "Error validating profile_group answer")
+                    false
+                }
+            }
             else -> {
                 selectedOptions.isNotEmpty()
             }
