@@ -17,7 +17,9 @@ enum class QuestionTypeKind {
     TOGGLE_LIST,
     SLIDER,
     CIRCULAR_PICKER,
-    IMAGE_CARD
+    IMAGE_CARD,
+    INFORMATION_SCREEN,
+    PROFILE_GROUP
 }
 
 @IgnoreExtraProperties
@@ -44,6 +46,9 @@ class QuestionTypeConfig {
     var maxLines: Int? = null
     var maxCharacters: Int? = null
     var placeholder: String? = null
+
+    // Profile group
+    var fields: List<ProfileField>? = null
 
     constructor()
 
@@ -91,6 +96,8 @@ class QuestionTypeConfig {
             "slider" -> QuestionTypeKind.SLIDER
             "circular_picker" -> QuestionTypeKind.CIRCULAR_PICKER
             "image_card" -> QuestionTypeKind.IMAGE_CARD
+            "information_screen" -> QuestionTypeKind.INFORMATION_SCREEN
+            "profile_group" -> QuestionTypeKind.PROFILE_GROUP
             else -> QuestionTypeKind.MULTIPLE_CHOICE
         }
     }

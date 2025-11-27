@@ -309,6 +309,12 @@ fun OnboardingQuestionCard(
 
         // Options based on question type
         when (question.type.toKind()) {
+            QuestionTypeKind.INFORMATION_SCREEN -> {
+                InformationScreenContent(
+                    question = question,
+                    onAnswerChange = onAnswerChange
+                )
+            }
             QuestionTypeKind.MULTIPLE_CHOICE -> {
                 if (question.type.displayMode == "grid") {
                     GridSelectionOptions(
@@ -404,6 +410,23 @@ fun OnboardingQuestionCard(
                     gridColumns = question.type.gridColumns ?: 2,
                     onSelectionChange = { newSelection ->
                         onAnswerChange(newSelection, null)
+                    }
+                )
+            }
+            QuestionTypeKind.PROFILE_GROUP -> {
+                // Profile group handles multiple fields - data stored as JSON
+                var profileData by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+
+                ProfileGroupContent(
+                    question = question,
+                    profileData = profileData,
+                    onProfileDataChange = { newData ->
+                        profileData = newData
+                        // Convert profile data to JSON string for storage
+                        val jsonString = newData.entries.joinToString(",") { (key, value) ->
+                            "\"$key\":\"$value\""
+                        }
+                        onAnswerChange(emptyList(), "{$jsonString}")
                     }
                 )
             }
@@ -1082,6 +1105,54 @@ fun TimeSelectionOptions(
 }
 
 @Composable
+fun InformationScreenContent(
+    question: OnboardingQuestion,
+    onAnswerChange: (List<String>, String?) -> Unit
+) {
+    // Information screens don't need user input
+    // Auto-mark as answered when displayed
+    LaunchedEffect(Unit) {
+        onAnswerChange(listOf("acknowledged"), null)
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        // Icon/Emoji (default lotus flower for ORA)
+        Surface(
+            modifier = Modifier.size(120.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer
+        ) {
+            Box(
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "🪷",
+                    style = MaterialTheme.typography.displayLarge,
+                    modifier = Modifier.scale(1.5f)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Additional message or description (already shown as subtitle above)
+        question.getLocalizedSubtitle()?.let { subtitle ->
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        }
+    }
+}
+
+@Composable
 fun EnhancedTextInput(
     question: OnboardingQuestion,
     onTextChange: (String) -> Unit
@@ -1125,6 +1196,139 @@ fun EnhancedTextInput(
             },
             modifier = Modifier.align(Alignment.End)
         )
+    }
+}
+
+@Composable
+fun ProfileGroupContent(
+    question: OnboardingQuestion,
+    profileData: Map<String, String>,
+    onProfileDataChange: (Map<String, String>) -> Unit
+) {
+    val fields = question.type.fields ?: emptyList()
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        fields.sortedBy { it.id }.forEach { field ->
+            when (field.getInputTypeEnum()) {
+                com.ora.wellbeing.data.model.onboarding.ProfileFieldInputType.TEXT -> {
+                    OutlinedTextField(
+                        value = profileData[field.id] ?: "",
+                        onValueChange = { value ->
+                            val newData = profileData.toMutableMap()
+                            newData[field.id] = value
+                            onProfileDataChange(newData)
+                        },
+                        label = { Text(field.label) },
+                        placeholder = field.placeholder?.let { { Text(it) } },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                        )
+                    )
+                }
+                com.ora.wellbeing.data.model.onboarding.ProfileFieldInputType.DATE -> {
+                    OutlinedTextField(
+                        value = profileData[field.id] ?: "",
+                        onValueChange = { value ->
+                            val newData = profileData.toMutableMap()
+                            newData[field.id] = value
+                            onProfileDataChange(newData)
+                        },
+                        label = { Text(field.label) },
+                        placeholder = field.placeholder?.let { { Text(it) } },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                        )
+                    )
+                }
+                com.ora.wellbeing.data.model.onboarding.ProfileFieldInputType.RADIO -> {
+                    // Radio button group for gender selection
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = field.label,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+
+                        val options = field.options ?: emptyList()
+                        options.sortedBy { it.order }.forEach { option ->
+                            val isSelected = profileData[field.id] == option.id
+
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        val newData = profileData.toMutableMap()
+                                        newData[field.id] = option.id
+                                        onProfileDataChange(newData)
+                                    },
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (isSelected) {
+                                    MaterialTheme.colorScheme.primaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.surface
+                                },
+                                tonalElevation = if (isSelected) 2.dp else 1.dp,
+                                border = if (isSelected) {
+                                    androidx.compose.foundation.BorderStroke(
+                                        2.dp,
+                                        MaterialTheme.colorScheme.primary
+                                    )
+                                } else null
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    option.icon?.let { emoji ->
+                                        Text(
+                                            text = emoji,
+                                            style = MaterialTheme.typography.titleLarge,
+                                            fontSize = 24.sp
+                                        )
+                                    }
+
+                                    Text(
+                                        text = option.label,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = if (isSelected) {
+                                            MaterialTheme.colorScheme.onPrimaryContainer
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurface
+                                        },
+                                        modifier = Modifier.weight(1f)
+                                    )
+
+                                    if (isSelected) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "Selected",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
