@@ -125,6 +125,13 @@ service cloud.firestore {
       allow write: if false; // Admin only (future Cloud Functions)
     }
 
+    // Collection lessons/{lessonId}
+    // Règle: Lecture pour tous les utilisateurs authentifiés, écriture admin uniquement
+    match /lessons/{lessonId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Admin only (from OraWebApp)
+    }
+
     // Collection onboarding_configs/{configId}
     // Règle: Lecture pour tous les utilisateurs authentifiés, écriture admin uniquement
     match /onboarding_configs/{configId} {
