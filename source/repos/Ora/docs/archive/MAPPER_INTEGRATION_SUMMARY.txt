@@ -1,0 +1,236 @@
+OFFLINE-FIRST REPOSITORY ARCHITECTURE ANALYSIS
+===============================================
+
+CURRENT FINDINGS
+================
+
+1. EXISTING REPOSITORIES (Firestore-Only)
+
+   ContentRepositoryImpl.kt
+   - Location: data/repository/impl/
+   - 10 methods using direct Firestore listeners
+   - NO Room caching - network required
+   - Methods: getAllContent(), getContentByCategory(), searchContent(), etc.
+
+   ProgramRepositoryImpl.kt
+   - Location: data/repository/impl/
+   - 5 methods using direct Firestore listeners
+   - NO Room caching
+   - Methods: getAllPrograms(), getProgram(), getPopularPrograms(), etc.
+
+2. ROOM DATABASE STATUS
+
+   OraDatabase.kt - version 1 (needs upgrade to v2)
+   
+   Current Entities:
+   - User, JournalEntry, Content, UserActivity, UserFavorite, UserStats, Settings, NotificationPreference
+   
+   Missing:
+   - Program entity (not in Room yet)
+
+3. CONTENTDAO.KT (READY TO USE!)
+
+   14 methods already implemented but NOT used by ContentRepositoryImpl:
+   - getAllContentFlow(), getContentByTypeFlow(), getContentByCategoryFlow()
+   - getContentByLevelFlow(), getFlashSessionsFlow(), getContentByMaxDurationFlow()
+   - getFilteredContentFlow(), getContentByIdFlow(), searchContentFlow()
+   - getUserFavoritesFlow(), getOfflineContentFlow()
+   - insert/update/delete operations
+
+4. CONTENT ENTITY (needs updates)
+
+   Current fields: id, title, description, type, category, durationMinutes, level, videoUrl, audioUrl, thumbnailUrl, instructorName, tags, isFlashSession, equipment, benefits, createdAt, isOfflineAvailable, downloadSize
+
+   Missing from LessonDocument:
+   - programId: String?
+   - order: Int
+   - status: String
+   - updatedAt: LocalDateTime?
+
+===============================================
+NEW MAPPERS (Ready to Use!)
+===============================================
+
+1. LESSONMAPPER.KT
+   Method: fromFirestore(id: String, doc: LessonDocument): ContentItem
+   Conversions: duration_sec to minutes, renditions to videoUrl, status to isActive, etc.
+
+2. PROGRAMMAPPER.KT
+   Method: fromFirestore(id: String, doc: ProgramDocument): Program
+   Conversions: difficulty to level (French), category to French, etc.
+
+3. FIRESTORE MODELS
+   - LessonDocument.kt - correct snake_case schema
+   - ProgramDocument.kt - correct snake_case schema
+
+===============================================
+WHAT NEEDS TO BE DONE
+===============================================
+
+CREATE 2 NEW FILES:
+1. Program.kt - Room entity for programs
+   Location: data/local/entities/Program.kt
+
+2. ProgramDao.kt - Room DAO for programs
+   Location: data/local/dao/ProgramDao.kt
+
+MODIFY 5 EXISTING FILES:
+1. Content.kt - add programId, order, status, updatedAt fields
+
+2. Converters.kt - add Timestamp converters for Firestore sync
+
+3. OraDatabase.kt - upgrade version to 2, add Program entity and ProgramDao
+
+4. ContentRepositoryImpl.kt - use ContentDao + LessonMapper (offline-first pattern)
+
+5. ProgramRepositoryImpl.kt - use ProgramDao + ProgramMapper (offline-first pattern)
+
+KEEP (No changes):
+- LessonMapper.kt
+- ProgramMapper.kt
+- LessonDocument.kt
+- ProgramDocument.kt
+
+===============================================
+OFFLINE-FIRST PATTERN
+===============================================
+
+Pattern: Room is Single Source of Truth
+
+Override getAllContent(): Flow<Content> = flow {
+    // 1. Emit cached from Room immediately
+    val cached = contentDao.getAllContent()
+    if (cached.isNotEmpty()) emit(cached)
+    
+    // 2. Check if sync needed (last sync > N hours)
+    if (shouldSync("content")) {
+        try {
+            // 3. Fetch from Firestore lessons collection
+            val snapshot = firestore.collection("lessons")
+                .whereEqualTo("status", "ready").get().await()
+            
+            // 4. Map each document using LessonMapper
+            val items = snapshot.documents.mapNotNull { doc ->
+                val lessonDoc = doc.toObject(LessonDocument::class.java)
+                lessonDoc?.let { LessonMapper.fromFirestore(doc.id, it) }
+            }
+            
+            // 5. Cache in Room
+            contentDao.insertAllContent(items)
+            
+            // 6. Emit fresh data
+            emit(contentDao.getAllContent())
+        } catch (e: Exception) {
+            // On error: continue with cache, don't crash
+            Timber.e(e, "Sync failed, using cache")
+        }
+    }
+}
+
+KEY BENEFITS:
+- Works offline (cached data always available)
+- Fast (cached data shown immediately)
+- Automatic sync (background doesn't block UI)
+- Resilient (errors don't crash app)
+
+===============================================
+MAPPER INTEGRATION POINTS
+===============================================
+
+ContentRepositoryImpl.kt:
+- Fetch from "lessons" collection (not "content")
+- Map via LessonMapper.fromFirestore(id, lessonDoc)
+- Cache via contentDao.insertAllContent(items)
+- Return data from contentDao, not Firestore
+
+ProgramRepositoryImpl.kt:
+- Fetch from "programs" collection
+- Map via ProgramMapper.fromFirestore(id, programDoc)
+- Cache via programDao.insertAllPrograms(programs)
+- Return data from programDao, not Firestore
+
+===============================================
+KEY FIELD CONVERSIONS
+===============================================
+
+LessonDocument (Firestore snake_case) to Content (Room):
+- id → id
+- title → title
+- program_id → programId
+- order → order
+- duration_sec → durationMinutes (divide by 60)
+- tags → tags, instructor (extract), category (via tags)
+- status → status; "ready" → isActive
+- renditions → videoUrl (pick best: high > medium > low)
+- audio_variants → audioUrl
+- thumbnail_url → thumbnailUrl
+- created_at → createdAt
+- updated_at → updatedAt
+
+ProgramDocument (Firestore snake_case) to Program (Room):
+- id → id
+- title → title
+- category → category (map to French: meditation → Méditation)
+- difficulty → level (map to French: beginner → Débutant)
+- duration_days → duration
+- cover_image_url → thumbnailUrl
+- status → isActive (status == "published")
+- participant_count → participantCount
+- rating → rating
+- created_at → createdAt
+- updated_at → updatedAt
+
+===============================================
+IMPLEMENTATION CHECKLIST
+===============================================
+
+Phase 1 - Room Entities
+[ ] Create Program.kt Room entity
+[ ] Create ProgramDao.kt Room DAO
+
+Phase 2 - Updates
+[ ] Update Content.kt - add 4 fields
+[ ] Update Converters.kt - add Timestamp converters
+[ ] Update OraDatabase.kt - v2, add Program
+
+Phase 3 - Repositories
+[ ] Refactor ContentRepositoryImpl - use LessonMapper + ContentDao
+[ ] Refactor ProgramRepositoryImpl - use ProgramMapper + ProgramDao
+
+Phase 4 - Testing
+[ ] Test offline functionality
+[ ] Test sync behavior
+[ ] Test error handling
+
+===============================================
+SUMMARY
+===============================================
+
+Status: 80% ready!
+
+Already Exists:
+- LessonMapper.kt (correct)
+- ProgramMapper.kt (correct)
+- LessonDocument.kt (correct)
+- ProgramDocument.kt (correct)
+- ContentDao.kt (14 methods, not used)
+- Content entity (mostly complete)
+
+Missing:
+- Program entity + DAO
+- Integration of mappers into repositories
+- Offline-first caching logic
+
+The mappers are CORRECT and READY to use!
+Just need to:
+1. Create Program entity/DAO
+2. Use mappers in repositories
+3. Wire up Room caching
+4. Add sync metadata tracking
+
+Total effort:
+- 2 files to create
+- 5 files to modify
+- ~100 lines of new code
+
+This enables complete offline support!

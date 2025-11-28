@@ -1,0 +1,20 @@
+openapi: 3.0.3
+info:
+  title: Ora Backend API
+  version: "0.1.0"
+paths:
+  /v1/programs:
+    get:
+      summary: List programs
+      responses:
+        "200":
+          description: OK
+  /v1/campaigns/active:
+    get:
+      summary: Get active campaigns for a user
+      parameters:
+        - in: query
+          name: uid
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
