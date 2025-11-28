@@ -41,6 +41,14 @@ class UserProfile {
     @set:PropertyName("motto")
     var motto: String? = null
 
+    @get:PropertyName("birth_date")
+    @set:PropertyName("birth_date")
+    var birthDate: String? = null
+
+    @get:PropertyName("gender")
+    @set:PropertyName("gender")
+    var gender: String? = null
+
     @get:PropertyName("plan_tier")
     @set:PropertyName("plan_tier")
     var planTier: String = "FREE"

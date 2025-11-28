@@ -53,10 +53,10 @@ fun OraNavigation(
     val isAuthenticated by authViewModel.isAuthenticated.collectAsStateWithLifecycle()
     val userProfile by authViewModel.userProfile.collectAsStateWithLifecycle()
 
-    // FIX(auth): Redirection vers Auth si non connecté
+    // FIX(auth): Redirection vers Auth Flow si non connecté
     LaunchedEffect(isAuthenticated) {
-        if (!isAuthenticated && currentDestination?.route != OraDestinations.Auth.route) {
-            navController.navigate(OraDestinations.Auth.route) {
+        if (!isAuthenticated && currentDestination?.route != "auth_flow") {
+            navController.navigate("auth_flow") {
                 popUpTo(navController.graph.findStartDestination().id) {
                     inclusive = true
                 }
@@ -97,17 +97,34 @@ fun OraNavigation(
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = if (isAuthenticated) OraDestinations.Home.route else OraDestinations.Auth.route,
+            startDestination = if (isAuthenticated) OraDestinations.Home.route else "auth_flow",
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // FIX(auth): Écran d'authentification
+            // Registration Onboarding Flow (6 screens + questionnaire)
+            // Shown to non-authenticated users
+            composable("auth_flow") {
+                AuthNavGraph(
+                    onAuthComplete = {
+                        // After registration and account creation,
+                        // the existing logic will redirect to OnboardingScreen if needed
+                        navController.navigate(OraDestinations.Home.route) {
+                            popUpTo("auth_flow") {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+
+            // Login screen for existing users (accessible from Welcome screen)
             composable(OraDestinations.Auth.route) {
                 AuthScreen(
                     onAuthSuccess = {
                         navController.navigate(OraDestinations.Home.route) {
-                            popUpTo(OraDestinations.Auth.route) {
+                            popUpTo("auth_flow") {
                                 inclusive = true
                             }
                             launchSingleTop = true

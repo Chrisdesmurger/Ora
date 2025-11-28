@@ -29,6 +29,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -309,6 +310,12 @@ fun OnboardingQuestionCard(
 
         // Options based on question type
         when (question.type.toKind()) {
+            QuestionTypeKind.INFORMATION_SCREEN -> {
+                InformationScreenContent(
+                    question = question,
+                    onAnswerChange = onAnswerChange
+                )
+            }
             QuestionTypeKind.MULTIPLE_CHOICE -> {
                 if (question.type.displayMode == "grid") {
                     GridSelectionOptions(
@@ -404,6 +411,23 @@ fun OnboardingQuestionCard(
                     gridColumns = question.type.gridColumns ?: 2,
                     onSelectionChange = { newSelection ->
                         onAnswerChange(newSelection, null)
+                    }
+                )
+            }
+            QuestionTypeKind.PROFILE_GROUP -> {
+                // Profile group handles multiple fields - data stored as JSON
+                var profileData by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+
+                ProfileGroupContent(
+                    question = question,
+                    profileData = profileData,
+                    onProfileDataChange = { newData ->
+                        profileData = newData
+                        // Convert profile data to JSON string for storage
+                        val jsonString = newData.entries.joinToString(",") { (key, value) ->
+                            "\"$key\":\"$value\""
+                        }
+                        onAnswerChange(emptyList(), "{$jsonString}")
                     }
                 )
             }
@@ -1082,6 +1106,100 @@ fun TimeSelectionOptions(
 }
 
 @Composable
+fun InformationScreenContent(
+    question: OnboardingQuestion,
+    onAnswerChange: (List<String>, String?) -> Unit
+) {
+    // Information screens don't need user input
+    // Auto-mark as answered when displayed
+    LaunchedEffect(Unit) {
+        onAnswerChange(listOf("acknowledged"), null)
+    }
+
+    val locale = java.util.Locale.getDefault().language
+
+    // Get localized content from question type config
+    val content = when (locale) {
+        "en" -> question.type.contentEn ?: question.type.content
+        else -> question.type.contentFr ?: question.type.content
+    } ?: ""
+
+    val bulletPoints = when (locale) {
+        "en" -> question.type.bulletPointsEn ?: question.type.bulletPoints
+        else -> question.type.bulletPointsFr ?: question.type.bulletPoints
+    } ?: emptyList()
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        // Icon/Emoji (default lotus flower for ORA)
+        Surface(
+            modifier = Modifier.size(120.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer
+        ) {
+            Box(
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "🪷",
+                    style = MaterialTheme.typography.displayLarge,
+                    modifier = Modifier.scale(1.5f)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Subtitle (shown above as well, this is secondary display)
+        question.getLocalizedSubtitle()?.let { subtitle ->
+            if (subtitle.isNotBlank()) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.titleMedium,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.9f),
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            }
+        }
+
+        // Main content
+        if (content.isNotBlank()) {
+            Text(
+                text = content,
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
+                modifier = Modifier.padding(horizontal = 24.dp)
+            )
+        }
+
+        // Bullet points
+        if (bulletPoints.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                bulletPoints.forEach { point ->
+                    Text(
+                        text = point,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun EnhancedTextInput(
     question: OnboardingQuestion,
     onTextChange: (String) -> Unit
@@ -1125,6 +1243,191 @@ fun EnhancedTextInput(
             },
             modifier = Modifier.align(Alignment.End)
         )
+    }
+}
+
+@Composable
+fun ProfileGroupContent(
+    question: OnboardingQuestion,
+    profileData: Map<String, String>,
+    onProfileDataChange: (Map<String, String>) -> Unit
+) {
+    val fields = question.type.fields ?: emptyList()
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        fields.sortedBy { it.order }.forEach { field ->
+            when (field.getInputTypeEnum()) {
+                com.ora.wellbeing.data.model.onboarding.ProfileFieldInputType.TEXT -> {
+                    OutlinedTextField(
+                        value = profileData[field.id] ?: "",
+                        onValueChange = { value ->
+                            val newData = profileData.toMutableMap()
+                            newData[field.id] = value
+                            onProfileDataChange(newData)
+                        },
+                        label = { Text(field.label) },
+                        placeholder = field.placeholder?.let { { Text(it) } },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                        )
+                    )
+                }
+                com.ora.wellbeing.data.model.onboarding.ProfileFieldInputType.DATE -> {
+                    // Date picker for birthDate
+                    var showDatePicker by remember { mutableStateOf(false) }
+                    val datePickerState = rememberDatePickerState()
+
+                    // Format displayed date (DD/MM/YYYY)
+                    val selectedDate = profileData[field.id] ?: ""
+
+                    OutlinedTextField(
+                        value = selectedDate,
+                        onValueChange = { }, // Read-only, opens date picker on click
+                        label = { Text(field.label) },
+                        placeholder = field.placeholder?.let { { Text(it) } },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showDatePicker = true },
+                        shape = RoundedCornerShape(16.dp),
+                        singleLine = true,
+                        readOnly = true,
+                        enabled = false,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                            disabledBorderColor = MaterialTheme.colorScheme.outline,
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        trailingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Schedule,
+                                contentDescription = "Sélectionner une date",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    )
+
+                    if (showDatePicker) {
+                        DatePickerDialog(
+                            onDismissRequest = { showDatePicker = false },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        datePickerState.selectedDateMillis?.let { millis ->
+                                            // Convert timestamp to DD/MM/YYYY format
+                                            val calendar = java.util.Calendar.getInstance()
+                                            calendar.timeInMillis = millis
+                                            val day = calendar.get(java.util.Calendar.DAY_OF_MONTH)
+                                            val month = calendar.get(java.util.Calendar.MONTH) + 1
+                                            val year = calendar.get(java.util.Calendar.YEAR)
+                                            val formattedDate = String.format("%02d/%02d/%04d", day, month, year)
+
+                                            val newData = profileData.toMutableMap()
+                                            newData[field.id] = formattedDate
+                                            onProfileDataChange(newData)
+                                        }
+                                        showDatePicker = false
+                                    }
+                                ) {
+                                    Text("OK")
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showDatePicker = false }) {
+                                    Text("Annuler")
+                                }
+                            }
+                        ) {
+                            DatePicker(state = datePickerState)
+                        }
+                    }
+                }
+                com.ora.wellbeing.data.model.onboarding.ProfileFieldInputType.RADIO -> {
+                    // Radio button group for gender selection
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = field.label,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+
+                        val options = field.options ?: emptyList()
+                        options.sortedBy { it.order }.forEach { option ->
+                            val isSelected = profileData[field.id] == option.id
+
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        val newData = profileData.toMutableMap()
+                                        newData[field.id] = option.id
+                                        onProfileDataChange(newData)
+                                    },
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (isSelected) {
+                                    MaterialTheme.colorScheme.primaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.surface
+                                },
+                                tonalElevation = if (isSelected) 2.dp else 1.dp,
+                                border = if (isSelected) {
+                                    androidx.compose.foundation.BorderStroke(
+                                        2.dp,
+                                        MaterialTheme.colorScheme.primary
+                                    )
+                                } else null
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    option.icon?.let { emoji ->
+                                        Text(
+                                            text = emoji,
+                                            style = MaterialTheme.typography.titleLarge,
+                                            fontSize = 24.sp
+                                        )
+                                    }
+
+                                    Text(
+                                        text = option.label,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = if (isSelected) {
+                                            MaterialTheme.colorScheme.onPrimaryContainer
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurface
+                                        },
+                                        modifier = Modifier.weight(1f)
+                                    )
+
+                                    if (isSelected) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "Selected",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

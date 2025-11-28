@@ -72,6 +72,23 @@ interface FirestoreUserProfileRepository {
     suspend fun updatePhotoUrl(uid: String, url: String): Result<Unit>
 
     /**
+     * Met à jour les informations du profil groupé (onboarding)
+     * Utilisé par l'écran profile_group de l'onboarding
+     *
+     * @param uid Firebase Auth UID
+     * @param firstName Prénom de l'utilisateur
+     * @param birthDate Date de naissance (format DD/MM/YYYY)
+     * @param gender Genre ("male" | "female" | "non_binary" | "prefer_not_to_say")
+     * @return Result.success si mis à jour, Result.failure si erreur
+     */
+    suspend fun updateProfileGroup(
+        uid: String,
+        firstName: String?,
+        birthDate: String?,
+        gender: String?
+    ): Result<Unit>
+
+    /**
      * Supprime le profil utilisateur (GDPR)
      * Appelé lors de la suppression du compte
      *
