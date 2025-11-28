@@ -1116,6 +1116,19 @@ fun InformationScreenContent(
         onAnswerChange(listOf("acknowledged"), null)
     }
 
+    val locale = java.util.Locale.getDefault().language
+
+    // Get localized content from question type config
+    val content = when (locale) {
+        "en" -> question.type.contentEn ?: question.type.content
+        else -> question.type.contentFr ?: question.type.content
+    } ?: ""
+
+    val bulletPoints = when (locale) {
+        "en" -> question.type.bulletPointsEn ?: question.type.bulletPoints
+        else -> question.type.bulletPointsFr ?: question.type.bulletPoints
+    } ?: emptyList()
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -1140,15 +1153,48 @@ fun InformationScreenContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Additional message or description (already shown as subtitle above)
+        // Subtitle (shown above as well, this is secondary display)
         question.getLocalizedSubtitle()?.let { subtitle ->
+            if (subtitle.isNotBlank()) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.titleMedium,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.9f),
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            }
+        }
+
+        // Main content
+        if (content.isNotBlank()) {
             Text(
-                text = subtitle,
+                text = content,
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
-                modifier = Modifier.padding(horizontal = 16.dp)
+                modifier = Modifier.padding(horizontal = 24.dp)
             )
+        }
+
+        // Bullet points
+        if (bulletPoints.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                bulletPoints.forEach { point ->
+                    Text(
+                        text = point,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
         }
     }
 }

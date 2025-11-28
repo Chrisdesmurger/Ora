@@ -63,18 +63,23 @@ class OnboardingViewModel @Inject constructor(
             onboardingRepository.getActiveOnboardingConfig()
                 .onSuccess { loadedConfig ->
                     config = loadedConfig
-                    val sortedQuestions = loadedConfig.questions.sortedBy { it.order }
+
+                    // Merge questions and information screens
+                    val allQuestions = mergeQuestionsAndInformationScreens(
+                        loadedConfig.questions,
+                        loadedConfig.informationScreens
+                    )
 
                     _uiState.value = OnboardingUiState(
                         isLoading = false,
                         config = loadedConfig,
-                        questions = sortedQuestions,
+                        questions = allQuestions,
                         currentQuestionIndex = 0,
-                        totalQuestions = sortedQuestions.size,
+                        totalQuestions = allQuestions.size,
                         isComplete = false
                     )
 
-                    Timber.d("Onboarding config loaded: ${sortedQuestions.size} questions")
+                    Timber.d("Onboarding config loaded: ${loadedConfig.questions.size} questions + ${loadedConfig.informationScreens.size} information screens = ${allQuestions.size} total items")
                 }
                 .onFailure { error ->
                     _uiState.value = _uiState.value.copy(
@@ -84,6 +89,62 @@ class OnboardingViewModel @Inject constructor(
                     Timber.e(error, "Failed to load onboarding config")
                 }
         }
+    }
+
+    /**
+     * Merge questions and information screens into a single sorted list
+     * Information screens are inserted at their specified positions
+     */
+    private fun mergeQuestionsAndInformationScreens(
+        questions: List<OnboardingQuestion>,
+        informationScreens: List<com.ora.wellbeing.data.model.onboarding.InformationScreen>
+    ): List<OnboardingQuestion> {
+        // Convert information screens to virtual questions
+        val virtualQuestions = informationScreens.map { screen ->
+            convertInformationScreenToQuestion(screen)
+        }
+
+        // Combine all items and sort by order
+        val allItems = (questions + virtualQuestions).sortedBy { it.order }
+
+        Timber.d("Merged ${questions.size} questions + ${informationScreens.size} info screens = ${allItems.size} total")
+
+        return allItems
+    }
+
+    /**
+     * Convert an InformationScreen to a virtual OnboardingQuestion
+     * The UI already handles INFORMATION_SCREEN type questions
+     */
+    private fun convertInformationScreenToQuestion(
+        screen: com.ora.wellbeing.data.model.onboarding.InformationScreen
+    ): OnboardingQuestion {
+        return OnboardingQuestion(
+            id = "info_screen_${screen.position}",
+            category = "information",
+            order = screen.order,
+            title = screen.title,
+            titleFr = screen.titleFr,
+            titleEn = screen.titleEn,
+            subtitle = screen.subtitle,
+            subtitleFr = screen.subtitleFr,
+            subtitleEn = screen.subtitleEn,
+            type = com.ora.wellbeing.data.model.onboarding.QuestionTypeConfig().apply {
+                kind = "information_screen"
+                content = screen.content
+                contentFr = screen.contentFr
+                contentEn = screen.contentEn
+                bulletPoints = screen.bulletPoints
+                bulletPointsFr = screen.bulletPointsFr
+                bulletPointsEn = screen.bulletPointsEn
+                ctaText = screen.ctaText
+                ctaTextFr = screen.ctaTextFr
+                ctaTextEn = screen.ctaTextEn
+                backgroundColor = screen.backgroundColor
+            },
+            options = emptyList(),
+            required = false // Information screens don't require user input
+        )
     }
 
     private fun startOnboarding() {
@@ -145,6 +206,10 @@ class OnboardingViewModel @Inject constructor(
         if (!question.required) return true
 
         return when (question.type.toKind()) {
+            com.ora.wellbeing.data.model.onboarding.QuestionTypeKind.INFORMATION_SCREEN -> {
+                // Information screens are auto-acknowledged, always valid
+                true
+            }
             com.ora.wellbeing.data.model.onboarding.QuestionTypeKind.TEXT_INPUT -> {
                 !textAnswer.isNullOrBlank()
             }
@@ -343,6 +408,11 @@ class OnboardingViewModel @Inject constructor(
         val answer = answers[question.id]
 
         if (!question.required) return true
+
+        // Information screens are always considered "answered"
+        if (question.type.toKind() == com.ora.wellbeing.data.model.onboarding.QuestionTypeKind.INFORMATION_SCREEN) {
+            return true
+        }
 
         return answer != null && when (question.type.toKind()) {
             com.ora.wellbeing.data.model.onboarding.QuestionTypeKind.TEXT_INPUT -> {
