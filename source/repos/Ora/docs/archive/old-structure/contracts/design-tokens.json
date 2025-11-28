@@ -1,0 +1,5 @@
+{
+  "color": { "primary": "#f0743e", "onPrimary": "#FFFFFF" },
+  "typography": { "heading": {"family":"Nectarine","fallback":["Montserrat","Poppins"]}, "body":{"family":"Poppins"} },
+  "shape": { "lg": 16, "xl": 24, "xxl": 32 }
+}

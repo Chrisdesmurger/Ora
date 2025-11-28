@@ -1,0 +1,24 @@
+users:
+  doc: users/{uid}
+  fields:
+    uid: string
+    firstName: string?
+    photoUrl: string?
+    planTier: enum["free","premium"]
+    locale: string?
+    createdAt: timestamp
+stats:
+  doc: stats/{uid}
+  fields:
+    uid: string
+    totalMinutes: int
+    sessions: int
+    streakDays: int
+    lastPracticeAt: timestamp?
+sessions:
+  doc: users/{uid}/sessions/{sessionId}
+  fields:
+    type: string
+    durationMin: int
+    startedAt: timestamp
+    completedAt: timestamp?
