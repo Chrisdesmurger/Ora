@@ -1,9 +1,12 @@
 package com.ora.wellbeing.presentation.screens.home
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.PlayArrow
@@ -11,13 +14,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.rememberAsyncImagePainter
 import com.ora.wellbeing.presentation.navigation.QuickSessionType
 import com.ora.wellbeing.presentation.theme.*
 
@@ -201,10 +207,12 @@ private fun RecommendationsSection(
 ) {
     if (recommendations.isEmpty()) return
 
+    // Show only the first recommendation
+    val dailyRecommendation = recommendations.firstOrNull() ?: return
+
     Column {
-        // FIX(build-debug-android): Titre de section restauré
         Text(
-            text = "Recommandations du jour",
+            text = "Découverte du jour",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface
@@ -212,14 +220,133 @@ private fun RecommendationsSection(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        DailyRecommendationCard(
+            content = dailyRecommendation,
+            onClick = { onContentClick(dailyRecommendation.id) }
+        )
+    }
+}
+
+@Composable
+private fun DailyRecommendationCard(
+    content: HomeUiState.ContentRecommendation,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(220.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize()
         ) {
-            items(recommendations) { content ->
-                RecommendationCard(
-                    content = content,
-                    onClick = { onContentClick(content.id) }
+            // Background image (preview or thumbnail)
+            val imageUrl = content.previewImageUrl ?: content.thumbnailUrl
+
+            if (!imageUrl.isNullOrBlank()) {
+                Image(
+                    painter = rememberAsyncImagePainter(
+                        model = imageUrl,
+                        contentScale = ContentScale.Crop
+                    ),
+                    contentDescription = content.title,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
                 )
+            } else {
+                // Fallback gradient background if no image
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primaryContainer,
+                                    MaterialTheme.colorScheme.tertiaryContainer
+                                )
+                            )
+                        )
+                )
+            }
+
+            // Dark overlay for better text readability
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.7f)
+                            ),
+                            startY = 0f,
+                            endY = Float.POSITIVE_INFINITY
+                        )
+                    )
+            )
+
+            // Play button in center
+            Icon(
+                imageVector = Icons.Default.PlayArrow,
+                contentDescription = "Lire",
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(64.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
+                        shape = CircleShape
+                    )
+                    .padding(12.dp),
+                tint = Color.White
+            )
+
+            // Content info at bottom
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = content.title,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    maxLines = 2
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = content.category,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.9f)
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Text(
+                        text = "•",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.7f)
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Text(
+                        text = content.duration,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.9f)
+                    )
+                }
             }
         }
     }
