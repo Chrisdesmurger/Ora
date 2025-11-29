@@ -23,6 +23,7 @@ class ContentItem() {
     var instructor: String = ""
     var description: String = ""
     var thumbnailUrl: String? = null
+    var previewImageUrl: String? = null
     var videoUrl: String? = null
     var audioUrl: String? = null
     var isPremiumOnly: Boolean = false

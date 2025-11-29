@@ -128,8 +128,15 @@ class LessonDocument() {
 
     /**
      * Thumbnail image URL (for video preview)
+     * Small image used in lists and grids
      */
     var thumbnail_url: String? = null
+
+    /**
+     * Preview image URL (for featured content)
+     * High-quality image used for daily recommendations and hero sections
+     */
+    var preview_image_url: String? = null
 
     /**
      * MIME type of the original file (e.g., "video/mp4", "audio/m4a")
