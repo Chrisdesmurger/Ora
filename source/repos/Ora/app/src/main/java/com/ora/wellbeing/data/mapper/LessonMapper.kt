@@ -41,6 +41,7 @@ object LessonMapper {
             this.durationMinutes = (doc.duration_sec ?: 0) / 60
             this.instructor = extractInstructorFromTags(doc.tags)
             this.thumbnailUrl = doc.thumbnail_url
+            this.previewImageUrl = doc.preview_image_url
             this.videoUrl = extractBestVideoUrl(doc.renditions)
             this.audioUrl = extractBestAudioUrl(doc.audio_variants)
             this.isPremiumOnly = false // TODO: Determine from program settings

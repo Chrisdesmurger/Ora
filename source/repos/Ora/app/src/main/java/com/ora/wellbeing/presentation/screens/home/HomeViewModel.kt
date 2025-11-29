@@ -167,6 +167,7 @@ class HomeViewModel @Inject constructor(
                 category = category,
                 duration = duration,
                 thumbnailUrl = thumbnailUrl ?: "",
+                previewImageUrl = previewImageUrl,
                 description = description,
                 isPremiumOnly = isPremiumOnly
             )
@@ -236,6 +237,7 @@ data class HomeUiState(
         val category: String,
         val duration: String,
         val thumbnailUrl: String,
+        val previewImageUrl: String? = null,
         val description: String = "",
         val isPremiumOnly: Boolean = false
     )
