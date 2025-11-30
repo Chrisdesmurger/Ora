@@ -14,9 +14,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,6 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.rememberAsyncImagePainter
+import com.ora.wellbeing.R
+import com.ora.wellbeing.presentation.components.OraIcons
 import com.ora.wellbeing.presentation.navigation.QuickSessionType
 import com.ora.wellbeing.presentation.theme.*
 
@@ -52,7 +56,7 @@ fun HomeScreen(
             streakDays = uiState.streakDays
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(0.dp))
 
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(24.dp)
@@ -97,18 +101,17 @@ private fun WelcomeSection(
     userName: String,
     streakDays: Int
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        // Texte de bienvenue à gauche
         Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.weight(1f)
         ) {
-            // FIX(build-debug-android): Texte de bienvenue restauré
             Text(
                 text = if (userName.isNotBlank()) "Bonjour $userName" else "Bonjour",
                 style = MaterialTheme.typography.headlineSmall,
@@ -117,7 +120,7 @@ private fun WelcomeSection(
             )
 
             if (streakDays > 0) {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "🔥 $streakDays jours de suite!",
                     style = MaterialTheme.typography.bodyLarge,
@@ -125,6 +128,16 @@ private fun WelcomeSection(
                 )
             }
         }
+
+        // Logo Ora à droite
+        Image(
+            painter = painterResource(id = R.drawable.ic_launcher_ora),
+            contentDescription = "Logo Ora",
+            modifier = Modifier
+                .size(56.dp)
+                .clip(CircleShape),
+            contentScale = ContentScale.Crop
+        )
     }
 }
 
@@ -138,7 +151,7 @@ private fun QuickSessionsSection(
             text = "Sessions rapides",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
+            color = TitleOrangeDark
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -161,40 +174,44 @@ private fun QuickSessionCard(
     sessionType: QuickSessionType,
     onClick: () -> Unit
 ) {
-    val (backgroundColor, iconColor, sessionName) = when (sessionType) {
-        QuickSessionType.BREATHING -> Triple(CategoryBreathingBlue, CategoryBreathingBlue, "Respiration")
-        QuickSessionType.YOGA_FLASH -> Triple(CategoryYogaGreen, MaterialTheme.colorScheme.tertiary, "Flash Yoga")
-        QuickSessionType.MINI_MEDITATION -> Triple(CategoryMeditationLavender, CategoryMeditationLavender, "Méditation")
+    val (backgroundColor, icon, sessionName) = when (sessionType) {
+        QuickSessionType.BREATHING -> Triple(CategoryBreathingBlue, OraIcons.Waves, "Respiration")
+        QuickSessionType.YOGA_FLASH -> Triple(CategoryYogaGreen, OraIcons.YogaPerson, "Flash Yoga")
+        QuickSessionType.MINI_MEDITATION -> Triple(CategoryMeditationLavender, OraIcons.MindHead, "Méditation")
     }
 
     Card(
         onClick = onClick,
-        modifier = Modifier.width(140.dp),
+        modifier = Modifier
+            .width(140.dp)
+            .height(120.dp), // Hauteur fixe pour un meilleur centrage
         colors = CardDefaults.cardColors(
             containerColor = backgroundColor
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp) // Suppression de l'ombre
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Icon(
-                imageVector = Icons.Default.SelfImprovement,
+                imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(32.dp),
-                tint = iconColor
+                modifier = Modifier.size(48.dp), // Icône agrandie
+                tint = MaterialTheme.colorScheme.background // Même couleur que le fond de l'app
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // FIX(build-debug-android): Nom de session restauré
             Text(
                 text = sessionName,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
+                style = MaterialTheme.typography.titleMedium, // Titre plus grand
+                fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurface
+                color = TitleGreenSage // Vert sage pâle foncé
             )
         }
     }
@@ -215,7 +232,7 @@ private fun RecommendationsSection(
             text = "Découverte du jour",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
+            color = TitleOrangeDark
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -421,7 +438,7 @@ private fun ActiveProgramsSection(
             text = "Programmes en cours",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
+            color = TitleOrangeDark
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -448,9 +465,9 @@ private fun ActiveProgramCard(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = Color(0xFFFEEFE0) // Beige légèrement plus foncé que le fond
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp) // Suppression de l'ombre
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -503,9 +520,9 @@ private fun QuickStatsSection(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = Color(0xFFFFF6F0) // Beige/pêche très clair et doux
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp) // Suppression de l'ombre
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -515,7 +532,7 @@ private fun QuickStatsSection(
                 text = "Cette semaine",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = TitleOrangeDark
             )
 
             Spacer(modifier = Modifier.height(16.dp))

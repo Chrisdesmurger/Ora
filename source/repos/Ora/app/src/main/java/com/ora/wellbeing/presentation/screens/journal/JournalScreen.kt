@@ -83,7 +83,7 @@ fun JournalScreen(
                         Text(
                             text = "Entrées récentes",
                             style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = TitleGreenSage,
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
                     }
@@ -124,7 +124,7 @@ private fun JournalHeader(
             Text(
                 text = "Journal de gratitudes",
                 style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurface
+                color = TitleGreenSage
             )
 
             if (streak > 0) {

@@ -217,7 +217,7 @@ private fun CategoriesSection(
         Text(
             text = "Catégories",
             style = MaterialTheme.typography.titleMedium,
-            color = Color(0xFF6B4E3D), // Marron foncé
+            color = TitleOrangeDark,
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
@@ -274,7 +274,7 @@ private fun DurationFiltersSection(
         Text(
             text = "Durée",
             style = MaterialTheme.typography.titleMedium,
-            color = Color(0xFF6B4E3D),
+            color = TitleOrangeDark,
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
@@ -331,7 +331,7 @@ private fun ContentSection(
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge,
-            color = Color(0xFF6B4E3D), // Marron foncé
+            color = TitleOrangeDark,
             modifier = Modifier.padding(bottom = 12.dp)
         )
 

@@ -229,7 +229,7 @@ private fun CompletedCalendarSection(
                     text = "Current month",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = TitleOrangeDark,
                         fontSize = 16.sp
                     )
                 )
@@ -237,7 +237,7 @@ private fun CompletedCalendarSection(
                     text = currentMonthName,
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = TitleOrangeDark,
                         fontSize = 22.sp
                     )
                 )
@@ -355,7 +355,7 @@ private fun MyStatisticsSection(
             text = "My",
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = TitleOrangeDark,
                 fontSize = 16.sp
             )
         )
@@ -363,7 +363,7 @@ private fun MyStatisticsSection(
             text = "Statistics",
             style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = TitleOrangeDark,
                 fontSize = 22.sp
             )
         )
@@ -452,7 +452,7 @@ private fun ChallengeProgressSection(challenge: ActiveChallenge) {
             text = "Challenge",
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFFF18D5C),
+                color = TitleOrangeDark,
                 fontSize = 16.sp
             )
         )
@@ -460,7 +460,7 @@ private fun ChallengeProgressSection(challenge: ActiveChallenge) {
             text = "in progress",
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFFF18D5C),
+                color = TitleOrangeDark,
                 fontSize = 16.sp
             )
         )
