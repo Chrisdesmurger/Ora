@@ -6,6 +6,8 @@ import com.ora.wellbeing.core.domain.practice.DownloadState
 import com.ora.wellbeing.core.domain.practice.Level
 import com.ora.wellbeing.core.domain.practice.MediaType
 import com.ora.wellbeing.core.domain.practice.Practice
+import com.ora.wellbeing.data.local.dao.ContentDao
+import com.ora.wellbeing.data.model.ContentItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,10 +18,12 @@ import javax.inject.Singleton
 
 /**
  * Repository pour les pratiques (séances)
- * TODO: Connecter à Firestore pour les vraies données
+ * Now connected to Room/Firestore for real data
  */
 @Singleton
-class PracticeRepository @Inject constructor() {
+class PracticeRepository @Inject constructor(
+    private val contentDao: ContentDao
+) {
 
     private val _downloadStates = MutableStateFlow<Map<String, DownloadInfo>>(emptyMap())
     val downloadStates: Flow<Map<String, DownloadInfo>> = _downloadStates.asStateFlow()
@@ -96,18 +100,29 @@ class PracticeRepository @Inject constructor() {
      */
     suspend fun getById(id: String): Result<Practice> {
         return try {
-            delay(300) // Simulate network delay
-            val practice = mockPractices.find { it.id == id }
-            if (practice != null) {
+            Timber.d("Loading practice from Room: id=$id")
+
+            // Load from Room database (offline-first)
+            val content = contentDao.getContentById(id)
+
+            if (content != null) {
+                Timber.d("Found content in Room: title=${content.title}")
+                val practice = content.toPractice()
                 Result.success(practice)
             } else {
-                // Fallback: retourner une pratique générique selon l'ID
-                Timber.w("Pratique non trouvée pour ID: $id, utilisation du fallback")
-                val fallbackPractice = createFallbackPractice(id)
-                Result.success(fallbackPractice)
+                // Fallback: try mock data or create fallback
+                Timber.w("Content not found in Room for ID: $id, trying mock data")
+                val mockPractice = mockPractices.find { it.id == id }
+                if (mockPractice != null) {
+                    Result.success(mockPractice)
+                } else {
+                    Timber.w("Practice not found in Room or mock data: $id, using fallback")
+                    val fallbackPractice = createFallbackPractice(id)
+                    Result.success(fallbackPractice)
+                }
             }
         } catch (e: Exception) {
-            Timber.e(e, "Erreur lors de la récupération de la pratique $id")
+            Timber.e(e, "Error loading practice $id")
             Result.failure(e)
         }
     }
@@ -231,5 +246,63 @@ class PracticeRepository @Inject constructor() {
      */
     fun getDownloadState(practiceId: String): Flow<DownloadInfo?> {
         return MutableStateFlow(_downloadStates.value[practiceId]).asStateFlow()
+    }
+
+    /**
+     * Converts Room Content entity to Practice domain model
+     */
+    private fun com.ora.wellbeing.data.local.entities.Content.toPractice(): Practice {
+        // Determine media type based on ContentType
+        val mediaType = when (type) {
+            com.ora.wellbeing.data.local.entities.ContentType.YOGA -> MediaType.VIDEO
+            com.ora.wellbeing.data.local.entities.ContentType.PILATES -> MediaType.VIDEO
+            com.ora.wellbeing.data.local.entities.ContentType.MEDITATION -> MediaType.AUDIO
+            com.ora.wellbeing.data.local.entities.ContentType.BREATHING -> MediaType.AUDIO
+            com.ora.wellbeing.data.local.entities.ContentType.SELF_MASSAGE -> MediaType.VIDEO
+            com.ora.wellbeing.data.local.entities.ContentType.BEAUTY_TIPS -> MediaType.VIDEO
+        }
+
+        // Determine discipline from category
+        val discipline = when (category) {
+            com.ora.wellbeing.data.local.entities.Category.FLEXIBILITY -> Discipline.YOGA
+            com.ora.wellbeing.data.local.entities.Category.STRENGTH -> Discipline.PILATES
+            com.ora.wellbeing.data.local.entities.Category.MINDFULNESS -> Discipline.MEDITATION
+            com.ora.wellbeing.data.local.entities.Category.MORNING_ROUTINE -> Discipline.MEDITATION
+            com.ora.wellbeing.data.local.entities.Category.STRESS_RELIEF -> Discipline.RESPIRATION
+            com.ora.wellbeing.data.local.entities.Category.DAY_BOOST -> Discipline.WELLNESS
+            com.ora.wellbeing.data.local.entities.Category.EVENING_WIND_DOWN -> Discipline.WELLNESS
+            com.ora.wellbeing.data.local.entities.Category.RELAXATION -> Discipline.WELLNESS
+            com.ora.wellbeing.data.local.entities.Category.ENERGY_BOOST -> Discipline.WELLNESS
+        }
+
+        // Determine level
+        val practiceLevel = when (level) {
+            com.ora.wellbeing.data.local.entities.ExperienceLevel.BEGINNER -> Level.BEGINNER
+            com.ora.wellbeing.data.local.entities.ExperienceLevel.INTERMEDIATE -> Level.INTERMEDIATE
+            com.ora.wellbeing.data.local.entities.ExperienceLevel.ADVANCED -> Level.ADVANCED
+        }
+
+        // Choose media URL (prefer video for VIDEO type, audio for AUDIO type)
+        val mediaUrl = when (mediaType) {
+            MediaType.VIDEO -> videoUrl ?: audioUrl ?: ""
+            MediaType.AUDIO -> audioUrl ?: videoUrl ?: ""
+        }
+
+        return Practice(
+            id = id,
+            title = title,
+            discipline = discipline,
+            level = practiceLevel,
+            durationMin = durationMinutes,
+            description = description,
+            mediaType = mediaType,
+            mediaUrl = mediaUrl,
+            thumbnailUrl = thumbnailUrl ?: "",
+            tags = tags,
+            similarIds = emptyList(), // TODO: Implement similar content recommendations
+            downloadable = isOfflineAvailable,
+            instructor = instructorName,
+            benefits = benefits
+        )
     }
 }
