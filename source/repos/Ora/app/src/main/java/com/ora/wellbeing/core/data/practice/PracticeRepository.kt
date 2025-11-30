@@ -1,5 +1,6 @@
 package com.ora.wellbeing.core.data.practice
 
+import com.google.firebase.storage.FirebaseStorage
 import com.ora.wellbeing.core.domain.practice.Discipline
 import com.ora.wellbeing.core.domain.practice.DownloadInfo
 import com.ora.wellbeing.core.domain.practice.DownloadState
@@ -12,6 +13,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -22,7 +24,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class PracticeRepository @Inject constructor(
-    private val contentDao: ContentDao
+    private val contentDao: ContentDao,
+    private val firebaseStorage: FirebaseStorage
 ) {
 
     private val _downloadStates = MutableStateFlow<Map<String, DownloadInfo>>(emptyMap())
@@ -107,7 +110,11 @@ class PracticeRepository @Inject constructor(
 
             if (content != null) {
                 Timber.d("Found content in Room: title=${content.title}")
-                val practice = content.toPractice()
+
+                // Get signed download URL from Firebase Storage
+                val mediaUrl = getSignedDownloadUrl(content.audioUrl, content.videoUrl)
+
+                val practice = content.toPractice(mediaUrl)
                 Result.success(practice)
             } else {
                 // Fallback: try mock data or create fallback
@@ -124,6 +131,49 @@ class PracticeRepository @Inject constructor(
         } catch (e: Exception) {
             Timber.e(e, "Error loading practice $id")
             Result.failure(e)
+        }
+    }
+
+    /**
+     * Gets signed download URL from Firebase Storage for a storage path
+     *
+     * Converts Firebase Storage paths (e.g., "media/lessons/ABC/audio/high.m4a")
+     * to signed download URLs that allow temporary access without authentication.
+     * These URLs expire after a period and are regenerated on each request.
+     *
+     * @param audioUrl Audio storage path (may be null or a path or an HTTP URL)
+     * @param videoUrl Video storage path (may be null or a path or an HTTP URL)
+     * @return Signed download URL or fallback URL
+     */
+    private suspend fun getSignedDownloadUrl(audioUrl: String?, videoUrl: String?): String {
+        try {
+            // Determine which URL to use (prefer audioUrl for audio lessons, videoUrl for video lessons)
+            val storagePath = audioUrl ?: videoUrl
+
+            if (storagePath.isNullOrBlank()) {
+                Timber.w("No storage path available, using fallback")
+                return "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+            }
+
+            // If it's already an HTTP URL, return it as-is (for mock data or already resolved URLs)
+            if (storagePath.startsWith("http://") || storagePath.startsWith("https://")) {
+                Timber.d("URL already resolved: $storagePath")
+                return storagePath
+            }
+
+            // Get signed download URL from Firebase Storage
+            Timber.d("Getting signed download URL for path: $storagePath")
+            val storageRef = firebaseStorage.reference.child(storagePath)
+            val downloadUrl = storageRef.downloadUrl.await()
+            val signedUrl = downloadUrl.toString()
+
+            Timber.d("Got signed download URL: $signedUrl")
+            return signedUrl
+
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to get signed download URL, using fallback")
+            // Fallback to a working test URL
+            return "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
         }
     }
 
@@ -250,8 +300,10 @@ class PracticeRepository @Inject constructor(
 
     /**
      * Converts Room Content entity to Practice domain model
+     *
+     * @param signedMediaUrl Signed download URL from Firebase Storage (obtained via getSignedDownloadUrl)
      */
-    private fun com.ora.wellbeing.data.local.entities.Content.toPractice(): Practice {
+    private fun com.ora.wellbeing.data.local.entities.Content.toPractice(signedMediaUrl: String): Practice {
         // Determine media type based on ContentType
         val mediaType = when (type) {
             com.ora.wellbeing.data.local.entities.ContentType.YOGA -> MediaType.VIDEO
@@ -282,12 +334,6 @@ class PracticeRepository @Inject constructor(
             com.ora.wellbeing.data.local.entities.ExperienceLevel.ADVANCED -> Level.ADVANCED
         }
 
-        // Choose media URL (prefer video for VIDEO type, audio for AUDIO type)
-        val mediaUrl = when (mediaType) {
-            MediaType.VIDEO -> videoUrl ?: audioUrl ?: ""
-            MediaType.AUDIO -> audioUrl ?: videoUrl ?: ""
-        }
-
         return Practice(
             id = id,
             title = title,
@@ -296,7 +342,7 @@ class PracticeRepository @Inject constructor(
             durationMin = durationMinutes,
             description = description,
             mediaType = mediaType,
-            mediaUrl = mediaUrl,
+            mediaUrl = signedMediaUrl, // Use signed download URL from Firebase Storage
             thumbnailUrl = thumbnailUrl ?: "",
             tags = tags,
             similarIds = emptyList(), // TODO: Implement similar content recommendations

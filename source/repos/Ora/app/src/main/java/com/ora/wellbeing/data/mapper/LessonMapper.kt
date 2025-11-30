@@ -59,11 +59,14 @@ object LessonMapper {
     }
 
     /**
-     * Extracts the best quality video URL from renditions
+     * Extracts the best quality video path from renditions
      * Priority: high > medium > low
      *
+     * Returns the Firebase Storage path, which will be converted to a signed download URL
+     * by PracticeRepository when loading the practice for playback.
+     *
      * @param renditions Map of video quality variants
-     * @return URL string or null if no renditions available
+     * @return Storage path string or null if no renditions available
      */
     private fun extractBestVideoUrl(renditions: Map<String, Map<String, Any>>?): String? {
         if (renditions == null) {
@@ -80,24 +83,25 @@ object LessonMapper {
             return null
         }
 
-        val url = buildFirebaseStorageUrl(path)
-
-        Timber.d("Extracted video URL: quality=${when {
+        Timber.d("Extracted video path: quality=${when {
             path == renditions["high"]?.get("path") -> "high"
             path == renditions["medium"]?.get("path") -> "medium"
             path == renditions["low"]?.get("path") -> "low"
             else -> "none"
-        }}, url=$url")
+        }}, path=$path")
 
-        return url
+        return path
     }
 
     /**
-     * Extracts the best quality audio URL from audio variants
+     * Extracts the best quality audio path from audio variants
      * Priority: high > medium > low
      *
+     * Returns the Firebase Storage path, which will be converted to a signed download URL
+     * by PracticeRepository when loading the practice for playback.
+     *
      * @param audioVariants Map of audio quality variants
-     * @return URL string or null if no variants available
+     * @return Storage path string or null if no variants available
      */
     private fun extractBestAudioUrl(audioVariants: Map<String, Map<String, Any>>?): String? {
         if (audioVariants == null) {
@@ -114,33 +118,14 @@ object LessonMapper {
             return null
         }
 
-        val url = buildFirebaseStorageUrl(path)
-        Timber.d("Extracted audio URL: quality=${when {
+        Timber.d("Extracted audio path: quality=${when {
             path == audioVariants["high"]?.get("path") -> "high"
             path == audioVariants["medium"]?.get("path") -> "medium"
             path == audioVariants["low"]?.get("path") -> "low"
             else -> "none"
-        }}, url=$url")
+        }}, path=$path")
 
-        return url
-    }
-
-    /**
-     * Converts Firebase Storage path to public HTTPS URL
-     *
-     * Converts storage paths like "media/lessons/ABC/audio/high.m4a"
-     * to Firebase Storage URLs like:
-     * "https://firebasestorage.googleapis.com/v0/b/ora-wellbeing.firebasestorage.app/o/media%2Flessons%2FABC%2Faudio%2Fhigh.m4a?alt=media"
-     *
-     * @param path Firebase Storage path (e.g., "media/lessons/ABC/audio/high.m4a")
-     * @return Public HTTPS URL for Firebase Storage
-     */
-    private fun buildFirebaseStorageUrl(path: String): String {
-        val bucket = "ora-wellbeing.firebasestorage.app"
-        val encodedPath = path.replace("/", "%2F")
-        val url = "https://firebasestorage.googleapis.com/v0/b/$bucket/o/$encodedPath?alt=media"
-        Timber.d("Built Firebase Storage URL: path=$path -> url=$url")
-        return url
+        return path
     }
 
     /**
