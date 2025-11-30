@@ -51,6 +51,7 @@ object LessonMapper {
             this.completionCount = 0 // TODO: Fetch from stats
             this.tags = doc.tags
             this.isActive = doc.status == "ready"
+            this.order = doc.order  // For sorting (lower values = higher priority, negative = featured)
             this.createdAt = doc.created_at as? Timestamp
             this.updatedAt = doc.updated_at as? Timestamp
             this.publishedAt = doc.scheduled_publish_at as? Timestamp
