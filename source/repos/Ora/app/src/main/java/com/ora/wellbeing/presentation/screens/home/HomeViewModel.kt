@@ -114,6 +114,7 @@ class HomeViewModel @Inject constructor(
 
     /**
      * Builds personalized recommendations based on user preferences and content
+     * Featured content (order < 0) always appears first
      */
     private fun buildRecommendations(
         popularContent: List<ContentItem>,
@@ -121,32 +122,43 @@ class HomeViewModel @Inject constructor(
         favoriteCategory: String?,
         isPremium: Boolean
     ): List<HomeUiState.ContentRecommendation> {
-        val recommendations = mutableListOf<ContentItem>()
+        // 1. PRIORITY: Extract featured content (order < 0) from all sources
+        val allContent = (popularContent + newContent).distinctBy { it.id }
+        val featuredContent = allContent.filter { it.order < 0 }.sortedBy { it.order }
 
-        // 1. Add content from favorite category (if available)
+        // 2. Build regular recommendations (excluding featured items)
+        val recommendations = mutableListOf<ContentItem>()
+        val featuredIds = featuredContent.map { it.id }.toSet()
+
+        // Add content from favorite category (if available)
         if (!favoriteCategory.isNullOrEmpty() && favoriteCategory != "N/A") {
             val favoriteCategoryContent = popularContent
-                .filter { it.category == favoriteCategory }
+                .filter { it.category == favoriteCategory && it.id !in featuredIds }
                 .take(2)
             recommendations.addAll(favoriteCategoryContent)
         }
 
-        // 2. Add new content
-        val newItems = newContent.take(2)
+        // Add new content
+        val newItems = newContent
+            .filter { it.id !in featuredIds }
+            .take(2)
         recommendations.addAll(newItems)
 
-        // 3. Add popular content (excluding duplicates)
-        val existingIds = recommendations.map { it.id }.toSet()
+        // Add popular content (excluding duplicates and featured)
+        val existingIds = recommendations.map { it.id }.toSet() + featuredIds
         val popularItems = popularContent
             .filter { it.id !in existingIds }
             .take(3)
         recommendations.addAll(popularItems)
 
+        // 3. Combine: Featured first, then regular recommendations
+        val combinedRecommendations = featuredContent + recommendations
+
         // 4. Filter premium content if user is not premium
         val filteredRecommendations = if (!isPremium) {
-            recommendations.filter { !it.isPremiumOnly }
+            combinedRecommendations.filter { !it.isPremiumOnly }
         } else {
-            recommendations
+            combinedRecommendations
         }
 
         // Convert to UI model

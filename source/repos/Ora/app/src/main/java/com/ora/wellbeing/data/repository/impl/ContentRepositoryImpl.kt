@@ -82,6 +82,7 @@ class ContentRepositoryImpl @Inject constructor(
             completionCount = 0 // TODO: From user stats
             tags = this@toContentItem.tags
             isActive = this@toContentItem.status == STATUS_READY
+            order = this@toContentItem.order  // Order for sorting (lower = higher priority)
             // FIX(build-debug-android): Use correct Timestamp constructor with seconds (Long) and nanoseconds (Int)
             createdAt = Timestamp(this@toContentItem.createdAt.toEpochSecond(ZoneOffset.UTC), 0)
             updatedAt = Timestamp(this@toContentItem.updatedAt / 1000, 0)
@@ -114,7 +115,7 @@ class ContentRepositoryImpl @Inject constructor(
             isOfflineAvailable = false, // Requires explicit download
             downloadSize = null,
             programId = null, // TODO: Extract from lesson data
-            order = 0,
+            order = order,  // Preserve sort order
             status = if (isActive) STATUS_READY else "draft",
             updatedAt = System.currentTimeMillis()
         )
