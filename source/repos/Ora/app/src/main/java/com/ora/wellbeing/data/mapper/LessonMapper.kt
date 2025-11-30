@@ -51,6 +51,7 @@ object LessonMapper {
             this.completionCount = 0 // TODO: Fetch from stats
             this.tags = doc.tags
             this.isActive = doc.status == "ready"
+            this.order = doc.order  // For sorting (lower values = higher priority, negative = featured)
             this.createdAt = doc.created_at as? Timestamp
             this.updatedAt = doc.updated_at as? Timestamp
             this.publishedAt = doc.scheduled_publish_at as? Timestamp
@@ -58,11 +59,14 @@ object LessonMapper {
     }
 
     /**
-     * Extracts the best quality video URL from renditions
+     * Extracts the best quality video path from renditions
      * Priority: high > medium > low
      *
+     * Returns the Firebase Storage path, which will be converted to a signed download URL
+     * by PracticeRepository when loading the practice for playback.
+     *
      * @param renditions Map of video quality variants
-     * @return URL string or null if no renditions available
+     * @return Storage path string or null if no renditions available
      */
     private fun extractBestVideoUrl(renditions: Map<String, Map<String, Any>>?): String? {
         if (renditions == null) {
@@ -70,35 +74,58 @@ object LessonMapper {
             return null
         }
 
-        val url = renditions["high"]?.get("path") as? String
+        val path = renditions["high"]?.get("path") as? String
             ?: renditions["medium"]?.get("path") as? String
             ?: renditions["low"]?.get("path") as? String
 
-        Timber.d("Extracted video URL: quality=${when {
-            url == renditions["high"]?.get("path") -> "high"
-            url == renditions["medium"]?.get("path") -> "medium"
-            url == renditions["low"]?.get("path") -> "low"
-            else -> "none"
-        }}, url=$url")
-
-        return url
-    }
-
-    /**
-     * Extracts the best quality audio URL from audio variants
-     * Priority: high > medium > low
-     *
-     * @param audioVariants Map of audio quality variants
-     * @return URL string or null if no variants available
-     */
-    private fun extractBestAudioUrl(audioVariants: Map<String, Map<String, Any>>?): String? {
-        if (audioVariants == null) {
+        if (path == null) {
+            Timber.w("No video path found in renditions")
             return null
         }
 
-        return audioVariants["high"]?.get("path") as? String
+        Timber.d("Extracted video path: quality=${when {
+            path == renditions["high"]?.get("path") -> "high"
+            path == renditions["medium"]?.get("path") -> "medium"
+            path == renditions["low"]?.get("path") -> "low"
+            else -> "none"
+        }}, path=$path")
+
+        return path
+    }
+
+    /**
+     * Extracts the best quality audio path from audio variants
+     * Priority: high > medium > low
+     *
+     * Returns the Firebase Storage path, which will be converted to a signed download URL
+     * by PracticeRepository when loading the practice for playback.
+     *
+     * @param audioVariants Map of audio quality variants
+     * @return Storage path string or null if no variants available
+     */
+    private fun extractBestAudioUrl(audioVariants: Map<String, Map<String, Any>>?): String? {
+        if (audioVariants == null) {
+            Timber.w("No audio variants available")
+            return null
+        }
+
+        val path = audioVariants["high"]?.get("path") as? String
             ?: audioVariants["medium"]?.get("path") as? String
             ?: audioVariants["low"]?.get("path") as? String
+
+        if (path == null) {
+            Timber.w("No audio path found in variants")
+            return null
+        }
+
+        Timber.d("Extracted audio path: quality=${when {
+            path == audioVariants["high"]?.get("path") -> "high"
+            path == audioVariants["medium"]?.get("path") -> "medium"
+            path == audioVariants["low"]?.get("path") -> "low"
+            else -> "none"
+        }}, path=$path")
+
+        return path
     }
 
     /**

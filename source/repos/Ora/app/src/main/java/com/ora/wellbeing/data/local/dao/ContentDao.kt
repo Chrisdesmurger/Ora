@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ContentDao {
 
-    @Query("SELECT * FROM content ORDER BY title ASC")
+    @Query("SELECT * FROM content ORDER BY `order` ASC, title ASC")
     fun getAllContentFlow(): Flow<List<Content>>
 
     @Query("SELECT * FROM content WHERE type = :type ORDER BY title ASC")
