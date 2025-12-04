@@ -1,30 +1,24 @@
 package com.ora.wellbeing.feature.practice.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ora.wellbeing.feature.practice.player.specialized.PlayerRouter
 import com.ora.wellbeing.feature.practice.player.specialized.PlayerType
 
 /**
- * Écran wrapper qui charge la pratique et route vers le lecteur spécialisé approprié.
+ * Écran wrapper qui détermine le type de lecteur et route vers le lecteur spécialisé.
  *
- * Ce composant :
- * 1. Charge les informations de la pratique via le ViewModel
- * 2. Détermine le type de lecteur approprié selon la discipline
- * 3. Route vers YogaPlayerScreen, MeditationPlayerScreen ou MassagePlayerScreen
- *
- * Usage dans la navigation :
- * ```kotlin
- * composable(OraDestinations.PracticeDetail.route) { backStackEntry ->
- *     val practiceId = backStackEntry.arguments?.getString("id") ?: return@composable
- *     SpecializedPlayerScreen(
- *         practiceId = practiceId,
- *         onBack = { navController.popBackStack() },
- *         onMinimize = { navController.popBackStack() }
- *     )
- * }
- * ```
+ * Chaque lecteur spécialisé (Yoga, Méditation, Massage) gère son propre chargement,
+ * ce composant sert uniquement à déterminer quel lecteur afficher.
  */
 @Composable
 fun SpecializedPlayerScreen(
@@ -49,22 +43,6 @@ fun SpecializedPlayerScreen(
 
     // Router vers le lecteur approprié
     when {
-        uiState.isLoading -> {
-            // Afficher l'écran de chargement standard
-            PlayerScreen(
-                practiceId = practiceId,
-                onBack = onBack,
-                onMinimize = onMinimize
-            )
-        }
-        uiState.error != null -> {
-            // En cas d'erreur, utiliser le lecteur standard
-            PlayerScreen(
-                practiceId = practiceId,
-                onBack = onBack,
-                onMinimize = onMinimize
-            )
-        }
         playerType != null -> {
             // Router vers le lecteur spécialisé
             PlayerRouter(
@@ -74,10 +52,35 @@ fun SpecializedPlayerScreen(
                 onMinimize = onMinimize
             )
         }
+        uiState.isLoading -> {
+            // Afficher un écran de chargement minimal pendant la détermination du type
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "Chargement...",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
         else -> {
-            // Fallback vers le lecteur standard
-            PlayerScreen(
+            // Fallback : utiliser le lecteur Yoga par défaut (vidéo)
+            // ou afficher une erreur
+            PlayerRouter(
                 practiceId = practiceId,
+                playerType = PlayerType.YOGA,
                 onBack = onBack,
                 onMinimize = onMinimize
             )
