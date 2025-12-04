@@ -4,51 +4,73 @@ import androidx.compose.ui.graphics.Color
 
 /**
  * Palettes de couleurs pour chaque type de lecteur
+ * Basées sur le Design System Ora officiel (docs/ORA_DESIGN_SYSTEM.md)
+ *
+ * Couleurs principales Ora :
+ * - Primary (Orange Coral): #F18D5C
+ * - Background (Beige): #F5EFE6
+ * - Surface (Blanc cassé): #FFFBF8
+ * - Texte: #4A4A4A
  */
 object PlayerColors {
 
-    // Yoga/Pilates - Vert menthe et vert sauge
+    // Couleurs Ora principales (réutilisées)
+    private val OraPrimary = Color(0xFFF18D5C)          // Orange Coral
+    private val OraBackground = Color(0xFFF5EFE6)       // Beige/Crème
+    private val OraSurface = Color(0xFFFFFBF8)          // Blanc cassé chaud
+    private val OraOnSurface = Color(0xFF4A4A4A)        // Texte principal (gris-brun)
+    private val OraSecondary = Color(0xFFF5C9A9)        // Peach doux
+
+    // Yoga/Pilates - Vert Sage (CategoryYogaGreen)
     object Yoga {
-        val background = Color(0xFFD4E8D9)      // Vert menthe clair
-        val backgroundGradientEnd = Color(0xFFE8F4EB) // Vert très clair
-        val accent = Color(0xFF7BA089)          // Vert sauge
-        val accentDark = Color(0xFF5A7A66)      // Vert sauge foncé
-        val onBackground = Color(0xFF2C2C2C)    // Texte foncé
-        val surface = Color(0xFFFFFBF8)         // Surface blanche
-        val chapterActive = Color(0xFF7BA089)   // Chapitre actif
-        val chapterInactive = Color(0xFFB8D4C0) // Chapitre inactif
+        val background = Color(0xFFA8C5B0)              // Vert sage (catégorie Yoga)
+        val backgroundGradientEnd = Color(0xFFD4E8D4)   // Menthe douce (gradient)
+        val accent = Color(0xFF7BA089)                  // Vert sage foncé
+        val accentDark = Color(0xFF5A7A66)              // Vert encore plus foncé
+        val onBackground = OraOnSurface                 // Texte Ora standard
+        val surface = OraSurface                        // Surface Ora
+        val chapterActive = Color(0xFF7BA089)           // Chapitre actif
+        val chapterInactive = Color(0xFFD4E8D4)         // Chapitre inactif
     }
 
-    // Méditation/Respiration - Lavande
+    // Méditation/Respiration - Lavande (CategoryMeditationLavender)
     object Meditation {
-        val background = Color(0xFFD4C4E8)      // Lavande
-        val backgroundGradientEnd = Color(0xFFE8E0F4) // Lavande très clair
-        val accent = Color(0xFF8B7BA0)          // Lavande foncé
-        val accentDark = Color(0xFF6B5A80)      // Lavande très foncé
-        val onBackground = Color(0xFF2C2C2C)    // Texte foncé
-        val surface = Color(0xFFFFFBF8)         // Surface blanche
-        val breatheIn = Color(0xFF9B8BB0)       // Inspiration
-        val breatheOut = Color(0xFFB8A8C8)      // Expiration
+        val background = Color(0xFFC5B8D4)              // Lavande (catégorie Méditation)
+        val backgroundGradientEnd = Color(0xFFE8E0F4)   // Lavande très clair
+        val accent = Color(0xFF9B8BB0)                  // Lavande moyen
+        val accentDark = Color(0xFF7A6A90)              // Lavande foncé
+        val onBackground = OraOnSurface                 // Texte Ora standard
+        val surface = OraSurface                        // Surface Ora
+        val breatheIn = Color(0xFF9B8BB0)               // Inspiration
+        val breatheOut = Color(0xFFC5B8D4)              // Expiration
 
-        // Mode nuit
-        val nightBackground = Color(0xFF1A1A2E)
-        val nightAccent = Color(0xFFE0B0FF)
-        val nightOnBackground = Color(0xFFE8E0F4)
+        // Mode nuit - Tons bruns chauds (cohérent avec Ora dark mode)
+        val nightBackground = Color(0xFF2A2520)         // Brun très foncé (Ora dark)
+        val nightAccent = Color(0xFFC5B8D4)             // Lavande visible
+        val nightOnBackground = Color(0xFFE8E0D8)       // Texte clair chaud
     }
 
-    // Auto-massage/Bien-être - Orange Ora
+    // Auto-massage/Bien-être - Orange Ora (couleur principale de la marque)
     object Massage {
-        val background = Color(0xFFFFF5F0)      // Beige chaud (Ora background)
-        val backgroundGradientEnd = Color(0xFFFFFAF5) // Beige très clair
-        val accent = Color(0xFFF4845F)          // Orange Ora
-        val accentDark = Color(0xFFD76B3D)      // Orange foncé
-        val onBackground = Color(0xFF2C2C2C)    // Texte foncé
-        val surface = Color(0xFFFFFBF8)         // Surface blanche
-        val zoneActive = Color(0xFFFFD4C4)      // Zone active - Pêche
-        val zoneCompleted = Color(0xFFD4E8D9)   // Zone terminée - Vert menthe
-        val zonePending = Color(0xFFE8E8E8)     // Zone en attente - Gris clair
-        val pressureLow = Color(0xFFB8D4C0)     // Pression légère
-        val pressureMedium = Color(0xFFF4845F)  // Pression moyenne
-        val pressureHigh = Color(0xFFD76B3D)    // Pression forte
+        val background = OraBackground                  // Beige Ora (#F5EFE6)
+        val backgroundGradientEnd = OraSurface          // Blanc cassé Ora
+        val accent = OraPrimary                         // Orange Coral Ora (#F18D5C)
+        val accentDark = Color(0xFFD76B3D)              // Orange foncé
+        val onBackground = OraOnSurface                 // Texte Ora standard
+        val surface = OraSurface                        // Surface Ora
+        val zoneActive = OraSecondary                   // Peach doux (#F5C9A9)
+        val zoneCompleted = Color(0xFFD4E8D4)           // Menthe (gratitude)
+        val zonePending = Color(0xFFE8E0D8)             // Gris chaud
+        val pressureLow = Color(0xFFA8C5B0)             // Vert sage (légère)
+        val pressureMedium = OraPrimary                 // Orange Ora (moyenne)
+        val pressureHigh = Color(0xFFD76B3D)            // Orange foncé (forte)
+    }
+
+    // Couleurs de catégories Ora (pour référence)
+    object Categories {
+        val yoga = Color(0xFFA8C5B0)                    // Vert sage
+        val pilates = Color(0xFFF5C9A9)                 // Peach
+        val meditation = Color(0xFFC5B8D4)              // Lavande
+        val breathing = Color(0xFFA3C4E0)               // Bleu clair
     }
 }
