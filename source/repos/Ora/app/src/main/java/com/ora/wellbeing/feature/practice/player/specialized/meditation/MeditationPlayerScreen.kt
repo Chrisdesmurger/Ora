@@ -34,7 +34,6 @@ import com.ora.wellbeing.feature.practice.ui.CustomSeekBar
  * Écran lecteur spécialisé pour Méditation/Respiration
  * - Animation de respiration
  * - Sons ambiants superposables
- * - Timer de fin
  * - Mode nuit automatique
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -184,15 +183,6 @@ private fun MeditationPlayerContent(
                 Icon(Icons.Default.ArrowBack, "Retour", tint = textColor)
             }
 
-            // Timer de fin si actif
-            if (uiState.sleepTimerEnabled) {
-                SleepTimerBadge(
-                    remaining = uiState.sleepTimerRemaining,
-                    onCancel = { onEvent(MeditationPlayerEvent.CancelSleepTimer) },
-                    textColor = textColor
-                )
-            }
-
             IconButton(onClick = { onEvent(MeditationPlayerEvent.ToggleNightMode) }) {
                 Icon(
                     if (uiState.isNightMode) Icons.Default.LightMode else Icons.Default.DarkMode,
@@ -270,16 +260,6 @@ private fun MeditationPlayerContent(
             sounds = uiState.ambientSounds,
             activeSound = uiState.activeAmbientSound,
             onSoundSelected = { onEvent(MeditationPlayerEvent.SetAmbientSound(it)) },
-            accentColor = accentColor,
-            textColor = textColor
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Timer de fin
-        SleepTimerSelector(
-            isEnabled = uiState.sleepTimerEnabled,
-            onTimerSelected = { onEvent(MeditationPlayerEvent.SetSleepTimer(it)) },
             accentColor = accentColor,
             textColor = textColor
         )
@@ -457,68 +437,3 @@ private fun AmbientSoundSelector(
     }
 }
 
-@Composable
-private fun SleepTimerSelector(
-    isEnabled: Boolean,
-    onTimerSelected: (SleepTimerOption) -> Unit,
-    accentColor: Color,
-    textColor: Color
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = "Timer de fin",
-            style = MaterialTheme.typography.labelMedium,
-            color = textColor.copy(alpha = 0.7f)
-        )
-
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(SleepTimerOption.values().toList()) { option ->
-                FilterChip(
-                    selected = false,
-                    onClick = { onTimerSelected(option) },
-                    label = { Text(option.displayName) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        containerColor = accentColor.copy(alpha = 0.2f),
-                        labelColor = textColor
-                    )
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun SleepTimerBadge(
-    remaining: Long,
-    onCancel: () -> Unit,
-    textColor: Color
-) {
-    val minutes = (remaining / 60000).toInt()
-    val seconds = ((remaining % 60000) / 1000).toInt()
-
-    Surface(
-        shape = RoundedCornerShape(20.dp),
-        color = PlayerColors.Meditation.accent.copy(alpha = 0.3f),
-        modifier = Modifier.clickable { onCancel() }
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Icon(
-                Icons.Default.Timer,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp),
-                tint = textColor
-            )
-            Text(
-                text = "%d:%02d".format(minutes, seconds),
-                style = MaterialTheme.typography.labelMedium,
-                color = textColor
-            )
-        }
-    }
-}
