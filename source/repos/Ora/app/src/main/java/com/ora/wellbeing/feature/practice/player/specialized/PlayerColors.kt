@@ -8,7 +8,7 @@ import androidx.compose.ui.graphics.Color
  *
  * Couleurs principales Ora :
  * - Primary (Orange Coral): #F18D5C
- * - Background (Beige): #F5EFE6
+ * - Background (Beige): #FFF5F0 (page d'accueil)
  * - Surface (Blanc cassé): #FFFBF8
  * - Texte: #4A4A4A
  */
@@ -16,15 +16,15 @@ object PlayerColors {
 
     // Couleurs Ora principales (réutilisées)
     private val OraPrimary = Color(0xFFF18D5C)          // Orange Coral
-    private val OraBackground = Color(0xFFF5EFE6)       // Beige/Crème
+    private val OraBackground = Color(0xFFFFF5F0)       // Beige rosé (page d'accueil)
     private val OraSurface = Color(0xFFFFFBF8)          // Blanc cassé chaud
     private val OraOnSurface = Color(0xFF4A4A4A)        // Texte principal (gris-brun)
     private val OraSecondary = Color(0xFFF5C9A9)        // Peach doux
 
-    // Yoga/Pilates - Vert Sage (CategoryYogaGreen)
+    // Yoga/Pilates - Fond Ora uniforme avec accents verts
     object Yoga {
-        val background = Color(0xFFA8C5B0)              // Vert sage (catégorie Yoga)
-        val backgroundGradientEnd = Color(0xFFD4E8D4)   // Menthe douce (gradient)
+        val background = OraBackground                  // Beige rosé (uniforme)
+        val backgroundGradientEnd = OraSurface          // Blanc cassé (gradient)
         val accent = Color(0xFF7BA089)                  // Vert sage foncé
         val accentDark = Color(0xFF5A7A66)              // Vert encore plus foncé
         val onBackground = OraOnSurface                 // Texte Ora standard
@@ -33,10 +33,10 @@ object PlayerColors {
         val chapterInactive = Color(0xFFD4E8D4)         // Chapitre inactif
     }
 
-    // Méditation/Respiration - Lavande (CategoryMeditationLavender)
+    // Méditation/Respiration - Fond Ora uniforme avec accents lavande
     object Meditation {
-        val background = Color(0xFFC5B8D4)              // Lavande (catégorie Méditation)
-        val backgroundGradientEnd = Color(0xFFE8E0F4)   // Lavande très clair
+        val background = OraBackground                  // Beige rosé (uniforme)
+        val backgroundGradientEnd = OraSurface          // Blanc cassé (gradient)
         val accent = Color(0xFF9B8BB0)                  // Lavande moyen
         val accentDark = Color(0xFF7A6A90)              // Lavande foncé
         val onBackground = OraOnSurface                 // Texte Ora standard
@@ -50,9 +50,9 @@ object PlayerColors {
         val nightOnBackground = Color(0xFFE8E0D8)       // Texte clair chaud
     }
 
-    // Auto-massage/Bien-être - Orange Ora (couleur principale de la marque)
+    // Auto-massage/Bien-être - Fond Ora uniforme avec accents orange
     object Massage {
-        val background = OraBackground                  // Beige Ora (#F5EFE6)
+        val background = OraBackground                  // Beige rosé (uniforme #FFF5F0)
         val backgroundGradientEnd = OraSurface          // Blanc cassé Ora
         val accent = OraPrimary                         // Orange Coral Ora (#F18D5C)
         val accentDark = Color(0xFFD76B3D)              // Orange foncé
