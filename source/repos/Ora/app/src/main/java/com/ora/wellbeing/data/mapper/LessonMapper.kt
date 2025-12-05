@@ -132,7 +132,7 @@ object LessonMapper {
      * Maps lesson type and tags to Android category
      *
      * Uses tags to determine the most appropriate category from:
-     * - Méditation, Yoga, Respiration, Pilates, Bien-être, Sommeil
+     * - Méditation, Yoga, Respiration, Pilates, Bien-être, Sommeil, Massage
      *
      * @param type Lesson type ("video" or "audio")
      * @param tags List of tags for categorization
@@ -146,6 +146,8 @@ object LessonMapper {
             tags.any { it.equals("breathing", ignoreCase = true) || it.equals("respiration", ignoreCase = true) } -> "Respiration"
             tags.any { it.equals("pilates", ignoreCase = true) } -> "Pilates"
             tags.any { it.equals("sleep", ignoreCase = true) || it.equals("sommeil", ignoreCase = true) } -> "Sommeil"
+            tags.any { it.equals("massage", ignoreCase = true) || it.equals("auto-massage", ignoreCase = true) || it.equals("self-massage", ignoreCase = true) } -> "Massage"
+            tags.any { it.equals("wellness", ignoreCase = true) || it.equals("bien-être", ignoreCase = true) } -> "Bien-être"
             else -> "Bien-être" // Default category
         }
     }
