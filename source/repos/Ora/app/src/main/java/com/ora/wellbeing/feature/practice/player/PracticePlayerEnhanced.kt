@@ -36,6 +36,30 @@ class PracticePlayerEnhanced(
     private val config: PlayerConfig = PlayerConfig()
 ) {
 
+    companion object {
+        @Volatile
+        private var sharedCache: SimpleCache? = null
+        private val cacheLock = Any()
+
+        /**
+         * Obtient ou crée une instance singleton du cache.
+         * Évite l'erreur "Another SimpleCache instance uses the folder"
+         */
+        private fun getSharedCache(context: Context, cacheSize: Long): SimpleCache {
+            return sharedCache ?: synchronized(cacheLock) {
+                sharedCache ?: run {
+                    val cacheDir = File(context.cacheDir, "media")
+                    val databaseProvider = StandaloneDatabaseProvider(context)
+                    SimpleCache(
+                        cacheDir,
+                        LeastRecentlyUsedCacheEvictor(cacheSize),
+                        databaseProvider
+                    ).also { sharedCache = it }
+                }
+            }
+        }
+    }
+
     private val _state = MutableStateFlow(PlayerState())
     val state: StateFlow<PlayerState> = _state.asStateFlow()
 
@@ -64,14 +88,8 @@ class PracticePlayerEnhanced(
      */
     private fun setupPlayer() {
         try {
-            // Setup cache
-            val cacheDir = File(context.cacheDir, "media")
-            val databaseProvider = StandaloneDatabaseProvider(context)
-            val cache = SimpleCache(
-                cacheDir,
-                LeastRecentlyUsedCacheEvictor(config.cacheSize),
-                databaseProvider
-            )
+            // Utiliser le cache singleton pour éviter les conflits
+            val cache = getSharedCache(context, config.cacheSize)
 
             // Build player
             player = ExoPlayer.Builder(context)
