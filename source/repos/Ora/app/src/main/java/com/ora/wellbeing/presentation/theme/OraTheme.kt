@@ -49,6 +49,10 @@ val GratitudePeach = Color(0xFFFFE5CC)              // Orange pêche
 val GratitudeMint = Color(0xFFD4E8D9)               // Vert menthe
 val GratitudeYellow = Color(0xFFFFF4CC)             // Jaune doux
 
+// Couleurs pour les titres (Design System - Option 2 & 3)
+val TitleOrangeDark = Color(0xFFD76B3D)             // Orange foncé pour titres principaux
+val TitleGreenSage = Color(0xFF7BA089)              // Vert sage pour sections zen/journal
+
 // Mode sombre - Adaptation de la palette chaude
 private val DarkPrimary = Color(0xFFF5A879)         // Orange plus clair pour le dark mode
 private val DarkSecondary = Color(0xFFE8B892)       // Peach plus saturé

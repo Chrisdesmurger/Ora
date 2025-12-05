@@ -29,6 +29,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.ora.wellbeing.data.model.DailyJournalEntry
 import com.ora.wellbeing.domain.repository.DailyJournalRepository
+import com.ora.wellbeing.presentation.theme.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -131,7 +132,8 @@ private fun MonthSelector(
                     DateTimeFormatter.ofPattern("MMMM yyyy", Locale.FRENCH)
                 ).replaceFirstChar { it.uppercase() },
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = TitleGreenSage
             )
 
             IconButton(

@@ -157,6 +157,8 @@ class ContentRepositoryImpl @Inject constructor(
             "yoga" -> ContentType.YOGA
             "respiration", "breathing" -> ContentType.BREATHING
             "pilates" -> ContentType.PILATES
+            "bien-être", "wellness", "massage", "auto-massage", "self-massage" -> ContentType.SELF_MASSAGE
+            "beauté", "beauty", "beauty tips" -> ContentType.BEAUTY_TIPS
             else -> ContentType.MEDITATION
         }
     }
