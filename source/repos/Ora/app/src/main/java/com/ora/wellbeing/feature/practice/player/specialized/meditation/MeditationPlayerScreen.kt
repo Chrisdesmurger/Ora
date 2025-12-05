@@ -1,5 +1,6 @@
 package com.ora.wellbeing.feature.practice.player.specialized.meditation
 
+import android.app.Activity
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -19,11 +20,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
@@ -67,6 +71,17 @@ fun MeditationPlayerScreen(
         PlayerColors.Meditation.nightOnBackground
     } else {
         PlayerColors.Meditation.onBackground
+    }
+
+    // Adapter la couleur de la barre d'état au fond du lecteur
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as Activity).window
+            window.statusBarColor = backgroundColor.toArgb()
+            // Icônes claires en mode nuit, sombres en mode normal
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !uiState.isNightMode
+        }
     }
 
     Box(
