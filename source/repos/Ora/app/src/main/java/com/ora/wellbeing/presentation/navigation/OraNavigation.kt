@@ -34,7 +34,7 @@ import com.ora.wellbeing.presentation.screens.programs.ProgramsScreen
 import com.ora.wellbeing.presentation.screens.profile.ProfileScreen
 import com.ora.wellbeing.presentation.screens.profile.ProfileEditScreen
 import com.ora.wellbeing.presentation.screens.stats.PracticeStatsScreen
-import com.ora.wellbeing.feature.practice.ui.PlayerScreen
+import com.ora.wellbeing.feature.practice.ui.SpecializedPlayerScreen
 import com.ora.wellbeing.presentation.screens.debug.FirestoreDebugScreen
 import com.ora.wellbeing.presentation.screens.onboarding.OnboardingScreen
 import com.ora.wellbeing.presentation.screens.onboarding.OnboardingCelebrationScreen
@@ -254,13 +254,13 @@ fun OraNavigation(
                 )
             }
 
-            // Écran de détail d'une pratique (vidéo/audio player)
+            // Écran de détail d'une pratique - Lecteurs spécialisés par discipline
             composable(
                 route = OraDestinations.PracticeDetail.route,
                 arguments = OraDestinations.PracticeDetail.arguments
             ) { backStackEntry ->
                 val practiceId = backStackEntry.arguments?.getString("id") ?: return@composable
-                PlayerScreen(
+                SpecializedPlayerScreen(
                     practiceId = practiceId,
                     onBack = { navController.popBackStack() },
                     onMinimize = { navController.popBackStack() }

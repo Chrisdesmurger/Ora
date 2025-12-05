@@ -123,4 +123,23 @@ object Migrations {
             )
         }
     }
+
+    /**
+     * Migration 2 -> 3
+     *
+     * Changes:
+     * 1. Add new field to Content table:
+     *    - previewImageUrl (nullable String)
+     */
+    val MIGRATION_2_3 = object : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Add previewImageUrl column to content table
+            db.execSQL(
+                """
+                ALTER TABLE content
+                ADD COLUMN previewImageUrl TEXT DEFAULT NULL
+                """.trimIndent()
+            )
+        }
+    }
 }

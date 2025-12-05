@@ -17,6 +17,7 @@ data class Content(
     val videoUrl: String? = null,
     val audioUrl: String? = null,
     val thumbnailUrl: String? = null,
+    val previewImageUrl: String? = null,
     val instructorName: String? = null,
     val tags: List<String> = emptyList(),
     val isFlashSession: Boolean = false,

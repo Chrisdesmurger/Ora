@@ -23,6 +23,7 @@ class ContentItem() {
     var instructor: String = ""
     var description: String = ""
     var thumbnailUrl: String? = null
+    var previewImageUrl: String? = null
     var videoUrl: String? = null
     var audioUrl: String? = null
     var isPremiumOnly: Boolean = false
@@ -32,6 +33,7 @@ class ContentItem() {
     var completionCount: Int = 0
     var tags: List<String> = emptyList()
     var isActive: Boolean = true
+    var order: Int = 0  // Order for sorting (lower values appear first, negative for featured content)
 
     // Firestore Timestamp - automatically populated with @ServerTimestamp on create/update
     @ServerTimestamp

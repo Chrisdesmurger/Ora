@@ -121,7 +121,7 @@ private fun ActiveProgramsSection(
             text = "Vos programmes en cours",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = TitleOrangeDark,
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
@@ -240,7 +240,7 @@ private fun RecommendedProgramsSection(
             text = "Recommandés pour vous",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = TitleOrangeDark,
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
@@ -270,7 +270,7 @@ private fun PopularChallengesSection(
             text = "Défis populaires",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = TitleOrangeDark,
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
@@ -299,7 +299,7 @@ private fun AllProgramsSection(
                 text = category,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = TitleOrangeDark,
                 modifier = Modifier.padding(vertical = 12.dp)
             )
 

@@ -147,6 +147,50 @@ class UserProfileRepository @Inject constructor(
     }
 
     /**
+     * Met à jour la date de naissance
+     */
+    suspend fun updateBirthDate(uid: String, birthDate: String): Result<Unit> {
+        return updateUserProfile(uid, mapOf("birth_date" to birthDate))
+    }
+
+    /**
+     * Met à jour le genre
+     */
+    suspend fun updateGender(uid: String, gender: String): Result<Unit> {
+        return updateUserProfile(uid, mapOf("gender" to gender))
+    }
+
+    /**
+     * Met à jour les informations du profil groupé (onboarding)
+     * Utilisé par l'écran profile_group de l'onboarding
+     */
+    suspend fun updateProfileGroup(
+        uid: String,
+        firstName: String?,
+        birthDate: String?,
+        gender: String?
+    ): Result<Unit> {
+        return try {
+            val updates = mutableMapOf<String, Any?>()
+
+            firstName?.let { updates["first_name"] = it }
+            birthDate?.let { updates["birth_date"] = it }
+            gender?.let { updates["gender"] = it }
+
+            if (updates.isEmpty()) {
+                Timber.w("UserProfileRepository: No profile group fields to update")
+                return Result.success(Unit)
+            }
+
+            Timber.d("UserProfileRepository: Updating profile group for uid=$uid")
+            updateUserProfile(uid, updates)
+        } catch (e: Exception) {
+            Timber.e(e, "UserProfileRepository: Error updating profile group")
+            Result.failure(e)
+        }
+    }
+
+    /**
      * Met à jour le plan tier (Free, Premium, Lifetime)
      */
     suspend fun updatePlanTier(uid: String, planTier: PlanTier): Result<Unit> {

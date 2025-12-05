@@ -226,4 +226,22 @@ object OraIcons {
      */
     val ArrowForward: ImageVector
         get() = Icons.Default.ArrowForward
+
+    /**
+     * Icône Vagues pour Respiration - 3 lignes ondulées
+     */
+    val Waves: ImageVector
+        get() = Icons.Default.Air
+
+    /**
+     * Icône Personne en position Lotus/Yoga
+     */
+    val YogaPerson: ImageVector
+        get() = Icons.Default.SelfImprovement
+
+    /**
+     * Icône Tête/Profil pour Méditation
+     */
+    val MindHead: ImageVector
+        get() = Icons.Default.Psychology
 }

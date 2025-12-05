@@ -147,6 +147,8 @@ service cloud.firestore {
           && (data.created_at == null || data.created_at is int)
           && (data.locale == null || data.locale in ['fr', 'en'])
           && (data.updated_at == null || data.updated_at is int)
+          && (data.birth_date == null || (data.birth_date is string && data.birth_date.size() <= 10))
+          && (data.gender == null || data.gender in ['male', 'female', 'non_binary', 'prefer_not_to_say'])
           && (data.has_completed_onboarding == null || data.has_completed_onboarding is bool)
           && (data.onboarding == null || data.onboarding is map);
     }

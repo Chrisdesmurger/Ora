@@ -72,6 +72,7 @@ class ContentRepositoryImpl @Inject constructor(
             duration = formatDuration(this@toContentItem.durationMinutes)
             instructor = this@toContentItem.instructorName ?: ""
             thumbnailUrl = this@toContentItem.thumbnailUrl
+            previewImageUrl = this@toContentItem.previewImageUrl
             videoUrl = this@toContentItem.videoUrl
             audioUrl = this@toContentItem.audioUrl
             isPremiumOnly = false // Determined by program settings
@@ -81,6 +82,7 @@ class ContentRepositoryImpl @Inject constructor(
             completionCount = 0 // TODO: From user stats
             tags = this@toContentItem.tags
             isActive = this@toContentItem.status == STATUS_READY
+            order = this@toContentItem.order  // Order for sorting (lower = higher priority)
             // FIX(build-debug-android): Use correct Timestamp constructor with seconds (Long) and nanoseconds (Int)
             createdAt = Timestamp(this@toContentItem.createdAt.toEpochSecond(ZoneOffset.UTC), 0)
             updatedAt = Timestamp(this@toContentItem.updatedAt / 1000, 0)
@@ -103,6 +105,7 @@ class ContentRepositoryImpl @Inject constructor(
             videoUrl = videoUrl,
             audioUrl = audioUrl,
             thumbnailUrl = thumbnailUrl,
+            previewImageUrl = previewImageUrl,
             instructorName = instructor,
             tags = tags,
             isFlashSession = durationMinutes <= 10, // Quick sessions
@@ -112,7 +115,7 @@ class ContentRepositoryImpl @Inject constructor(
             isOfflineAvailable = false, // Requires explicit download
             downloadSize = null,
             programId = null, // TODO: Extract from lesson data
-            order = 0,
+            order = order,  // Preserve sort order
             status = if (isActive) STATUS_READY else "draft",
             updatedAt = System.currentTimeMillis()
         )
@@ -154,6 +157,8 @@ class ContentRepositoryImpl @Inject constructor(
             "yoga" -> ContentType.YOGA
             "respiration", "breathing" -> ContentType.BREATHING
             "pilates" -> ContentType.PILATES
+            "bien-être", "wellness", "massage", "auto-massage", "self-massage" -> ContentType.SELF_MASSAGE
+            "beauté", "beauty", "beauty tips" -> ContentType.BEAUTY_TIPS
             else -> ContentType.MEDITATION
         }
     }

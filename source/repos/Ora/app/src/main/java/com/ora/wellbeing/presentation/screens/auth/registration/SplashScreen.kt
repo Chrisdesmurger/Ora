@@ -46,8 +46,15 @@ fun SplashScreen(
             animationSpec = tween(durationMillis = 1000)
         )
 
-        // Attendre 2 secondes de plus (total 3 secondes)
+        // Attendre 2 secondes (total 3 secondes)
         delay(2000)
+
+        Timber.d("SplashScreen: Starting fade-out animation")
+        // Fade-out sur 800ms
+        alphaAnimation.animateTo(
+            targetValue = 0f,
+            animationSpec = tween(durationMillis = 800)
+        )
 
         Timber.d("SplashScreen: Navigating to Welcome")
         onNavigateToWelcome()
@@ -64,22 +71,12 @@ fun SplashScreen(
         ) {
             // Logo ORA
             Image(
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                painter = painterResource(id = R.drawable.ora_logo),
                 contentDescription = "ORA Logo",
-                modifier = Modifier.size(200.dp)
+                modifier = Modifier.size(320.dp)
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Nom de l'app
-            Text(
-                text = "ORA",
-                style = MaterialTheme.typography.displayLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             // Tagline
             Text(

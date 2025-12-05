@@ -9,6 +9,7 @@ import com.ora.wellbeing.BuildConfig
 import com.ora.wellbeing.data.model.onboarding.OnboardingConfig
 import com.ora.wellbeing.data.model.onboarding.OnboardingMetadata
 import com.ora.wellbeing.data.model.onboarding.OnboardingQuestion
+import com.ora.wellbeing.data.model.onboarding.QuestionTypeKind
 import com.ora.wellbeing.data.model.onboarding.UserOnboardingAnswer
 import com.ora.wellbeing.data.model.onboarding.UserOnboardingResponse
 import com.ora.wellbeing.data.repository.OnboardingRepository
@@ -62,18 +63,23 @@ class OnboardingViewModel @Inject constructor(
             onboardingRepository.getActiveOnboardingConfig()
                 .onSuccess { loadedConfig ->
                     config = loadedConfig
-                    val sortedQuestions = loadedConfig.questions.sortedBy { it.order }
+
+                    // Merge questions and information screens
+                    val allQuestions = mergeQuestionsAndInformationScreens(
+                        loadedConfig.questions,
+                        loadedConfig.informationScreens
+                    )
 
                     _uiState.value = OnboardingUiState(
                         isLoading = false,
                         config = loadedConfig,
-                        questions = sortedQuestions,
+                        questions = allQuestions,
                         currentQuestionIndex = 0,
-                        totalQuestions = sortedQuestions.size,
+                        totalQuestions = allQuestions.size,
                         isComplete = false
                     )
 
-                    Timber.d("Onboarding config loaded: ${sortedQuestions.size} questions")
+                    Timber.d("Onboarding config loaded: ${loadedConfig.questions.size} questions + ${loadedConfig.informationScreens.size} information screens = ${allQuestions.size} total items")
                 }
                 .onFailure { error ->
                     _uiState.value = _uiState.value.copy(
@@ -83,6 +89,62 @@ class OnboardingViewModel @Inject constructor(
                     Timber.e(error, "Failed to load onboarding config")
                 }
         }
+    }
+
+    /**
+     * Merge questions and information screens into a single sorted list
+     * Information screens are inserted at their specified positions
+     */
+    private fun mergeQuestionsAndInformationScreens(
+        questions: List<OnboardingQuestion>,
+        informationScreens: List<com.ora.wellbeing.data.model.onboarding.InformationScreen>
+    ): List<OnboardingQuestion> {
+        // Convert information screens to virtual questions
+        val virtualQuestions = informationScreens.map { screen ->
+            convertInformationScreenToQuestion(screen)
+        }
+
+        // Combine all items and sort by order
+        val allItems = (questions + virtualQuestions).sortedBy { it.order }
+
+        Timber.d("Merged ${questions.size} questions + ${informationScreens.size} info screens = ${allItems.size} total")
+
+        return allItems
+    }
+
+    /**
+     * Convert an InformationScreen to a virtual OnboardingQuestion
+     * The UI already handles INFORMATION_SCREEN type questions
+     */
+    private fun convertInformationScreenToQuestion(
+        screen: com.ora.wellbeing.data.model.onboarding.InformationScreen
+    ): OnboardingQuestion {
+        return OnboardingQuestion(
+            id = "info_screen_${screen.position}",
+            category = "information",
+            order = screen.order,
+            title = screen.title,
+            titleFr = screen.titleFr,
+            titleEn = screen.titleEn,
+            subtitle = screen.subtitle,
+            subtitleFr = screen.subtitleFr,
+            subtitleEn = screen.subtitleEn,
+            type = com.ora.wellbeing.data.model.onboarding.QuestionTypeConfig().apply {
+                kind = "information_screen"
+                content = screen.content
+                contentFr = screen.contentFr
+                contentEn = screen.contentEn
+                bulletPoints = screen.bulletPoints
+                bulletPointsFr = screen.bulletPointsFr
+                bulletPointsEn = screen.bulletPointsEn
+                ctaText = screen.ctaText
+                ctaTextFr = screen.ctaTextFr
+                ctaTextEn = screen.ctaTextEn
+                backgroundColor = screen.backgroundColor
+            },
+            options = emptyList(),
+            required = false // Information screens don't require user input
+        )
     }
 
     private fun startOnboarding() {
@@ -144,8 +206,32 @@ class OnboardingViewModel @Inject constructor(
         if (!question.required) return true
 
         return when (question.type.toKind()) {
+            com.ora.wellbeing.data.model.onboarding.QuestionTypeKind.INFORMATION_SCREEN -> {
+                // Information screens are auto-acknowledged, always valid
+                true
+            }
             com.ora.wellbeing.data.model.onboarding.QuestionTypeKind.TEXT_INPUT -> {
                 !textAnswer.isNullOrBlank()
+            }
+            com.ora.wellbeing.data.model.onboarding.QuestionTypeKind.PROFILE_GROUP -> {
+                // For profile_group, validate that textAnswer (JSON) is not empty
+                // and contains all required fields
+                if (textAnswer.isNullOrBlank()) return false
+
+                // Parse JSON to check if all required fields are filled
+                try {
+                    val fields = question.type.fields ?: return false
+                    val requiredFields = fields.filter { it.required }
+
+                    // Simple validation: check that JSON contains all required field IDs with non-empty values
+                    requiredFields.all { field ->
+                        textAnswer.contains("\"${field.id}\":") &&
+                        !textAnswer.contains("\"${field.id}\":\"\"")
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e, "Error validating profile_group answer")
+                    false
+                }
             }
             else -> {
                 selectedOptions.isNotEmpty()
@@ -217,6 +303,11 @@ class OnboardingViewModel @Inject constructor(
         viewModelScope.launch {
             onboardingRepository.saveUserOnboardingResponse(uid, response)
                 .onSuccess {
+                    // Parse profile_group data and update user profile fields
+                    viewModelScope.launch {
+                        parseAndUpdateProfileGroupData(uid)
+                    }
+
                     // Update user profile to mark onboarding as completed
                     viewModelScope.launch {
                         userProfileRepository.getUserProfile(uid).collect { profile ->
@@ -242,6 +333,71 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
+    private suspend fun parseAndUpdateProfileGroupData(uid: String) {
+        try {
+            // Find profile_group question in config
+            val profileGroupQuestion = config?.questions?.find { question ->
+                question.type.toKind() == QuestionTypeKind.PROFILE_GROUP
+            }
+
+            if (profileGroupQuestion == null) {
+                Timber.d("No profile_group question found in onboarding config")
+                return
+            }
+
+            // Find corresponding answer
+            val profileGroupAnswer = answers[profileGroupQuestion.id]
+            if (profileGroupAnswer == null) {
+                Timber.w("No answer found for profile_group question ${profileGroupQuestion.id}")
+                return
+            }
+
+            // Parse JSON from textAnswer
+            val jsonString = profileGroupAnswer.textAnswer
+            if (jsonString.isNullOrBlank()) {
+                Timber.w("Profile group answer is empty")
+                return
+            }
+
+            Timber.d("Parsing profile_group JSON: $jsonString")
+
+            // Parse JSON manually (simple JSON parsing for our known structure)
+            val firstName = extractJsonValue(jsonString, "firstName")
+            val birthDate = extractJsonValue(jsonString, "birthDate")
+            val gender = extractJsonValue(jsonString, "gender")
+
+            Timber.d("Extracted profile data - firstName: $firstName, birthDate: $birthDate, gender: $gender")
+
+            // Update user profile with extracted data
+            val result = userProfileRepository.updateProfileGroup(
+                uid = uid,
+                firstName = firstName,
+                birthDate = birthDate,
+                gender = gender
+            )
+
+            result.onSuccess {
+                Timber.d("Profile group data updated successfully in users collection")
+            }.onFailure { error ->
+                Timber.e(error, "Failed to update profile group data")
+            }
+
+        } catch (e: Exception) {
+            Timber.e(e, "Error parsing profile_group data")
+        }
+    }
+
+    /**
+     * Simple JSON value extractor for our known profile_group structure
+     * Extracts value from JSON like: {"firstName":"John","birthDate":"01/01/1990","gender":"male"}
+     */
+    private fun extractJsonValue(json: String, key: String): String? {
+        val pattern = "\"$key\":\"([^\"]*)\""
+        val regex = Regex(pattern)
+        val matchResult = regex.find(json)
+        return matchResult?.groupValues?.getOrNull(1)
+    }
+
     private fun getCurrentQuestion(): OnboardingQuestion? {
         val currentState = _uiState.value
         return currentState.questions.getOrNull(currentState.currentQuestionIndex)
@@ -252,6 +408,11 @@ class OnboardingViewModel @Inject constructor(
         val answer = answers[question.id]
 
         if (!question.required) return true
+
+        // Information screens are always considered "answered"
+        if (question.type.toKind() == com.ora.wellbeing.data.model.onboarding.QuestionTypeKind.INFORMATION_SCREEN) {
+            return true
+        }
 
         return answer != null && when (question.type.toKind()) {
             com.ora.wellbeing.data.model.onboarding.QuestionTypeKind.TEXT_INPUT -> {
