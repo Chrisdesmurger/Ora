@@ -54,7 +54,15 @@ class UserProfile {
     @get:PropertyName("locale")
     @set:PropertyName("locale")
     var locale: String? = null
-    
+
+    @get:PropertyName("birth_date")
+    @set:PropertyName("birth_date")
+    var birthDate: String? = null
+
+    @get:PropertyName("gender")
+    @set:PropertyName("gender")
+    var gender: String? = null
+
     @get:PropertyName("has_completed_onboarding")
     @set:PropertyName("has_completed_onboarding")
     var hasCompletedOnboarding: Boolean = false
@@ -71,7 +79,9 @@ class UserProfile {
         planTier: String = "free",
         createdAt: Long? = null,
         updatedAt: Long? = null,
-        locale: String? = null
+        locale: String? = null,
+        birthDate: String? = null,
+        gender: String? = null
     ) : this() {
         this.uid = uid
         this.firstName = firstName
@@ -83,6 +93,8 @@ class UserProfile {
         this.createdAt = createdAt
         this.updatedAt = updatedAt
         this.locale = locale
+        this.birthDate = birthDate
+        this.gender = gender
     }
     companion object {
         /**
@@ -133,6 +145,8 @@ class UserProfile {
         createdAt: Long? = this.createdAt,
         updatedAt: Long? = this.updatedAt,
         locale: String? = this.locale,
+        birthDate: String? = this.birthDate,
+        gender: String? = this.gender,
         hasCompletedOnboarding: Boolean = this.hasCompletedOnboarding
     ): UserProfile {
         val newProfile = UserProfile(
@@ -145,7 +159,9 @@ class UserProfile {
             planTier = planTier,
             createdAt = createdAt,
             updatedAt = updatedAt,
-            locale = locale
+            locale = locale,
+            birthDate = birthDate,
+            gender = gender
         )
         newProfile.hasCompletedOnboarding = hasCompletedOnboarding
         return newProfile

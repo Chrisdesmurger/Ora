@@ -1,0 +1,114 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-10-04",
+  "description": "Feature flags pour Ora Android - Configuration locale avec support Remote Config futur",
+  "flags": {
+    "SYNC_STATS_FROM_ROOM": {
+      "enabled": true,
+      "description": "Active la synchronisation des stats depuis Room vers Firestore",
+      "category": "data",
+      "risk_level": "medium",
+      "added_date": "2025-10-04",
+      "comment": "FIX(user-dynamic): Permet de désactiver la sync en cas de problème performance"
+    },
+    "DYNAMIC_LABELS": {
+      "enabled": true,
+      "description": "Active les labels personnalisés selon le profil utilisateur (débutant/avancé/expert)",
+      "category": "ui",
+      "risk_level": "low",
+      "added_date": "2025-10-04",
+      "comment": "FIX(user-dynamic): Personnalisation des labels UI basée sur UserProfile"
+    },
+    "OFFLINE_MODE_ENABLED": {
+      "enabled": true,
+      "description": "Active le cache offline Firestore pour accès hors-ligne",
+      "category": "data",
+      "risk_level": "medium",
+      "added_date": "2025-10-04",
+      "comment": "FIX(user-dynamic): Mode offline avec persistence locale Firestore"
+    },
+    "AUTO_CREATE_PROFILE": {
+      "enabled": true,
+      "description": "Crée automatiquement le profil utilisateur au premier login",
+      "category": "auth",
+      "risk_level": "low",
+      "added_date": "2025-10-04",
+      "comment": "FIX(user-dynamic): Auto-création profil avec valeurs par défaut sécurisées"
+    },
+    "ADVANCED_VIDEO_PLAYER": {
+      "enabled": false,
+      "description": "Active le lecteur vidéo avancé avec contrôles étendus (ExoPlayer)",
+      "category": "media",
+      "risk_level": "high",
+      "added_date": "2025-10-04",
+      "comment": "Feature expérimentale - lecteur vidéo avec PiP, qualité adaptative, sous-titres"
+    },
+    "NETWORK_SYNC": {
+      "enabled": false,
+      "description": "Active la synchronisation réseau automatique en arrière-plan",
+      "category": "network",
+      "risk_level": "high",
+      "added_date": "2025-10-04",
+      "comment": "Sync auto WorkManager - désactivé par défaut pour économie batterie"
+    },
+    "REMOTE_CONFIG_ENABLED": {
+      "enabled": false,
+      "description": "Active Firebase Remote Config pour mise à jour dynamique des flags",
+      "category": "config",
+      "risk_level": "low",
+      "added_date": "2025-10-04",
+      "comment": "Future intégration Remote Config - local-first pour l'instant"
+    },
+    "DEBUG_LOGGING": {
+      "enabled": true,
+      "description": "Active les logs détaillés Timber (debug uniquement)",
+      "category": "debug",
+      "risk_level": "low",
+      "added_date": "2025-10-04",
+      "comment": "Logs verbeux pour diagnostic - auto-désactivé en production"
+    },
+    "BADGE_SYSTEM": {
+      "enabled": true,
+      "description": "Active le système de badges et récompenses utilisateur",
+      "category": "gamification",
+      "risk_level": "low",
+      "added_date": "2025-10-04",
+      "comment": "Système de gamification avec badges, streaks, achievements"
+    },
+    "GRATITUDE_REMINDERS": {
+      "enabled": true,
+      "description": "Active les rappels quotidiens pour le journal de gratitude",
+      "category": "notifications",
+      "risk_level": "low",
+      "added_date": "2025-10-04",
+      "comment": "Notifications WorkManager pour rappels journaliers"
+    }
+  },
+  "metadata": {
+    "total_flags": 10,
+    "enabled_count": 6,
+    "categories": [
+      "data",
+      "ui",
+      "auth",
+      "media",
+      "network",
+      "config",
+      "debug",
+      "gamification",
+      "notifications"
+    ],
+    "risk_levels": {
+      "low": 6,
+      "medium": 2,
+      "high": 2
+    },
+    "notes": [
+      "Defaults sûrs: features à risque HIGH sont disabled par défaut",
+      "Local-first: modification sans rebuild via assets ou Remote Config futur",
+      "Traçabilité: chaque flag a date, catégorie, niveau de risque",
+      "Convention: UPPER_SNAKE_CASE pour noms de flags",
+      "Migration: prêt pour Remote Config avec fallback local"
+    ]
+  }
+}

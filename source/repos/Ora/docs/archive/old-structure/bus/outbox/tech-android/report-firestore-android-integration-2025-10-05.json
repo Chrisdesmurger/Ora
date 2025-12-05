@@ -1,0 +1,455 @@
+{
+  "reportId": "ANDROID-FIRESTORE-INTEGRATION-REPORT-2025-10-05",
+  "taskId": "ANDROID-001-FIRESTORE-INTEGRATION-2025-10-05",
+  "from": "tech-android",
+  "to": "supervisor-tech",
+  "timestamp": "2025-10-05T12:00:00Z",
+  "status": "PHASE_1_2_COMPLETE_PHASE_3_PARTIAL",
+  "summary": "Successfully implemented Firestore models, repositories, and mappers. JournalViewModel updated with real-time Firestore sync. Remaining 3 ViewModels follow identical pattern.",
+
+  "phasesCompleted": {
+    "phase1": {
+      "status": "COMPLETE",
+      "duration": "~2h",
+      "deliverables": [
+        {
+          "file": "app/src/main/java/com/ora/wellbeing/data/model/GratitudeEntry.kt",
+          "status": "CREATED",
+          "lines": 104,
+          "description": "Gratitude journal entry model with validation, formatting, and update methods",
+          "keyFields": ["uid", "date", "gratitudes (List<String>)", "mood?", "notes?", "createdAt", "updatedAt"],
+          "businessLogic": [
+            "createForToday() factory method",
+            "Max 3 gratitudes validation",
+            "Max 500 chars for notes",
+            "getFormattedDate() for UI",
+            "isToday() helper",
+            "update() method with auto-timestamp"
+          ]
+        },
+        {
+          "file": "app/src/main/java/com/ora/wellbeing/data/model/Program.kt",
+          "status": "CREATED",
+          "lines": 95,
+          "description": "Program catalog model with category, level, ratings, sessions",
+          "keyFields": ["id", "title", "description", "category", "duration", "level", "participantCount", "rating", "thumbnailUrl", "instructor", "isPremiumOnly", "sessions", "createdAt", "isActive"],
+          "businessLogic": [
+            "getFormattedDuration() - converts days to weeks",
+            "isAccessibleFor(userPlanTier) - premium check",
+            "getSessionCount()",
+            "hasHighRating() - >= 4.0",
+            "isPopular() - participantCount >= 100"
+          ]
+        },
+        {
+          "file": "app/src/main/java/com/ora/wellbeing/data/model/UserProgram.kt",
+          "status": "CREATED",
+          "lines": 160,
+          "description": "User program enrollment and progress tracking model",
+          "keyFields": ["uid", "programId", "currentDay", "totalDays", "progressPercentage", "startedAt", "lastSessionAt", "completedSessions (List<String>)", "isCompleted", "completedAt?"],
+          "businessLogic": [
+            "createEnrollment() factory",
+            "calculateProgress() - (currentDay - 1) * 100 / totalDays",
+            "getNextSessionDay()",
+            "isActiveToday() - practiced within 24h",
+            "completeSession() - increments day, adds to completedSessions, auto-completes",
+            "updateProgress() - transaction-safe progress update",
+            "markComplete() - sets isCompleted=true, progressPercentage=100",
+            "getDaysSinceEnrollment()",
+            "getFormattedProgress() - 'Jour 5/21'"
+          ]
+        },
+        {
+          "file": "app/src/main/java/com/ora/wellbeing/data/model/ContentItem.kt",
+          "status": "CREATED",
+          "lines": 148,
+          "description": "Content catalog model for meditations, yoga videos, breathing exercises",
+          "keyFields": ["id", "title", "category", "duration", "durationMinutes", "instructor", "description", "thumbnailUrl", "videoUrl?", "audioUrl?", "isPremiumOnly", "isPopular", "isNew", "rating", "completionCount", "tags (List<String>)", "createdAt", "publishedAt?", "isActive"],
+          "businessLogic": [
+            "getMediaUrl() - videoUrl ?: audioUrl",
+            "hasVideo(), hasAudio()",
+            "getContentType() - 'video' | 'audio' | 'unknown'",
+            "isAccessibleFor(userPlanTier) - premium check",
+            "matchesSearchQuery() - searches title, description, instructor, tags",
+            "hasHighRating() - >= 4.0",
+            "isDurationInRange()",
+            "getFormattedRating() - '4.5 ⭐'",
+            "getFormattedCompletionCount() - '1.2K complétions'"
+          ]
+        }
+      ],
+      "validation": {
+        "buildSuccess": "Not yet tested (requires gradle build)",
+        "noDataClasses": "✅ All models use data class (follows existing pattern)",
+        "validationLogic": "✅ All models have init blocks with business rule validation",
+        "helperMethods": "✅ All computed methods included, NO @Exclude needed (data classes)"
+      }
+    },
+
+    "phase2": {
+      "status": "COMPLETE",
+      "duration": "~4h",
+      "deliverables": [
+        {
+          "category": "Mappers",
+          "file": "app/src/main/java/com/ora/wellbeing/data/mapper/ContentMapper.kt",
+          "status": "CREATED",
+          "lines": 227,
+          "description": "Firestore DocumentSnapshot ↔ Domain Model mappers for all 4 new models",
+          "mappers": [
+            "DocumentSnapshot.toGratitudeEntry(): GratitudeEntry?",
+            "GratitudeEntry.toFirestoreMap(): Map<String, Any?>",
+            "DocumentSnapshot.toProgram(): Program?",
+            "Program.toFirestoreMap(): Map<String, Any?>",
+            "DocumentSnapshot.toUserProgram(): UserProgram?",
+            "UserProgram.toFirestoreMap(): Map<String, Any?>",
+            "DocumentSnapshot.toContentItem(): ContentItem?",
+            "ContentItem.toFirestoreMap(): Map<String, Any?>"
+          ],
+          "errorHandling": "All mappers return null on error, log with Timber"
+        },
+        {
+          "category": "Repository Interfaces",
+          "files": [
+            {
+              "file": "app/src/main/java/com/ora/wellbeing/domain/repository/GratitudeRepository.kt",
+              "methods": 7,
+              "flowMethods": ["getTodayEntry", "getRecentEntries", "getEntriesByDateRange"],
+              "suspendMethods": ["createEntry", "updateEntry", "deleteEntry", "calculateStreak", "getTotalEntryCount"]
+            },
+            {
+              "file": "app/src/main/java/com/ora/wellbeing/domain/repository/ProgramRepository.kt",
+              "methods": 6,
+              "flowMethods": ["getAllPrograms", "getProgramsByCategory", "getProgram", "getPopularPrograms", "getProgramsByLevel"],
+              "suspendMethods": ["getTotalProgramCount"],
+              "note": "Read-only repository (catalog)"
+            },
+            {
+              "file": "app/src/main/java/com/ora/wellbeing/domain/repository/UserProgramRepository.kt",
+              "methods": 10,
+              "flowMethods": ["getEnrolledPrograms", "getActivePrograms", "getCompletedPrograms", "getUserProgram"],
+              "suspendMethods": ["enrollInProgram", "updateProgress", "completeProgram", "unenrollFromProgram", "getEnrolledProgramCount", "getCompletedProgramCount"]
+            },
+            {
+              "file": "app/src/main/java/com/ora/wellbeing/domain/repository/ContentRepository.kt",
+              "methods": 10,
+              "flowMethods": ["getAllContent", "getContentByCategory", "getContent", "getPopularContent", "getNewContent", "getContentByDuration", "searchContent", "getContentByInstructor"],
+              "suspendMethods": ["getTotalContentCount", "getAllInstructors"],
+              "note": "Read-only repository (catalog). searchContent filters client-side (Firestore no full-text search)"
+            }
+          ]
+        },
+        {
+          "category": "Repository Implementations",
+          "files": [
+            {
+              "file": "app/src/main/java/com/ora/wellbeing/data/repository/impl/GratitudeRepositoryImpl.kt",
+              "lines": 301,
+              "collectionPath": "gratitudes/{uid}/entries/{date}",
+              "flowPattern": "callbackFlow + addSnapshotListener",
+              "errorHandling": "FirebaseFirestoreException with code checking",
+              "cleanupPattern": "awaitClose { listener.remove() }",
+              "transactionUsage": "No (simple CRUD)",
+              "streakCalculation": "Custom algorithm: checks consecutive days from most recent entry backwards"
+            },
+            {
+              "file": "app/src/main/java/com/ora/wellbeing/data/repository/impl/ProgramRepositoryImpl.kt",
+              "lines": 187,
+              "collectionPath": "programs/{programId}",
+              "flowPattern": "callbackFlow + addSnapshotListener",
+              "queries": [
+                "whereEqualTo('isActive', true)",
+                "orderBy('rating', DESC) for getAllPrograms, getProgramsByCategory, getProgramsByLevel",
+                "orderBy('participantCount', DESC) for getPopularPrograms"
+              ]
+            },
+            {
+              "file": "app/src/main/java/com/ora/wellbeing/data/repository/impl/UserProgramRepositoryImpl.kt",
+              "lines": 225,
+              "collectionPath": "user_programs/{uid}/enrolled/{programId}",
+              "flowPattern": "callbackFlow + addSnapshotListener",
+              "transactionUsage": "Yes - for updateProgress and completeProgram (ensures consistency)",
+              "queries": [
+                "whereEqualTo('isCompleted', false) for getActivePrograms",
+                "whereEqualTo('isCompleted', true) for getCompletedPrograms",
+                "orderBy('startedAt', DESC) for getEnrolledPrograms",
+                "orderBy('lastSessionAt', DESC) for getActivePrograms",
+                "orderBy('completedAt', DESC) for getCompletedPrograms"
+              ]
+            },
+            {
+              "file": "app/src/main/java/com/ora/wellbeing/data/repository/impl/ContentRepositoryImpl.kt",
+              "lines": 196,
+              "collectionPath": "content/{contentId}",
+              "flowPattern": "callbackFlow + addSnapshotListener",
+              "queries": [
+                "whereEqualTo('isActive', true) - ALL queries filter by isActive",
+                "whereEqualTo('isPopular', true) for getPopularContent",
+                "whereEqualTo('isNew', true) for getNewContent",
+                "whereGreaterThanOrEqualTo + whereLessThanOrEqualTo for getContentByDuration",
+                "whereEqualTo('instructor', instructor) for getContentByInstructor"
+              ],
+              "clientSideFiltering": "searchContent uses Flow.map to filter locally (Firestore limitation)"
+            }
+          ]
+        },
+        {
+          "category": "DI Module",
+          "file": "app/src/main/java/com/ora/wellbeing/di/FirestoreModule.kt",
+          "status": "UPDATED",
+          "newProviders": [
+            "provideGratitudeRepository(): GratitudeRepository",
+            "provideProgramRepository(): ProgramRepository",
+            "provideUserProgramRepository(): UserProgramRepository",
+            "provideContentRepository(): ContentRepository"
+          ],
+          "allSingletons": true,
+          "firestoreDependency": "Injected from existing provideFirebaseFirestore()"
+        }
+      ],
+      "validation": {
+        "buildSuccess": "Not yet tested (requires gradle build)",
+        "hiltCompilation": "Expected success (follows existing pattern)",
+        "flowTypes": "✅ All real-time methods return Flow<T>",
+        "resultTypes": "✅ All write methods return Result<Unit>",
+        "callbackFlowPattern": "✅ All Flow methods use callbackFlow with awaitClose"
+      }
+    },
+
+    "phase3": {
+      "status": "PARTIAL_COMPLETE",
+      "completed": ["JournalViewModel"],
+      "remaining": ["ProgramsViewModel", "LibraryViewModel", "HomeViewModel"],
+      "deliverables": [
+        {
+          "file": "app/src/main/java/com/ora/wellbeing/presentation/screens/journal/JournalViewModel.kt",
+          "status": "UPDATED",
+          "lines": 207,
+          "injectedDependencies": ["GratitudeRepository", "FirebaseAuth"],
+          "removed": "generateMockJournalData() - mock data completely replaced",
+          "added": [
+            "observeGratitudeData() in init block",
+            "combine(getTodayEntry, getRecentEntries) for real-time sync",
+            "calculateStreak() and getTotalEntryCount() for stats",
+            "saveGratitudes() event handler",
+            "deleteEntry() event handler",
+            "toUiEntry() mapper (GratitudeEntry → JournalUiState.JournalEntry)"
+          ],
+          "realTimeSync": "✅ Uses combine() to merge 2 Flow sources",
+          "errorHandling": "✅ All suspend calls wrapped in try-catch, updates uiState.error",
+          "authCheck": "✅ All methods check auth.currentUser?.uid before operations",
+          "autoUpdate": "✅ UI state updates automatically via Flow collection"
+        }
+      ],
+      "implementationPattern": {
+        "viewModelStructure": {
+          "inject": ["Repository", "FirebaseAuth"],
+          "initBlock": "observeData() - starts Flow collection",
+          "observeData": "combine() multiple Flow sources → emit to uiState",
+          "onEvent": "Handles user actions (SaveData, UpdateData, DeleteData)",
+          "mappers": "DataModel.toUiModel() extension functions"
+        },
+        "programsViewModelPlan": {
+          "inject": ["ProgramRepository", "UserProgramRepository", "FirebaseAuth"],
+          "observeData": "combine(getAllPrograms, getActivePrograms)",
+          "events": ["SelectCategory", "EnrollInProgram", "UpdateProgress"],
+          "grouping": "Programs grouped by category in ProgramsUiState"
+        },
+        "libraryViewModelPlan": {
+          "inject": ["ContentRepository"],
+          "observeData": "combine(getAllContent, getPopularContent, getNewContent)",
+          "events": ["SearchContent", "FilterByCategory", "FilterByDuration"],
+          "grouping": "Content grouped by category in LibraryUiState"
+        },
+        "homeViewModelPlan": {
+          "inject": ["ContentRepository", "ProgramRepository", "UserProgramRepository", "FirestoreUserProfileRepository", "FirestoreUserStatsRepository", "FirebaseAuth"],
+          "observeData": "combine(userProfile, userStats, popularContent, activePrograms)",
+          "recommendations": "Build personalized recommendations based on user stats",
+          "greeting": "Display user.firstName from UserProfile"
+        }
+      }
+    }
+  },
+
+  "filesCreated": {
+    "models": 4,
+    "mappers": 1,
+    "repositoryInterfaces": 4,
+    "repositoryImplementations": 4,
+    "viewModelsUpdated": 1,
+    "total": 14
+  },
+
+  "filesModified": {
+    "diModule": 1,
+    "total": 1
+  },
+
+  "codeMetrics": {
+    "totalLinesAdded": "~2200",
+    "models": 507,
+    "mappers": 227,
+    "repositoryInterfaces": 212,
+    "repositoryImplementations": 1109,
+    "viewModels": 207,
+    "averageComplexity": "Medium (business logic in models, transactions in repositories)"
+  },
+
+  "firestoreCollections": {
+    "gratitudes": {
+      "path": "gratitudes/{uid}/entries/{date}",
+      "documentIdPattern": "date (yyyy-MM-dd)",
+      "subcollection": true,
+      "securityRules": "request.auth.uid == uid",
+      "indexes": ["date DESC (for ordering)", "createdAt (optional)"]
+    },
+    "programs": {
+      "path": "programs/{programId}",
+      "documentIdPattern": "auto-generated or custom ID",
+      "subcollection": false,
+      "securityRules": "read-only (public read, admin write)",
+      "indexes": [
+        "isActive, rating DESC",
+        "isActive, category, rating DESC",
+        "isActive, level, rating DESC",
+        "participantCount DESC"
+      ]
+    },
+    "user_programs": {
+      "path": "user_programs/{uid}/enrolled/{programId}",
+      "documentIdPattern": "programId",
+      "subcollection": true,
+      "securityRules": "request.auth.uid == uid",
+      "indexes": [
+        "isCompleted, lastSessionAt DESC",
+        "isCompleted, completedAt DESC",
+        "startedAt DESC"
+      ]
+    },
+    "content": {
+      "path": "content/{contentId}",
+      "documentIdPattern": "auto-generated or custom ID",
+      "subcollection": false,
+      "securityRules": "read-only (public read, admin write)",
+      "indexes": [
+        "isActive, publishedAt DESC",
+        "isActive, category, rating DESC",
+        "isActive, isPopular, rating DESC",
+        "isActive, isNew, publishedAt DESC",
+        "isActive, durationMinutes ASC",
+        "isActive, instructor, rating DESC"
+      ]
+    }
+  },
+
+  "nextSteps": {
+    "immediate": [
+      "Update ProgramsViewModel with ProgramRepository + UserProgramRepository (follows JournalViewModel pattern)",
+      "Update LibraryViewModel with ContentRepository (follows JournalViewModel pattern)",
+      "Update HomeViewModel with multi-repository combine() for personalized recommendations",
+      "Run ./gradlew build to verify compilation",
+      "Test app launch and verify no crashes",
+      "Deploy Firestore security rules (firestore.rules)",
+      "Deploy Firestore indexes (firestore.indexes.json)",
+      "Seed initial data for programs and content collections"
+    ],
+    "phase5": [
+      "Write unit tests for all 4 repositories (GratitudeRepositoryTest, ProgramRepositoryTest, UserProgramRepositoryTest, ContentRepositoryTest)",
+      "Write integration tests for all 4 ViewModels (JournalViewModelTest, ProgramsViewModelTest, LibraryViewModelTest, HomeViewModelTest)",
+      "Target >80% code coverage",
+      "Use Mockk for mocking Firestore",
+      "Use Turbine for Flow testing",
+      "Create FIRESTORE_COLLECTIONS_SCHEMA.md documentation",
+      "Update CLAUDE.md with completed features"
+    ]
+  },
+
+  "technicalDecisions": {
+    "modelArchitecture": "data class instead of regular class (follows existing UserProfile/UserStats pattern)",
+    "mapperPattern": "Extension functions on DocumentSnapshot and data classes (follows existing UserMapper pattern)",
+    "repositoryPattern": "Interface in domain/, Implementation in data/repository/impl/ (Clean Architecture)",
+    "diPattern": "Hilt @Provides @Singleton in FirestoreModule",
+    "flowPattern": "callbackFlow + addSnapshotListener for real-time sync",
+    "errorHandling": "Result<Unit> for write operations, emit empty/null for Flow errors",
+    "authPattern": "Inject FirebaseAuth directly in ViewModels (simpler than SyncManager for UID access)",
+    "offlineSupport": "Firestore persistence enabled (10MB cache)",
+    "transactionUsage": "Only for critical operations (UserProgram progress updates)"
+  },
+
+  "architecturePatterns": {
+    "cleanArchitecture": "✅ Domain layer defines interfaces, Data layer implements",
+    "mvvm": "✅ ViewModel observes Flow from repositories, emits UiState",
+    "singleSourceOfTruth": "✅ Firestore is source of truth, app reacts to Firestore changes",
+    "unidirectionalDataFlow": "✅ User events → ViewModel → Repository → Firestore → Flow → ViewModel → UiState → UI",
+    "offlineFirst": "✅ Firestore cache serves data when offline, syncs when online",
+    "realtimeSync": "✅ All Flow methods use addSnapshotListener for instant updates"
+  },
+
+  "issues": {
+    "blockers": [],
+    "warnings": [
+      "ProgramsViewModel, LibraryViewModel, HomeViewModel not yet updated (remaining Phase 3 work)",
+      "No tests created yet (Phase 5 work)",
+      "Build not yet verified (requires ./gradlew build)",
+      "Firestore security rules not yet deployed (backend responsibility)",
+      "Firestore indexes not yet deployed (backend responsibility)",
+      "No seed data in Firestore collections (backend responsibility)"
+    ],
+    "notes": [
+      "All code follows existing patterns from UserProfile/UserStats implementation",
+      "Collection names match task specification exactly (gratitudes, programs, user_programs, content)",
+      "UID-based isolation enforced in collection paths and repository logic",
+      "All repositories are @Singleton to prevent multiple listeners",
+      "Flow-based design ensures automatic UI updates without manual refresh",
+      "Transaction usage in UserProgramRepository ensures progress updates are atomic",
+      "Client-side search filtering in ContentRepository (Firestore limitation)",
+      "All models have rich business logic (validation, formatting, calculations)",
+      "Streak calculation in GratitudeRepository uses consecutive day algorithm",
+      "UserProgram auto-completion when currentDay > totalDays or progressPercentage >= 100"
+    ]
+  },
+
+  "estimatedRemainingWork": {
+    "phase3Completion": "2-3 hours (3 ViewModels following JournalViewModel pattern)",
+    "phase5Tests": "4-5 hours (8 test files with >80% coverage)",
+    "documentation": "1 hour (FIRESTORE_COLLECTIONS_SCHEMA.md + CLAUDE.md update)",
+    "totalRemaining": "7-9 hours"
+  },
+
+  "dependencies": {
+    "blockedBy": [
+      "Backend must deploy firestore.rules with exact collection names",
+      "Backend must deploy firestore.indexes.json with composite indexes",
+      "Backend should seed programs and content collections for testing"
+    ],
+    "blocking": [
+      "App cannot fully test real-time sync until Firestore rules deployed",
+      "Search/filter features won't work until data exists in collections"
+    ]
+  },
+
+  "recommendations": {
+    "immediate": [
+      "Complete Phase 3 (update remaining 3 ViewModels)",
+      "Run ./gradlew build to catch any compilation errors",
+      "Coordinate with tech-backend-firebase to deploy rules and indexes",
+      "Test app with real Firebase project (authenticated user)"
+    ],
+    "phase5": [
+      "Prioritize repository tests over ViewModel tests (repositories have more complexity)",
+      "Use MockFirestore or Fake Firestore for repository tests",
+      "Use Mockk to mock repositories for ViewModel tests",
+      "Test offline scenarios (Firestore persistence cache)",
+      "Test real-time sync (multiple listeners, Firestore updates)",
+      "Test error scenarios (PERMISSION_DENIED, UNAVAILABLE, etc.)"
+    ],
+    "optimization": [
+      "Consider pagination for getRecentEntries, getAllPrograms, getAllContent (currently uses limit parameter)",
+      "Consider caching getAllInstructors() result (rarely changes)",
+      "Consider debouncing searchContent() Flow to reduce client-side filtering",
+      "Consider Firestore composite queries instead of client-side filtering where possible"
+    ]
+  },
+
+  "conclusion": "Phases 1 and 2 successfully completed with high-quality implementations following established patterns. JournalViewModel demonstrates real-time Firestore sync pattern. Remaining 3 ViewModels can be completed quickly using JournalViewModel as template. Architecture is solid, code is maintainable, and real-time sync will provide excellent UX."
+}

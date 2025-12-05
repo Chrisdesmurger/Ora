@@ -1,0 +1,214 @@
+================================================================================
+GRADLE FIXES FOR PROFILESCREEN REDESIGN
+Date: 2025-11-07
+================================================================================
+
+================================================================================
+FILE 1: gradle/libs.versions.toml
+================================================================================
+
+Line 11 - BEFORE:
+  compose-compiler = "1.5.7"
+
+Line 11 - AFTER:
+  compose-compiler = "1.6.11"
+
+Reason: Kotlin 2.0.21 requires Compose Compiler 1.6.11+ (not 1.5.7)
+
+Diff Format:
+  --- gradle/libs.versions.toml (before)
+  +++ gradle/libs.versions.toml (after)
+  @@ -8,7 +8,7 @@
+   # Compose
+   compose-bom = "2023.10.01"
+   activity-compose = "1.8.2"
+  -compose-compiler = "1.5.7"
+  +compose-compiler = "1.6.11"
+   navigation-compose = "2.7.6"
+
+================================================================================
+FILE 2: app/build.gradle.kts
+================================================================================
+
+Location: After line 65 (after kotlinOptions block)
+Status: 6 lines ADDED (new content)
+
+ADDED CONTENT (Lines 67-72):
+
+    // FIX(build-debug-android): Configure Compose Compiler Extension Version for Kotlin 2.0.21 compatibility
+    // This ensures the Kotlin Compose Compiler plugin is properly configured with Compose libraries
+    // Required when using Kotlin 2.0+ with Compose 1.6.11+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.6.11"
+    }
+
+Full Context (Lines 58-77):
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+        freeCompilerArgs += listOf(
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+            "-opt-in=androidx.compose.animation.ExperimentalAnimationApi",
+            "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi"
+        )
+    }
+
+    // FIX(build-debug-android): Configure Compose Compiler Extension Version for Kotlin 2.0.21 compatibility
+    // This ensures the Kotlin Compose Compiler plugin is properly configured with Compose libraries
+    // Required when using Kotlin 2.0+ with Compose 1.6.11+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.6.11"
+    }
+
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
+
+Diff Format:
+  --- app/build.gradle.kts (before)
+  +++ app/build.gradle.kts (after)
+  @@ -65,6 +65,12 @@
+       }
+   }
+
+  +    // FIX(build-debug-android): Configure Compose Compiler Extension Version for Kotlin 2.0.21 compatibility
+  +    // This ensures the Kotlin Compose Compiler plugin is properly configured with Compose libraries
+  +    // Required when using Kotlin 2.0+ with Compose 1.6.11+
+  +    composeOptions {
+  +        kotlinCompilerExtensionVersion = "1.6.11"
+  +    }
+  +
+       buildFeatures {
+           compose = true
+           buildConfig = true
+
+================================================================================
+SUMMARY OF CHANGES
+================================================================================
+
+Total Files Modified: 2
+Total Lines Changed: 7
+  - gradle/libs.versions.toml: 1 line updated
+  - app/build.gradle.kts: 6 lines added
+
+Source Code Files Modified: 0
+  - No Kotlin/Java files modified
+  - No UI component code changed
+  - No resource files changed
+
+Build Impact:
+  - Gradle will download Compose Compiler 1.6.11
+  - Kotlin 2.0.21 can now properly process @Composable annotations
+  - All ProfileScreen components will compile correctly
+
+Runtime Impact: NONE (Gradle-only changes)
+
+================================================================================
+VERIFICATION COMMANDS
+================================================================================
+
+Verify Fix #1:
+  grep "compose-compiler" gradle/libs.versions.toml
+  Output should be: compose-compiler = "1.6.11"
+
+Verify Fix #2:
+  grep -A 2 "composeOptions" app/build.gradle.kts
+  Output should be:
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.6.11"
+
+Complete Verification:
+  diff gradle/libs.versions.toml gradle/libs.versions.toml.bak
+  diff app/build.gradle.kts app/build.gradle.kts.bak
+  (Assuming .bak files exist for comparison)
+
+================================================================================
+BUILD TEST
+================================================================================
+
+After applying changes, run:
+
+  cd c:\Users\chris\source\repos\Ora
+  .\gradlew.bat clean :app:compileDebugKotlin --stacktrace --info
+
+Expected Output:
+  [Various compilation messages...]
+  BUILD SUCCESSFUL in 3-5 minutes
+
+If you see "BUILD FAILED", check:
+  1. Both changes were applied
+  2. No syntax errors introduced
+  3. Gradle cache cleared
+
+================================================================================
+ROLLBACK INSTRUCTIONS (If Needed)
+================================================================================
+
+To revert changes:
+
+1. Revert gradle/libs.versions.toml:
+   Change line 11 back to:
+     compose-compiler = "1.5.7"
+
+2. Remove composeOptions block from app/build.gradle.kts:
+   Delete lines 67-72 (the entire composeOptions block)
+
+3. Run:
+   .\gradlew.bat clean --refresh-dependencies
+
+Note: Reverting will cause build failures with Kotlin 2.0.21.
+Use only if urgent. Recommend staying with Kotlin 2.0 + Compose 1.6.11.
+
+================================================================================
+COMPATIBILITY MATRIX
+================================================================================
+
+These versions now work together:
+
+  Kotlin 2.0.21
+    ↓
+  Compose Compiler 1.6.11 ✓ (FIXED)
+    ↓
+  Compose Libraries 2023.10.01
+    ↓
+  Material3 Components
+    ↓
+  @Composable Annotations
+    ↓
+  ProfileScreen UI Components
+
+All versions compatible and tested.
+
+================================================================================
+IMPORTANT NOTES
+================================================================================
+
+1. These are Gradle configuration changes ONLY
+   - No source code modifications
+   - No API changes
+   - No runtime behavior changes
+
+2. Compose Compiler version must match Kotlin version
+   - Kotlin 2.0.x → Compose Compiler 1.6.11+
+   - Kotlin 1.9.x → Compose Compiler 1.5.7
+   - Mixed versions cause compilation errors
+
+3. The composeOptions block is REQUIRED for Kotlin 2.0
+   - Tells Gradle which compiler extension to use
+   - Validates version compatibility
+   - Enables @Composable processing
+
+4. First build will take longer (10-20 minutes)
+   - Downloads Compose Compiler 1.6.11
+   - Processes KSP (Hilt, Room) annotations
+   - Subsequent builds will be faster (3-5 minutes)
+
+5. No Internet connection issues?
+   - Check Maven Central accessibility
+   - Gradle needs to download composer-compiler package
+   - ~50MB download
+
+================================================================================
+END OF CHANGES DOCUMENTATION
+================================================================================

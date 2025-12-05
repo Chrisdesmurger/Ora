@@ -10,7 +10,10 @@
       "Bash(git reset:*)",
       "Bash(git commit -m \"$(cat <<''EOF''\nfix(navigation): Utiliser les lecteurs spécialisés dans la navigation\n\n- Remplacer PlayerScreen par SpecializedPlayerScreen dans OraNavigation\n- Simplifier SpecializedPlayerScreen pour router directement vers le bon lecteur\n- Chaque lecteur (Yoga, Méditation, Massage) gère son propre chargement\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git commit -m \"$(cat <<''EOF''\nfix(player): Corriger les couleurs selon le Design System Ora\n\n- Utiliser les couleurs officielles du docs/ORA_DESIGN_SYSTEM.md\n- Yoga: Vert sage #A8C5B0 (au lieu de vert menthe)\n- Méditation: Lavande #C5B8D4 (couleur officielle)\n- Massage: Orange Coral #F18D5C et Beige #F5EFE6 (couleurs Ora)\n- Texte: #4A4A4A (gris-brun officiel)\n- Mode nuit: Tons bruns chauds #2A2520 (cohérent avec Ora dark)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(gh pr create:*)",
+      "Bash(git fetch:*)",
+      "Bash(git merge:*)"
     ],
     "deny": [],
     "ask": []

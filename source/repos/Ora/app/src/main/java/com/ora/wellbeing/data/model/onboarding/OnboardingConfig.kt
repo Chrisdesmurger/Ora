@@ -25,6 +25,7 @@ class OnboardingConfig {
     var status: String = "draft"
     var version: String = "1.0"
     var questions: List<OnboardingQuestion> = emptyList()
+    var informationScreens: List<InformationScreen> = emptyList()
 
     @get:PropertyName("created_at")
     @set:PropertyName("created_at")
@@ -55,6 +56,7 @@ class OnboardingConfig {
         status: String,
         version: String,
         questions: List<OnboardingQuestion>,
+        informationScreens: List<InformationScreen>,
         createdAt: Timestamp?,
         updatedAt: Timestamp?,
         createdBy: String,
@@ -67,6 +69,7 @@ class OnboardingConfig {
         this.status = status
         this.version = version
         this.questions = questions
+        this.informationScreens = informationScreens
         this.createdAt = createdAt
         this.updatedAt = updatedAt
         this.createdBy = createdBy
