@@ -57,11 +57,19 @@ fun MassagePlayerScreen(
 
     // Adapter la couleur de la barre d'état au fond du lecteur
     val view = LocalView.current
+    val originalStatusBarColor = remember { Color(0xFFFFF5F0) } // Couleur de fond Ora
+
     if (!view.isInEditMode) {
-        SideEffect {
+        DisposableEffect(Unit) {
             val window = (view.context as Activity).window
             window.statusBarColor = PlayerColors.Massage.background.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
+
+            onDispose {
+                // Restaurer la couleur originale quand on quitte l'écran
+                window.statusBarColor = originalStatusBarColor.toArgb()
+                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
+            }
         }
     }
 
