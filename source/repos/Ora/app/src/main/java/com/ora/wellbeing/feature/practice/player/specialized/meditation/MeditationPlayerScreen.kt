@@ -75,18 +75,19 @@ fun MeditationPlayerScreen(
 
     // Adapter la couleur de la barre d'état au fond du lecteur
     val view = LocalView.current
-    val originalStatusBarColor = remember { Color(0xFFFFF5F0) } // Couleur de fond Ora
-
     if (!view.isInEditMode) {
-        DisposableEffect(backgroundColor, uiState.isNightMode) {
-            val window = (view.context as Activity).window
-            window.statusBarColor = backgroundColor.toArgb()
-            // Icônes claires en mode nuit, sombres en mode normal
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !uiState.isNightMode
+        val window = (view.context as Activity).window
 
+        // Application immédiate de la couleur
+        SideEffect {
+            window.statusBarColor = backgroundColor.toArgb()
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !uiState.isNightMode
+        }
+
+        // Restauration uniquement au démontage
+        DisposableEffect(Unit) {
             onDispose {
-                // Restaurer la couleur originale quand on quitte l'écran
-                window.statusBarColor = originalStatusBarColor.toArgb()
+                window.statusBarColor = Color(0xFFFFF5F0).toArgb()
                 WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
             }
         }

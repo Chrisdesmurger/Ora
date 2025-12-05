@@ -58,17 +58,19 @@ fun YogaPlayerScreen(
 
     // Adapter la couleur de la barre d'état au fond du lecteur
     val view = LocalView.current
-    val originalStatusBarColor = remember { Color(0xFFFFF5F0) } // Couleur de fond Ora
-
     if (!view.isInEditMode) {
-        DisposableEffect(Unit) {
-            val window = (view.context as Activity).window
+        val window = (view.context as Activity).window
+
+        // Application immédiate de la couleur
+        SideEffect {
             window.statusBarColor = PlayerColors.Yoga.background.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
+        }
 
+        // Restauration uniquement au démontage
+        DisposableEffect(Unit) {
             onDispose {
-                // Restaurer la couleur originale quand on quitte l'écran
-                window.statusBarColor = originalStatusBarColor.toArgb()
+                window.statusBarColor = Color(0xFFFFF5F0).toArgb()
                 WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
             }
         }
