@@ -17,34 +17,34 @@ import com.ora.wellbeing.feature.practice.player.specialized.PlayerType
 /**
  * Écran wrapper qui détermine le type de lecteur et route vers le lecteur spécialisé.
  *
- * Chaque lecteur spécialisé (Yoga, Méditation, Massage) gère son propre chargement,
- * ce composant sert uniquement à déterminer quel lecteur afficher.
+ * Utilise PracticeTypeViewModel (léger, sans player) pour déterminer la discipline,
+ * puis route vers le lecteur approprié qui crée son propre player.
  */
 @Composable
 fun SpecializedPlayerScreen(
     practiceId: String,
     onBack: () -> Unit,
     onMinimize: () -> Unit,
-    viewModel: PlayerViewModel = hiltViewModel()
+    viewModel: PracticeTypeViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
-    // Charger la pratique pour déterminer son type
+    // Charger uniquement les métadonnées de la pratique (pas de player)
     LaunchedEffect(practiceId) {
-        viewModel.loadPractice(practiceId)
+        viewModel.loadPracticeType(practiceId)
     }
 
-    // Déterminer le type de lecteur basé sur la discipline
-    val playerType = remember(uiState.practice) {
-        uiState.practice?.let { practice ->
-            PlayerType.fromDiscipline(practice.discipline)
+    // Déterminer le type de lecteur basé sur le type de contenu
+    val playerType = remember(state.contentType) {
+        state.contentType?.let { contentType ->
+            PlayerType.fromContentType(contentType)
         }
     }
 
     // Router vers le lecteur approprié
     when {
         playerType != null -> {
-            // Router vers le lecteur spécialisé
+            // Router vers le lecteur spécialisé (qui crée son propre player)
             PlayerRouter(
                 practiceId = practiceId,
                 playerType = playerType,
@@ -52,7 +52,7 @@ fun SpecializedPlayerScreen(
                 onMinimize = onMinimize
             )
         }
-        uiState.isLoading -> {
+        state.isLoading -> {
             // Afficher un écran de chargement minimal pendant la détermination du type
             Box(
                 modifier = Modifier
@@ -77,7 +77,6 @@ fun SpecializedPlayerScreen(
         }
         else -> {
             // Fallback : utiliser le lecteur Yoga par défaut (vidéo)
-            // ou afficher une erreur
             PlayerRouter(
                 practiceId = practiceId,
                 playerType = PlayerType.YOGA,
