@@ -37,11 +37,12 @@ private val LightOnBackground = Color(0xFF2C2C2C)   // Texte principal (brun tr�
 private val LightOnSurface = Color(0xFF2C2C2C)      // Texte sur surfaces
 private val LightOnSurfaceVariant = Color(0xFF6B6B6B) // Texte moyen (gris)
 
-// Couleurs de catégories (exactes des mockups)
-val CategoryYogaGreen = Color(0xFFD4E8D9)           // Yoga - Vert menthe clair
-val CategoryPilatesPeach = Color(0xFFFFD4C4)        // Pilates - Pêche/orange clair
-val CategoryMeditationLavender = Color(0xFFD4C4E8)  // Méditation - Lavande
+// Couleurs de catégories - Palette Ora plus saturée et chaleureuse
+val CategoryYogaGreen = Color(0xFF7BA089)           // Yoga - Vert sage (tertiary color)
+val CategoryPilatesPeach = Color(0xFFFDB5A0)        // Pilates - Orange pêche (secondary color)
+val CategoryMeditationLavender = Color(0xFFD4C4E8)  // Méditation - Lavande (conservée)
 val CategoryBreathingBlue = Color(0xFFC4D8E8)       // Respiration - Bleu clair
+val CategoryWellnessBeige = Color(0xFFFFE5CC)       // Bien-être - Orange pêche doux (GratitudePeach)
 
 // Couleurs pour les cartes de gratitude (mockup Journal)
 val GratitudePink = Color(0xFFFFD4CC)               // Rose pêche
