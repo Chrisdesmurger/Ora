@@ -109,6 +109,23 @@ sealed class OraDestinations(
     object JournalHistory : OraDestinations("journal_history")
 
     // Library specific destinations
+    // NEW: Library categories entry screen
+    object LibraryCategories : OraDestinations("library_categories")
+
+    // NEW: Category detail screen with filtering
+    object CategoryDetail : OraDestinations(
+        route = "category_detail/{categoryId}",
+        arguments = listOf(
+            navArgument("categoryId") {
+                type = NavType.StringType
+            }
+        )
+    ) {
+        fun createRoute(categoryId: String): String {
+            return "category_detail/$categoryId"
+        }
+    }
+
     object LibrarySearch : OraDestinations("library_search")
 
     object LibraryFilters : OraDestinations("library_filters")

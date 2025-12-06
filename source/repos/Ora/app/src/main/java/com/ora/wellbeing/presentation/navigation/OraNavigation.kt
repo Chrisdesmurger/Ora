@@ -176,17 +176,11 @@ fun OraNavigation(
                 )
             }
 
+            // Library - NEW: Display categories screen directly
             composable(OraDestinations.Library.route) {
-                LibraryScreen(
-                    onNavigateToContent = { contentId ->
-                        // Redirection vers PracticeDetail au lieu de ContentDetail
-                        navController.navigate(OraDestinations.PracticeDetail.createRoute(contentId))
-                    },
-                    onNavigateToSearch = {
-                        navController.navigate(OraDestinations.LibrarySearch.route)
-                    },
-                    onNavigateToFilters = {
-                        navController.navigate(OraDestinations.LibraryFilters.route)
+                com.ora.wellbeing.presentation.screens.library.ContentLibraryCategoriesScreen(
+                    onCategoryClick = { categoryId ->
+                        navController.navigate(OraDestinations.CategoryDetail.createRoute(categoryId))
                     }
                 )
             }
@@ -289,6 +283,30 @@ fun OraNavigation(
                     },
                     onNavigateToEntry = { date ->
                         navController.navigate(OraDestinations.DailyJournalEntry.createRoute(date))
+                    }
+                )
+            }
+
+            // NEW: Library Categories Screen (main entry for library)
+            composable(OraDestinations.LibraryCategories.route) {
+                com.ora.wellbeing.presentation.screens.library.ContentLibraryCategoriesScreen(
+                    onCategoryClick = { categoryId ->
+                        navController.navigate(OraDestinations.CategoryDetail.createRoute(categoryId))
+                    }
+                )
+            }
+
+            // NEW: Category Detail Screen (filtered content by category)
+            composable(
+                route = OraDestinations.CategoryDetail.route,
+                arguments = OraDestinations.CategoryDetail.arguments
+            ) {
+                com.ora.wellbeing.presentation.screens.library.ContentCategoryDetailScreen(
+                    onBackClick = {
+                        navController.popBackStack()
+                    },
+                    onContentClick = { contentId ->
+                        navController.navigate(OraDestinations.PracticeDetail.createRoute(contentId))
                     }
                 )
             }
