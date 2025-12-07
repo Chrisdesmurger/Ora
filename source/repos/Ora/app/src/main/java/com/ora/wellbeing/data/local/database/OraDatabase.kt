@@ -18,9 +18,13 @@ import com.ora.wellbeing.data.local.entities.*
         UserFavorite::class,
         UserStats::class,
         Settings::class,
-        NotificationPreference::class
+        NotificationPreference::class,
+        // Massage player entities (v4)
+        MassageSessionEntity::class,
+        MassagePreferenceEntity::class,
+        MassageProgressEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -36,6 +40,11 @@ abstract class OraDatabase : RoomDatabase() {
     abstract fun settingsDao(): SettingsDao
     abstract fun notificationPreferenceDao(): NotificationPreferenceDao
 
+    // Massage player DAOs (v4)
+    abstract fun massageSessionDao(): MassageSessionDao
+    abstract fun massagePreferenceDao(): MassagePreferenceDao
+    abstract fun massageProgressDao(): MassageProgressDao
+
     companion object {
         @Volatile
         private var INSTANCE: OraDatabase? = null
@@ -47,7 +56,11 @@ abstract class OraDatabase : RoomDatabase() {
                     OraDatabase::class.java,
                     "ora_database"
                 )
-                    .addMigrations(Migrations.MIGRATION_1_2, Migrations.MIGRATION_2_3)
+                    .addMigrations(
+                        Migrations.MIGRATION_1_2,
+                        Migrations.MIGRATION_2_3,
+                        Migrations.MIGRATION_3_4
+                    )
                     .build()
                 INSTANCE = instance
                 instance
