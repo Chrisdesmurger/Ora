@@ -12,7 +12,6 @@ import {
   UserOnboarding,
   LessonDocument,
   UserRecommendation,
-  RecommendationContext,
   INTENTION_TO_DISCIPLINE,
   EXPERIENCE_LEVEL_ORDER,
 } from "./types";
