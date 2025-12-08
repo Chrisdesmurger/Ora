@@ -15,6 +15,7 @@ import com.ora.wellbeing.data.repository.impl.FirestoreUserProfileRepositoryImpl
 import com.ora.wellbeing.data.repository.impl.FirestoreUserStatsRepositoryImpl
 import com.ora.wellbeing.data.repository.impl.GratitudeRepositoryImpl
 import com.ora.wellbeing.data.repository.impl.ProgramRepositoryImpl
+import com.ora.wellbeing.data.repository.impl.RecommendationRepositoryImpl
 import com.ora.wellbeing.data.repository.impl.UserProgramRepositoryImpl
 import com.ora.wellbeing.domain.repository.ContentRepository
 import com.ora.wellbeing.domain.repository.DailyJournalRepository
@@ -22,6 +23,7 @@ import com.ora.wellbeing.domain.repository.FirestoreUserProfileRepository
 import com.ora.wellbeing.domain.repository.FirestoreUserStatsRepository
 import com.ora.wellbeing.domain.repository.GratitudeRepository
 import com.ora.wellbeing.domain.repository.ProgramRepository
+import com.ora.wellbeing.domain.repository.RecommendationRepository
 import com.ora.wellbeing.domain.repository.UserProgramRepository
 import com.ora.wellbeing.data.repository.UserStatsRepository
 import dagger.Module
@@ -32,7 +34,7 @@ import timber.log.Timber
 import javax.inject.Singleton
 
 // FIX(user-dynamic): Module Hilt pour Firestore et repositories utilisateur
-// Fournit instances Firestore avec cache offline activé
+// Fournit instances Firestore avec cache offline active
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -40,8 +42,8 @@ object FirestoreModule {
 
     /**
      * Fournit l'instance Firebase Firestore avec configuration offline-first
-     * - Cache persistant activé (10MB)
-     * - Synchronisation automatique en arrière-plan
+     * - Cache persistant active (10MB)
+     * - Synchronisation automatique en arriere-plan
      * - Gestion des write pending
      */
     @Provides
@@ -59,7 +61,7 @@ object FirestoreModule {
 
         firestore.firestoreSettings = settings
 
-        Timber.i("provideFirebaseFirestore: Firestore configuré avec cache offline 10MB")
+        Timber.i("provideFirebaseFirestore: Firestore configure avec cache offline 10MB")
         return firestore
     }
 
@@ -88,7 +90,7 @@ object FirestoreModule {
     }
 
     /**
-     * Fournit le repository pour les entrées de gratitude
+     * Fournit le repository pour les entrees de gratitude
      */
     @Provides
     @Singleton
@@ -100,7 +102,7 @@ object FirestoreModule {
     }
 
     /**
-     * Fournit le repository pour les entrées de journal quotidien (NEW)
+     * Fournit le repository pour les entrees de journal quotidien (NEW)
      */
     @Provides
     @Singleton
@@ -138,7 +140,7 @@ object FirestoreModule {
     }
 
     /**
-     * Fournit le repository pour le catalogue de contenu (méditations, vidéos yoga)
+     * Fournit le repository pour le catalogue de contenu (meditations, videos yoga)
      * UPDATED: Now uses offline-first pattern with Room cache + Firestore sync
      */
     @Provides
@@ -152,6 +154,20 @@ object FirestoreModule {
     }
 
     /**
+     * Fournit le repository pour les recommandations personnalisees
+     * NEW: Fetches personalized recommendations from users/{uid}/recommendations
+     */
+    @Provides
+    @Singleton
+    fun provideRecommendationRepository(
+        firestore: FirebaseFirestore,
+        contentRepository: ContentRepository
+    ): RecommendationRepository {
+        Timber.d("provideRecommendationRepository: Creating repository")
+        return RecommendationRepositoryImpl(firestore, contentRepository)
+    }
+
+    /**
      * Fournit l'instance Firebase Storage pour l'upload de photos de profil
      */
     @Provides
@@ -162,7 +178,7 @@ object FirestoreModule {
     }
 
     /**
-     * Fournit le repository pour les statistiques de pratique détaillées
+     * Fournit le repository pour les statistiques de pratique detaillees
      */
     @Provides
     @Singleton

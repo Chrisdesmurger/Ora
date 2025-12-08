@@ -5,16 +5,20 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.ora.wellbeing.data.model.ContentItem
 import com.ora.wellbeing.data.model.UserProgram
+import com.ora.wellbeing.data.repository.OnboardingRepository
 import com.ora.wellbeing.domain.repository.ContentRepository
 import com.ora.wellbeing.domain.repository.FirestoreUserProfileRepository
 import com.ora.wellbeing.domain.repository.FirestoreUserStatsRepository
 import com.ora.wellbeing.domain.repository.ProgramRepository
+import com.ora.wellbeing.domain.repository.RecommendationRepository
 import com.ora.wellbeing.domain.repository.UserProgramRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -26,6 +30,8 @@ class HomeViewModel @Inject constructor(
     private val contentRepository: ContentRepository,
     private val programRepository: ProgramRepository,
     private val userProgramRepository: UserProgramRepository,
+    private val recommendationRepository: RecommendationRepository,
+    private val onboardingRepository: OnboardingRepository,
     private val auth: FirebaseAuth
 ) : ViewModel() {
 
@@ -47,7 +53,7 @@ class HomeViewModel @Inject constructor(
             Timber.e("observeHomeData: No authenticated user")
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
-                error = "Vous devez être connecté pour voir l'accueil"
+                error = "Vous devez etre connecte pour voir l'accueil"
             )
             return
         }
@@ -55,6 +61,10 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true)
+
+                // Check if user has completed onboarding
+                val onboardingResult = onboardingRepository.getUserOnboardingResponse(uid)
+                val hasCompletedOnboarding = onboardingResult.getOrNull()?.completed == true
 
                 // Combine all data sources for real-time personalized recommendations
                 combine(
@@ -73,16 +83,33 @@ class HomeViewModel @Inject constructor(
                     val profile = data.profile
                     val stats = data.stats
 
-                    // Get user's favorite category from stats (default to "Méditation")
-                    val favoriteCategory = "Méditation" // TODO: Add category tracking to domain UserStats
+                    // Get user's favorite category from stats (default to "Meditation")
+                    val favoriteCategory = "Meditation" // TODO: Add category tracking to domain UserStats
 
-                    // Build personalized recommendations
-                    val recommendations = buildRecommendations(
+                    // Build personalized recommendations (fallback if no AI recommendations)
+                    val fallbackRecommendations = buildRecommendations(
                         popularContent = data.popularContent,
                         newContent = data.newContent,
                         favoriteCategory = favoriteCategory,
                         isPremium = profile?.isPremium ?: false
                     )
+
+                    // Fetch AI-powered personalized recommendations if onboarding is complete
+                    var personalizedRecommendations: List<HomeUiState.ContentRecommendation> = emptyList()
+                    var showPersonalizedSection = false
+
+                    if (hasCompletedOnboarding) {
+                        try {
+                            val recommendedContent = recommendationRepository.getRecommendedContent(uid, limit = 5).first()
+                            if (recommendedContent.isNotEmpty()) {
+                                personalizedRecommendations = recommendedContent.map { it.toContentRecommendation() }
+                                showPersonalizedSection = true
+                                Timber.d("HomeViewModel: Loaded ${personalizedRecommendations.size} personalized recommendations")
+                            }
+                        } catch (e: Exception) {
+                            Timber.w(e, "HomeViewModel: Failed to load personalized recommendations, using fallback")
+                        }
+                    }
 
                     // Map active programs to UI model
                     val activeProgramsUi = data.activePrograms.map { it.toActiveProgram() }
@@ -90,17 +117,21 @@ class HomeViewModel @Inject constructor(
                     _uiState.value = HomeUiState(
                         isLoading = false,
                         error = null,
-                        userName = profile?.displayName() ?: "Invité",
+                        userName = profile?.displayName() ?: "Invite",
                         streakDays = stats?.streakDays ?: 0,
                         totalMinutesThisWeek = stats?.totalMinutes ?: 0,
                         sessionsCompletedThisWeek = stats?.sessions ?: 0,
                         favoriteCategory = favoriteCategory,
                         isPremium = profile?.isPremium ?: false,
-                        dailyRecommendations = recommendations,
-                        activePrograms = activeProgramsUi
+                        dailyRecommendations = fallbackRecommendations,
+                        activePrograms = activeProgramsUi,
+                        // NEW: Personalized recommendations from Cloud Functions
+                        personalizedRecommendations = personalizedRecommendations,
+                        showPersonalizedSection = showPersonalizedSection,
+                        hasCompletedOnboarding = hasCompletedOnboarding
                     )
 
-                    Timber.d("observeHomeData: Updated UI state (user=${profile?.firstName}, ${recommendations.size} recommendations, ${activeProgramsUi.size} active programs)")
+                    Timber.d("observeHomeData: Updated UI state (user=${profile?.firstName}, ${fallbackRecommendations.size} daily, ${personalizedRecommendations.size} personalized, ${activeProgramsUi.size} active programs)")
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
@@ -115,6 +146,7 @@ class HomeViewModel @Inject constructor(
     /**
      * Builds personalized recommendations based on user preferences and content
      * Featured content (order < 0) always appears first
+     * This is the fallback when Cloud Functions recommendations are not available
      */
     private fun buildRecommendations(
         popularContent: List<ContentItem>,
@@ -185,14 +217,14 @@ class HomeViewModel @Inject constructor(
             )
         } catch (e: Exception) {
             Timber.e(e, "Error converting ContentItem: id=$id, title=$title")
-            // Retourner une recommendation par défaut en cas d'erreur
+            // Retourner une recommendation par defaut en cas d'erreur
             HomeUiState.ContentRecommendation(
                 id = id.takeIf { it.isNotBlank() } ?: "unknown",
-                title = title.takeIf { it.isNotBlank() } ?: "Séance sans titre",
-                category = category.takeIf { it.isNotBlank() } ?: "Méditation",
+                title = title.takeIf { it.isNotBlank() } ?: "Seance sans titre",
+                category = category.takeIf { it.isNotBlank() } ?: "Meditation",
                 duration = duration.takeIf { it.isNotBlank() } ?: "10 min",
                 thumbnailUrl = thumbnailUrl ?: "",
-                description = description.takeIf { it.isNotBlank() } ?: "Découvrez cette séance",
+                description = description.takeIf { it.isNotBlank() } ?: "Decouvrez cette seance",
                 isPremiumOnly = isPremiumOnly
             )
         }
@@ -226,22 +258,26 @@ class HomeViewModel @Inject constructor(
 }
 
 /**
- * État de l'interface utilisateur pour l'écran Home
+ * Etat de l'interface utilisateur pour l'ecran Home
  */
 data class HomeUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
-    val userName: String = "Invité",
+    val userName: String = "Invite",
     val streakDays: Int = 0,
     val dailyRecommendations: List<ContentRecommendation> = emptyList(),
     val activePrograms: List<ActiveProgram> = emptyList(),
     val totalMinutesThisWeek: Int = 0,
     val sessionsCompletedThisWeek: Int = 0,
     val favoriteCategory: String = "N/A",
-    val isPremium: Boolean = false
+    val isPremium: Boolean = false,
+    // NEW: Personalized recommendations from Cloud Functions
+    val personalizedRecommendations: List<ContentRecommendation> = emptyList(),
+    val showPersonalizedSection: Boolean = false,
+    val hasCompletedOnboarding: Boolean = false
 ) {
     /**
-     * Recommandation de contenu pour l'écran d'accueil
+     * Recommandation de contenu pour l'ecran d'accueil
      */
     data class ContentRecommendation(
         val id: String,
@@ -269,7 +305,7 @@ data class HomeUiState(
 }
 
 /**
- * Événements de l'interface utilisateur pour l'écran Home
+ * Evenements de l'interface utilisateur pour l'ecran Home
  */
 sealed interface HomeUiEvent {
     data object LoadHomeData : HomeUiEvent

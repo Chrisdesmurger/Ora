@@ -2,6 +2,46 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 🚨 CRITICAL - Multi-Agent Workflow System
+
+**IMPORTANT**: All development tasks MUST use the multi-agent workflow system.
+
+### How to Start Any Task
+
+**ALWAYS** use the `manager-workflow` agent as the entry point for ANY development request:
+
+```
+Use the Task tool with subagent_type="manager-workflow"
+```
+
+**DO NOT** start coding directly. The manager will:
+1. Create a Github Issue
+2. Create a feature branch
+3. Orchestrate specialized agents (tech-android, build-debug-android, qa-android, etc.)
+4. Run builds and tests
+5. Create a Pull Request
+6. Generate documentation
+
+### Available Specialized Agents
+
+- `manager-workflow` - **ENTRY POINT** - Supervises entire workflow
+- `tech-android` - Android development (Compose, Navigation, Room/Firestore, Media)
+- `build-debug-android` - Build diagnostics and error fixes
+- `tech-backend-firebase` - Firebase (Functions, Firestore, Storage, CRON)
+- `tech-portal-web` - Admin Portal (Next.js)
+- `tech-alignment-checker` - Verify Android ↔ WebApp alignment
+- `qa-android` - Tests (unit/UI, lint, a11y)
+- `docs-release` - Documentation (README, CHANGELOG)
+
+### Workflow Architecture
+
+- **Contracts**: `contracts/*.json|yaml` - Design tokens, API specs, events (supervisor approval required)
+- **Bus**: `bus/inbox/<agent>/*.json` - Agent communication messages
+- **Status**: `status/pipeline.json` - Workflow progress tracking
+- **Reports**: `reports/<agent>/*.md` - Agent decisions and diffs
+
+See [docs/development/README_AUTOMATION.md](docs/development/README_AUTOMATION.md) for details.
+
 ## Project Overview
 
 Ora is a Android wellbeing application built with Jetpack Compose, implementing clean architecture principles with MVVM pattern. The app focuses on meditation, yoga, journaling, and personal development programs with **complete offline support**.
