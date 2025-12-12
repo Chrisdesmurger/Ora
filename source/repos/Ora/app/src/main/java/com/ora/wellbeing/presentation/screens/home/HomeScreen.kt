@@ -7,9 +7,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,6 +23,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -48,9 +51,9 @@ fun HomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()  // Respecter la zone de la barre de statut
-            .padding(horizontal = 12.dp)  // Réduire le padding horizontal pour maximiser l'espace
+            .padding(horizontal = 12.dp)  // Reduire le padding horizontal pour maximiser l'espace
     ) {
-        // FIX(build-debug-android): Message de bienvenue personnalisé restauré
+        // FIX(build-debug-android): Message de bienvenue personnalise restaure
         WelcomeSection(
             userName = uiState.userName,
             streakDays = uiState.streakDays
@@ -61,14 +64,14 @@ fun HomeScreen(
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // FIX(build-debug-android): Sessions rapides restaurées avec textes
+            // FIX(build-debug-android): Sessions rapides restaurees avec textes
             item {
                 QuickSessionsSection(
                     onStartQuickSession = onNavigateToQuickSession
                 )
             }
 
-            // FIX(build-debug-android): Recommandations du jour restaurées avec textes
+            // FIX(build-debug-android): Recommandations du jour restaurees avec textes
             item {
                 RecommendationsSection(
                     recommendations = uiState.dailyRecommendations,
@@ -76,7 +79,17 @@ fun HomeScreen(
                 )
             }
 
-            // FIX(build-debug-android): Progression des programmes actifs restaurée avec textes
+            // NEW: Section "Pense pour toi" - Personalized recommendations from Cloud Functions
+            item {
+                PersonalizedRecommendationsSection(
+                    recommendations = uiState.personalizedRecommendations,
+                    showSection = uiState.showPersonalizedSection,
+                    hasCompletedOnboarding = uiState.hasCompletedOnboarding,
+                    onContentClick = onNavigateToContent
+                )
+            }
+
+            // FIX(build-debug-android): Progression des programmes actifs restauree avec textes
             item {
                 ActiveProgramsSection(
                     activePrograms = uiState.activePrograms,
@@ -84,7 +97,7 @@ fun HomeScreen(
                 )
             }
 
-            // FIX(build-debug-android): Statistiques rapides restaurées avec textes
+            // FIX(build-debug-android): Statistiques rapides restaurees avec textes
             item {
                 QuickStatsSection(
                     totalMinutes = uiState.totalMinutesThisWeek,
@@ -108,7 +121,7 @@ private fun WelcomeSection(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Texte de bienvenue à gauche
+        // Texte de bienvenue a gauche
         Column(
             modifier = Modifier.weight(1f)
         ) {
@@ -122,14 +135,14 @@ private fun WelcomeSection(
             if (streakDays > 0) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "🔥 $streakDays jours de suite!",
+                    text = "$streakDays jours de suite!",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
         }
 
-        // Logo Ora à droite
+        // Logo Ora a droite
         Image(
             painter = painterResource(id = R.drawable.ic_launcher_ora),
             contentDescription = "Logo Ora",
@@ -146,7 +159,7 @@ private fun QuickSessionsSection(
     onStartQuickSession: (QuickSessionType) -> Unit
 ) {
     Column {
-        // FIX(build-debug-android): Titre de section restauré
+        // FIX(build-debug-android): Titre de section restaure
         Text(
             text = "Sessions rapides",
             style = MaterialTheme.typography.titleLarge,
@@ -177,7 +190,7 @@ private fun QuickSessionCard(
     val (backgroundColor, icon, sessionName) = when (sessionType) {
         QuickSessionType.BREATHING -> Triple(CategoryBreathingBlue, OraIcons.Waves, "Respiration")
         QuickSessionType.YOGA_FLASH -> Triple(CategoryYogaGreen, OraIcons.YogaPerson, "Flash Yoga")
-        QuickSessionType.MINI_MEDITATION -> Triple(CategoryMeditationLavender, OraIcons.MindHead, "Méditation")
+        QuickSessionType.MINI_MEDITATION -> Triple(CategoryMeditationLavender, OraIcons.MindHead, "Meditation")
     }
 
     Card(
@@ -200,8 +213,8 @@ private fun QuickSessionCard(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(48.dp), // Icône agrandie
-                tint = MaterialTheme.colorScheme.background // Même couleur que le fond de l'app
+                modifier = Modifier.size(48.dp), // Icone agrandie
+                tint = MaterialTheme.colorScheme.background // Meme couleur que le fond de l'app
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -211,7 +224,7 @@ private fun QuickSessionCard(
                 style = MaterialTheme.typography.titleMedium, // Titre plus grand
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                color = TitleGreenSage // Vert sage pâle foncé
+                color = TitleGreenSage // Vert sage pale fonce
             )
         }
     }
@@ -229,7 +242,7 @@ private fun RecommendationsSection(
 
     Column {
         Text(
-            text = "Découverte du jour",
+            text = "Decouverte du jour",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = TitleOrangeDark
@@ -241,6 +254,231 @@ private fun RecommendationsSection(
             content = dailyRecommendation,
             onClick = { onContentClick(dailyRecommendation.id) }
         )
+    }
+}
+
+/**
+ * NEW: Personalized Recommendations Section
+ * Displays AI-powered recommendations based on user onboarding responses
+ * Only shown when user has completed onboarding and recommendations are available
+ */
+@Composable
+private fun PersonalizedRecommendationsSection(
+    recommendations: List<HomeUiState.ContentRecommendation>,
+    showSection: Boolean,
+    hasCompletedOnboarding: Boolean,
+    onContentClick: (String) -> Unit
+) {
+    // Show empty state if onboarding not completed
+    if (!hasCompletedOnboarding) {
+        PersonalizedEmptyState()
+        return
+    }
+
+    // Don't show section if no recommendations available yet
+    if (!showSection || recommendations.isEmpty()) {
+        return
+    }
+
+    Column {
+        // Section header with AI indicator
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.AutoAwesome,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Text(
+                text = "Pense pour toi",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = TitleOrangeDark
+            )
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = "Base sur tes objectifs et preferences",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Horizontal scroll of 5 recommendation cards
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(end = 16.dp)
+        ) {
+            items(recommendations) { recommendation ->
+                PersonalizedRecommendationCard(
+                    content = recommendation,
+                    onClick = { onContentClick(recommendation.id) }
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Empty state shown when user hasn't completed onboarding
+ */
+@Composable
+private fun PersonalizedEmptyState() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = Icons.Default.AutoAwesome,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Pense pour toi",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = "Complete ton profil pour recevoir des recommandations personnalisees",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+/**
+ * Card for personalized recommendation
+ * Design identique a ContentCard (ContentCategoryDetailScreen) pour coherence visuelle
+ * Format 3:4 portrait avec image de fond, play icon, et titre en overlay
+ */
+@Composable
+private fun PersonalizedRecommendationCard(
+    content: HomeUiState.ContentRecommendation,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .width(180.dp)
+            .aspectRatio(3f / 4f), // Format 3:4 portrait
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp,
+            pressedElevation = 4.dp
+        ),
+        onClick = onClick
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // Background image
+            val imageUrl = content.previewImageUrl ?: content.thumbnailUrl
+            if (imageUrl.isNotBlank()) {
+                Image(
+                    painter = rememberAsyncImagePainter(model = imageUrl),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                // Placeholder color if no thumbnail
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.surfaceVariant
+                ) {}
+            }
+
+            // Dark gradient overlay for text readability
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.6f)
+                            ),
+                            startY = 0f,
+                            endY = Float.POSITIVE_INFINITY
+                        )
+                    )
+            )
+
+            // Duration badge (top left)
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(8.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = Color.Black.copy(alpha = 0.6f)
+            ) {
+                Text(
+                    text = content.duration,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium
+                    ),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                )
+            }
+
+            // Play icon (center)
+            Surface(
+                modifier = Modifier
+                    .size(48.dp)
+                    .align(Alignment.Center),
+                shape = RoundedCornerShape(50),
+                color = Color.White.copy(alpha = 0.9f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = "Play",
+                    tint = Color.Black,
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+
+            // Title (bottom)
+            Text(
+                text = content.title,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White
+                ),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(12.dp)
+            )
+        }
     }
 }
 
@@ -351,7 +589,7 @@ private fun DailyRecommendationCard(
                     Spacer(modifier = Modifier.width(8.dp))
 
                     Text(
-                        text = "•",
+                        text = "-",
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.White.copy(alpha = 0.7f)
                     )
@@ -396,7 +634,7 @@ private fun RecommendationCard(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                // FIX(build-debug-android): Durée restaurée
+                // FIX(build-debug-android): Duree restauree
                 Text(
                     text = content.duration,
                     style = MaterialTheme.typography.bodySmall,
@@ -406,7 +644,7 @@ private fun RecommendationCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // FIX(build-debug-android): Titre et catégorie restaurés
+            // FIX(build-debug-android): Titre et categorie restaures
             Text(
                 text = content.title,
                 style = MaterialTheme.typography.titleMedium,
@@ -433,7 +671,7 @@ private fun ActiveProgramsSection(
     if (activePrograms.isEmpty()) return
 
     Column {
-        // FIX(build-debug-android): Titre de section restauré
+        // FIX(build-debug-android): Titre de section restaure
         Text(
             text = "Programmes en cours",
             style = MaterialTheme.typography.titleLarge,
@@ -465,14 +703,14 @@ private fun ActiveProgramCard(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFFEEFE0) // Beige légèrement plus foncé que le fond
+            containerColor = Color(0xFFFEEFE0) // Beige legerement plus fonce que le fond
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp) // Suppression de l'ombre
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // FIX(build-debug-android): Titre du programme restauré
+            // FIX(build-debug-android): Titre du programme restaure
             Text(
                 text = program.title,
                 style = MaterialTheme.typography.titleMedium,
@@ -482,7 +720,7 @@ private fun ActiveProgramCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // FIX(build-debug-android): Progression textuelle restaurée
+            // FIX(build-debug-android): Progression textuelle restauree
             Text(
                 text = "Jour ${program.currentDay} sur ${program.totalDays}",
                 style = MaterialTheme.typography.bodyMedium,
@@ -520,14 +758,14 @@ private fun QuickStatsSection(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFFFF6F0) // Beige/pêche très clair et doux
+            containerColor = Color(0xFFFFF6F0) // Beige/peche tres clair et doux
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp) // Suppression de l'ombre
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // FIX(build-debug-android): Titre de section restauré
+            // FIX(build-debug-android): Titre de section restaure
             Text(
                 text = "Cette semaine",
                 style = MaterialTheme.typography.titleLarge,
@@ -568,7 +806,7 @@ private fun StatItem(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // FIX(build-debug-android): Valeur et label restaurés
+        // FIX(build-debug-android): Valeur et label restaures
         Text(
             text = value,
             style = MaterialTheme.typography.headlineMedium,

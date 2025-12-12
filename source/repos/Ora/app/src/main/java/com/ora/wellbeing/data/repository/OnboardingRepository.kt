@@ -57,27 +57,38 @@ class OnboardingRepository @Inject constructor(
 
     /**
      * Get user onboarding response from Firestore
-     * Stored in users/{uid} document under "onboarding" field
+     * Stored in user_onboarding/{uid}/responses subcollection
      */
     suspend fun getUserOnboardingResponse(uid: String): Result<UserOnboardingResponse?> {
         return try {
             Timber.d("OnboardingRepository: Fetching onboarding response for user $uid")
 
-            val doc = firestore.collection("users")
+            // Get the latest completed response from the new structure
+            val snapshot = firestore.collection("user_onboarding")
                 .document(uid)
+                .collection("responses")
+                .whereEqualTo("completed", true)
+                .orderBy("completedAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
+                .limit(1)
                 .get()
                 .await()
 
-            val onboardingData = doc.get("onboarding") as? Map<*, *>
+            if (snapshot.isEmpty) {
+                Timber.d("OnboardingRepository: No completed onboarding response found for user $uid")
+                return Result.success(null)
+            }
+
+            val doc = snapshot.documents.first()
+            val onboardingData = doc.data
 
             if (onboardingData == null) {
                 Timber.d("OnboardingRepository: No onboarding data for user $uid")
                 return Result.success(null)
             }
 
-            // Parse the onboarding field
+            // Parse the onboarding response
             val response = UserOnboardingResponse(
-                uid = uid,
+                uid = onboardingData["uid"] as? String ?: uid,
                 configVersion = onboardingData["configVersion"] as? String ?: "",
                 completed = onboardingData["completed"] as? Boolean ?: false,
                 completedAt = onboardingData["completedAt"] as? Timestamp,
@@ -86,7 +97,7 @@ class OnboardingRepository @Inject constructor(
                 metadata = parseMetadata(onboardingData["metadata"] as? Map<*, *>)
             )
 
-            Timber.d("OnboardingRepository: Loaded response, completed=${response.completed}")
+            Timber.d("OnboardingRepository: Loaded response from user_onboarding/$uid/responses, completed=${response.completed}")
             Result.success(response)
         } catch (e: Exception) {
             Timber.e(e, "OnboardingRepository: Failed to fetch user response")
@@ -128,12 +139,17 @@ class OnboardingRepository @Inject constructor(
                 }
             )
 
-            firestore.collection("users")
+            // Save to new structure: user_onboarding/{uid}/responses/{completedAt}
+            val responseId = response.completedAt?.toDate()?.time?.toString() ?: System.currentTimeMillis().toString()
+
+            firestore.collection("user_onboarding")
                 .document(uid)
-                .set(mapOf("onboarding" to onboardingData), com.google.firebase.firestore.SetOptions.merge())
+                .collection("responses")
+                .document(responseId)
+                .set(onboardingData)
                 .await()
 
-            Timber.d("OnboardingRepository: Response saved successfully")
+            Timber.d("OnboardingRepository: Response saved successfully to user_onboarding/$uid/responses")
             Result.success(Unit)
         } catch (e: Exception) {
             Timber.e(e, "OnboardingRepository: Failed to save response")
@@ -156,12 +172,15 @@ class OnboardingRepository @Inject constructor(
                 "answers" to emptyList<Any>()
             )
 
-            firestore.collection("users")
+            // Save to new structure with temporary ID "in_progress"
+            firestore.collection("user_onboarding")
                 .document(uid)
-                .set(mapOf("onboarding" to onboardingData), com.google.firebase.firestore.SetOptions.merge())
+                .collection("responses")
+                .document("in_progress")
+                .set(onboardingData)
                 .await()
 
-            Timber.d("OnboardingRepository: Onboarding started")
+            Timber.d("OnboardingRepository: Onboarding started in user_onboarding/$uid/responses")
             Result.success(Unit)
         } catch (e: Exception) {
             Timber.e(e, "OnboardingRepository: Failed to start onboarding")
