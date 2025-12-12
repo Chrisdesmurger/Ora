@@ -63,6 +63,30 @@ service cloud.firestore {
                       && request.auth.uid == uid
                       && validateDailyJournalEntry(request.resource.data);
       }
+
+    }
+
+    // NEW: Collection user_onboarding/{uid} - Onboarding par utilisateur
+    match /user_onboarding/{uid} {
+      // Sous-collection responses - Réponses d'onboarding
+      match /responses/{responseId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+
+        // Validation des champs à l'écriture
+        allow create: if request.auth != null
+                      && request.auth.uid == uid
+                      && validateOnboardingResponse(request.resource.data);
+
+        allow update: if request.auth != null
+                      && request.auth.uid == uid
+                      && validateOnboardingResponse(request.resource.data);
+      }
+
+      // Sous-collection recommendations - Recommandations personnalisées
+      match /recommendations/{recommendationId} {
+        allow read: if request.auth != null && request.auth.uid == uid;
+        allow write: if false; // Only Cloud Functions can write
+      }
     }
 
     // Collection stats/{uid}
@@ -123,6 +147,13 @@ service cloud.firestore {
     match /content/{contentId} {
       allow read: if request.auth != null;
       allow write: if false; // Admin only (future Cloud Functions)
+    }
+
+    // Collection lessons/{lessonId}
+    // Règle: Lecture pour tous les utilisateurs authentifiés, écriture admin uniquement
+    match /lessons/{lessonId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Admin only (from OraWebApp)
     }
 
     // Collection onboarding_configs/{configId}
@@ -262,6 +293,17 @@ service cloud.firestore {
           && data.averageDurationMinutes is int
           && data.averageDurationMinutes >= 0
           && data.updatedAt is int;  // timestamp
+    }
+
+    // NEW: Valide une réponse d'onboarding
+    function validateOnboardingResponse(data) {
+      return data.uid is string
+          && data.uid.size() > 0
+          && data.configVersion is string
+          && data.completed is bool
+          && data.answers is list
+          && (data.startedAt == null || data.startedAt is timestamp)
+          && (data.completedAt == null || data.completedAt is timestamp);
     }
 
     // Bloquer tout accès aux autres collections par défaut

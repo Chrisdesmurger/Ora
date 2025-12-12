@@ -376,7 +376,8 @@ private fun PersonalizedEmptyState() {
 
 /**
  * Card for personalized recommendation
- * Compact design for horizontal scroll
+ * Design identique a ContentCard (ContentCategoryDetailScreen) pour coherence visuelle
+ * Format 3:4 portrait avec image de fond, play icon, et titre en overlay
  */
 @Composable
 private fun PersonalizedRecommendationCard(
@@ -384,93 +385,99 @@ private fun PersonalizedRecommendationCard(
     onClick: () -> Unit
 ) {
     Card(
-        onClick = onClick,
         modifier = Modifier
-            .width(160.dp)
-            .height(200.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            .width(180.dp)
+            .aspectRatio(3f / 4f), // Format 3:4 portrait
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp,
+            pressedElevation = 4.dp
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(12.dp)
+        onClick = onClick
     ) {
-        Column(
+        Box(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Thumbnail image
+            // Background image
+            val imageUrl = content.previewImageUrl ?: content.thumbnailUrl
+            if (imageUrl.isNotBlank()) {
+                Image(
+                    painter = rememberAsyncImagePainter(model = imageUrl),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                // Placeholder color if no thumbnail
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.surfaceVariant
+                ) {}
+            }
+
+            // Dark gradient overlay for text readability
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp)
-            ) {
-                val imageUrl = content.previewImageUrl ?: content.thumbnailUrl
-
-                if (imageUrl.isNotBlank()) {
-                    Image(
-                        painter = rememberAsyncImagePainter(
-                            model = imageUrl,
-                            contentScale = ContentScale.Crop
-                        ),
-                        contentDescription = content.title,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.6f)
+                            ),
+                            startY = 0f,
+                            endY = Float.POSITIVE_INFINITY
+                        )
                     )
-                } else {
-                    // Fallback gradient
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                brush = Brush.verticalGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.primaryContainer,
-                                        MaterialTheme.colorScheme.tertiaryContainer
-                                    )
-                                )
-                            )
-                    )
-                }
+            )
 
-                // Duration badge
-                Surface(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(8.dp),
-                    color = Color.Black.copy(alpha = 0.7f),
-                    shape = RoundedCornerShape(4.dp)
-                ) {
-                    Text(
-                        text = content.duration,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
-                }
-            }
-
-            // Content info
-            Column(
+            // Duration badge (top left)
+            Surface(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp)
+                    .align(Alignment.TopStart)
+                    .padding(8.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = Color.Black.copy(alpha = 0.6f)
             ) {
                 Text(
-                    text = content.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = content.category,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary
+                    text = content.duration,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium
+                    ),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                 )
             }
+
+            // Play icon (center)
+            Surface(
+                modifier = Modifier
+                    .size(48.dp)
+                    .align(Alignment.Center),
+                shape = RoundedCornerShape(50),
+                color = Color.White.copy(alpha = 0.9f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = "Play",
+                    tint = Color.Black,
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+
+            // Title (bottom)
+            Text(
+                text = content.title,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White
+                ),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(12.dp)
+            )
         }
     }
 }

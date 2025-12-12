@@ -20,7 +20,7 @@ import javax.inject.Singleton
 /**
  * Implementation of RecommendationRepository
  *
- * Fetches personalized recommendations from users/{uid}/recommendations subcollection
+ * Fetches personalized recommendations from user_onboarding/{uid}/recommendations subcollection
  * Uses the "latest" document which is always updated by Cloud Functions
  *
  * Flow:
@@ -36,7 +36,7 @@ class RecommendationRepositoryImpl @Inject constructor(
 ) : RecommendationRepository {
 
     companion object {
-        private const val COLLECTION_USERS = "users"
+        private const val COLLECTION_USER_ONBOARDING = "user_onboarding"
         private const val SUBCOLLECTION_RECOMMENDATIONS = "recommendations"
         private const val DOC_LATEST = "latest"
     }
@@ -48,30 +48,51 @@ class RecommendationRepositoryImpl @Inject constructor(
     override fun getLatestRecommendation(uid: String): Flow<UserRecommendation?> = callbackFlow {
         Timber.d("RecommendationRepository: Starting to observe recommendations for user $uid")
 
-        val docRef = firestore.collection(COLLECTION_USERS)
+        val docRef = firestore.collection(COLLECTION_USER_ONBOARDING)
             .document(uid)
             .collection(SUBCOLLECTION_RECOMMENDATIONS)
             .document(DOC_LATEST)
 
         val listener = docRef.addSnapshotListener { snapshot, error ->
             if (error != null) {
-                Timber.e(error, "RecommendationRepository: Error observing recommendations")
+                Timber.e(error, "RecommendationRepository: Error observing recommendations at path: user_onboarding/$uid/recommendations/latest")
                 trySend(null)
                 return@addSnapshotListener
             }
 
-            if (snapshot == null || !snapshot.exists()) {
-                Timber.d("RecommendationRepository: No recommendations found for user $uid")
+            if (snapshot == null) {
+                Timber.d("RecommendationRepository: Snapshot is null for user $uid")
+                trySend(null)
+                return@addSnapshotListener
+            }
+
+            if (!snapshot.exists()) {
+                Timber.d("RecommendationRepository: Document does not exist at user_onboarding/$uid/recommendations/latest")
                 trySend(null)
                 return@addSnapshotListener
             }
 
             try {
+                Timber.d("RecommendationRepository: Document exists, parsing recommendation for user $uid")
+                Timber.d("RecommendationRepository: Raw document data: ${snapshot.data}")
+
                 val recommendation = snapshot.toObject(UserRecommendation::class.java)
-                Timber.d("RecommendationRepository: Received ${recommendation?.lessonIds?.size ?: 0} recommendations")
+
+                if (recommendation == null) {
+                    Timber.w("RecommendationRepository: Failed to parse UserRecommendation from document")
+                    trySend(null)
+                    return@addSnapshotListener
+                }
+
+                Timber.d("RecommendationRepository: Successfully parsed recommendation")
+                Timber.d("RecommendationRepository: - lessonIds count: ${recommendation.lessonIds.size}")
+                Timber.d("RecommendationRepository: - lessonIds: ${recommendation.lessonIds}")
+                Timber.d("RecommendationRepository: - generatedAt: ${recommendation.generatedAt}")
+                Timber.d("RecommendationRepository: - trigger: ${recommendation.metadata?.trigger}")
+
                 trySend(recommendation)
             } catch (e: Exception) {
-                Timber.e(e, "RecommendationRepository: Error parsing recommendation")
+                Timber.e(e, "RecommendationRepository: Exception while parsing recommendation")
                 trySend(null)
             }
         }
@@ -87,24 +108,44 @@ class RecommendationRepositoryImpl @Inject constructor(
      * First fetches the recommendation document, then resolves lesson IDs to ContentItems
      */
     override fun getRecommendedContent(uid: String, limit: Int): Flow<List<ContentItem>> = flow {
-        Timber.d("RecommendationRepository: Fetching recommended content for user $uid (limit=$limit)")
+        Timber.d("RecommendationRepository: ========== START getRecommendedContent ==========")
+        Timber.d("RecommendationRepository: User: $uid, Limit: $limit")
 
         // Get latest recommendation
+        Timber.d("RecommendationRepository: Fetching latest recommendation...")
         val recommendation = getLatestRecommendation(uid).first()
 
-        if (recommendation == null || recommendation.lessonIds.isEmpty()) {
-            Timber.d("RecommendationRepository: No recommendations available")
+        if (recommendation == null) {
+            Timber.w("RecommendationRepository: Recommendation is NULL - no document found")
+            emit(emptyList())
+            return@flow
+        }
+
+        Timber.d("RecommendationRepository: Recommendation received with ${recommendation.lessonIds.size} lessonIds")
+        Timber.d("RecommendationRepository: LessonIds: ${recommendation.lessonIds}")
+
+        if (recommendation.lessonIds.isEmpty()) {
+            Timber.w("RecommendationRepository: Recommendation lessonIds list is EMPTY")
             emit(emptyList())
             return@flow
         }
 
         val lessonIds = recommendation.lessonIds.take(limit)
-        Timber.d("RecommendationRepository: Found ${lessonIds.size} recommended lesson IDs")
+        Timber.d("RecommendationRepository: Taking first $limit lessonIds: $lessonIds")
 
         // Fetch all content and filter by lesson IDs
+        Timber.d("RecommendationRepository: Fetching all content from ContentRepository...")
         val allContent = contentRepository.getAllContent().first()
+        Timber.d("RecommendationRepository: ContentRepository returned ${allContent.size} total content items")
+
         val recommendedContent = lessonIds.mapNotNull { lessonId ->
-            allContent.find { it.id == lessonId }
+            val found = allContent.find { it.id == lessonId }
+            if (found == null) {
+                Timber.w("RecommendationRepository: LessonId '$lessonId' NOT FOUND in content catalog")
+            } else {
+                Timber.d("RecommendationRepository: LessonId '$lessonId' found: ${found.title}")
+            }
+            found
         }
 
         // Sort by recommendation score (maintain order from recommendation)
@@ -112,7 +153,12 @@ class RecommendationRepositoryImpl @Inject constructor(
             recommendedContent.find { it.id == lessonId }
         }
 
-        Timber.d("RecommendationRepository: Resolved ${orderedContent.size} content items")
+        Timber.d("RecommendationRepository: Final result: ${orderedContent.size} content items")
+        orderedContent.forEach { content ->
+            Timber.d("RecommendationRepository:   - ${content.id}: ${content.title}")
+        }
+        Timber.d("RecommendationRepository: ========== END getRecommendedContent ==========")
+
         emit(orderedContent)
     }
 
@@ -142,7 +188,7 @@ class RecommendationRepositoryImpl @Inject constructor(
      */
     override suspend fun hasRecommendations(uid: String): Boolean {
         return try {
-            val docSnapshot = firestore.collection(COLLECTION_USERS)
+            val docSnapshot = firestore.collection(COLLECTION_USER_ONBOARDING)
                 .document(uid)
                 .collection(SUBCOLLECTION_RECOMMENDATIONS)
                 .document(DOC_LATEST)
@@ -163,7 +209,7 @@ class RecommendationRepositoryImpl @Inject constructor(
      */
     override suspend fun getRecommendationHistory(uid: String, limit: Int): List<UserRecommendation> {
         return try {
-            val snapshot = firestore.collection(COLLECTION_USERS)
+            val snapshot = firestore.collection(COLLECTION_USER_ONBOARDING)
                 .document(uid)
                 .collection(SUBCOLLECTION_RECOMMENDATIONS)
                 .orderBy("generated_at", Query.Direction.DESCENDING)
@@ -192,7 +238,7 @@ class RecommendationRepositoryImpl @Inject constructor(
 
         try {
             // Force fetch from server (bypass cache)
-            firestore.collection(COLLECTION_USERS)
+            firestore.collection(COLLECTION_USER_ONBOARDING)
                 .document(uid)
                 .collection(SUBCOLLECTION_RECOMMENDATIONS)
                 .document(DOC_LATEST)

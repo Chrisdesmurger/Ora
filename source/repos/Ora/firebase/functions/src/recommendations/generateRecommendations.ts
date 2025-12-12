@@ -10,6 +10,7 @@ import * as admin from "firebase-admin";
 import { Timestamp } from "firebase-admin/firestore";
 import {
   UserOnboarding,
+  OnboardingAnswer,
   LessonDocument,
   UserRecommendation,
   INTENTION_TO_DISCIPLINE,
@@ -22,21 +23,24 @@ const BATCH_SIZE = 100;
 
 /**
  * Trigger: When user completes onboarding
- * Listens for updates to users/{uid} where onboarding.completed changes to true
+ * Listens for new documents in user_onboarding/{uid}/responses subcollection
  */
 export const onUserOnboardingComplete = functions.firestore
-  .document("users/{uid}")
-  .onUpdate(async (change, context) => {
+  .document("user_onboarding/{uid}/responses/{responseId}")
+  .onCreate(async (snapshot, context) => {
     const uid = context.params.uid;
-    const before = change.before.data();
-    const after = change.after.data();
+    const responseId = context.params.responseId;
+    const data = snapshot.data();
 
-    // Check if onboarding.completed changed from false to true
-    const wasCompleted = before?.onboarding?.completed === true;
-    const isNowCompleted = after?.onboarding?.completed === true;
+    // Ignore the "in_progress" document
+    if (responseId === "in_progress") {
+      functions.logger.info(`Ignoring in_progress document for user ${uid}`);
+      return null;
+    }
 
-    if (!wasCompleted && isNowCompleted) {
-      functions.logger.info(`User ${uid} completed onboarding, generating recommendations`);
+    // Check if onboarding is completed
+    if (data.completed === true) {
+      functions.logger.info(`User ${uid} completed onboarding (response ${responseId}), generating recommendations`);
 
       try {
         await generateUserRecommendations(uid, "onboarding_complete");
@@ -67,7 +71,7 @@ export const weeklyRecommendationsUpdate = functions.pubsub
     try {
       // Get all users with completed onboarding
       const usersSnapshot = await db.collection("users")
-        .where("onboarding.completed", "==", true)
+        .where("has_completed_onboarding", "==", true)
         .get();
 
       functions.logger.info(`Found ${usersSnapshot.size} users with completed onboarding`);
@@ -159,17 +163,32 @@ async function generateUserRecommendations(
     throw new Error(`User ${uid} not found`);
   }
 
-  const userData = userDoc.data();
-  const onboarding = userData?.onboarding as UserOnboarding | undefined;
+  // Fetch latest onboarding response from new structure
+  functions.logger.info(`Fetching onboarding responses from user_onboarding/${uid}/responses`);
 
-  if (!onboarding?.completed) {
-    throw new Error(`User ${uid} has not completed onboarding`);
+  const responsesSnapshot = await db.collection("user_onboarding").doc(uid)
+    .collection("responses")
+    .where("completed", "==", true)
+    .orderBy("completedAt", "desc")
+    .limit(1)
+    .get();
+
+  if (responsesSnapshot.empty) {
+    throw new Error(`User ${uid} has no completed onboarding responses in user_onboarding/${uid}/responses`);
   }
 
-  // 2. Extract user preferences
-  const userIntentions = extractIntentions(onboarding);
-  const userExperienceLevels = onboarding.experienceLevels || {};
-  const timeCommitment = onboarding.dailyTimeCommitment || "10-20";
+  const onboarding = responsesSnapshot.docs[0].data() as UserOnboarding;
+
+  functions.logger.info(`Found onboarding response with ${onboarding.answers?.length || 0} answers for user ${uid}`);
+
+  if (!onboarding.answers || onboarding.answers.length === 0) {
+    throw new Error(`User ${uid} onboarding response has no answers to process`);
+  }
+
+  // 2. Extract user preferences from answers
+  const userIntentions = extractIntentionsFromAnswers(onboarding.answers);
+  const userExperienceLevels = extractExperienceLevelsFromAnswers(onboarding.answers);
+  const timeCommitment = extractTimeCommitmentFromAnswers(onboarding.answers);
 
   functions.logger.info(`User ${uid} preferences:`, {
     intentions: userIntentions,
@@ -177,9 +196,9 @@ async function generateUserRecommendations(
     timeCommitment,
   });
 
-  // 3. Fetch all published lessons
+  // 3. Fetch all ready lessons (status = "ready" in Firestore)
   const lessonsSnapshot = await db.collection("lessons")
-    .where("status", "==", "published")
+    .where("status", "==", "ready")
     .get();
 
   const lessons = lessonsSnapshot.docs.map((doc) => ({
@@ -277,19 +296,19 @@ async function generateUserRecommendations(
     },
   };
 
-  // 9. Save to Firestore
+  // 9. Save to new structure: user_onboarding/{uid}/recommendations
   const recommendationId = trigger === "weekly_cron"
     ? new Date().toISOString().split("T")[0] // e.g., "2025-12-08"
     : trigger; // e.g., "onboarding_complete" or "manual"
 
-  await db.collection("users")
+  await db.collection("user_onboarding")
     .doc(uid)
     .collection("recommendations")
     .doc(recommendationId)
     .set(recommendation);
 
   // Also save as "latest" for easy access
-  await db.collection("users")
+  await db.collection("user_onboarding")
     .doc(uid)
     .collection("recommendations")
     .doc("latest")
@@ -299,29 +318,64 @@ async function generateUserRecommendations(
 }
 
 /**
- * Extract user intentions from onboarding answers
+ * Extract user intentions from raw onboarding answers
+ * Looks for question IDs: intentions, life_situation
  */
-function extractIntentions(onboarding: UserOnboarding): string[] {
+function extractIntentionsFromAnswers(answers: OnboardingAnswer[]): string[] {
   const intentions: string[] = [];
 
-  // From goals field
-  if (onboarding.goals && Array.isArray(onboarding.goals)) {
-    intentions.push(...onboarding.goals);
-  }
-
-  // From mainGoal field
-  if (onboarding.mainGoal) {
-    intentions.push(onboarding.mainGoal);
-  }
-
-  // From challenges field (can indicate intentions)
-  if (onboarding.challenges && Array.isArray(onboarding.challenges)) {
-    intentions.push(...onboarding.challenges);
+  for (const answer of answers) {
+    // Intentions question
+    if (answer.questionId === "intentions" && Array.isArray(answer.selectedOptions)) {
+      intentions.push(...answer.selectedOptions);
+    }
+    // Life situation can also indicate intentions
+    if (answer.questionId === "life_situation" && Array.isArray(answer.selectedOptions)) {
+      intentions.push(...answer.selectedOptions);
+    }
   }
 
   // Normalize to lowercase and unique
-  return [...new Set(intentions.map((i) => i.toLowerCase().replace(/\s+/g, "_")))];
+  return [...new Set(intentions.map((i: string) => i.toLowerCase().replace(/\s+/g, "_")))];
 }
+
+/**
+ * Extract experience levels from raw onboarding answers
+ * Looks for question ID: practice_levels
+ */
+function extractExperienceLevelsFromAnswers(answers: OnboardingAnswer[]): Record<string, string> {
+  const levels: Record<string, string> = {};
+
+  for (const answer of answers) {
+    if (answer.questionId === "practice_levels" && Array.isArray(answer.selectedOptions)) {
+      // Parse experience level answers
+      // Expected format: "meditation:beginner", "yoga:intermediate", etc.
+      for (const option of answer.selectedOptions) {
+        const parts = option.split(":");
+        if (parts.length === 2) {
+          levels[parts[0].toLowerCase()] = parts[1].toLowerCase();
+        }
+      }
+    }
+  }
+
+  return levels;
+}
+
+/**
+ * Extract time commitment from raw onboarding answers
+ * Looks for question ID: time_commitment
+ */
+function extractTimeCommitmentFromAnswers(answers: OnboardingAnswer[]): string {
+  for (const answer of answers) {
+    if (answer.questionId === "time_commitment" && answer.selectedOptions && answer.selectedOptions.length > 0) {
+      return answer.selectedOptions[0];
+    }
+  }
+
+  return "10-20"; // Default
+}
+
 
 /**
  * Calculate recommendation score for a lesson
