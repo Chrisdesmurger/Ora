@@ -13,4 +13,5 @@ export {
   onUserOnboardingComplete,
   weeklyRecommendationsUpdate,
   regenerateUserRecommendations,
+  regenerateUserRecommendationsHttp,
 } from "./recommendations/generateRecommendations";

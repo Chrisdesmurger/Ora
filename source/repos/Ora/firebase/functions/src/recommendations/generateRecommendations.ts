@@ -22,6 +22,16 @@ const MAX_RECOMMENDATIONS = 5;
 const BATCH_SIZE = 100;
 
 /**
+ * Helper function to extract error message from unknown error type
+ */
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+}
+
+/**
  * Trigger: When user completes onboarding
  * Listens for new documents in user_onboarding/{uid}/responses subcollection
  */
@@ -107,7 +117,7 @@ export const weeklyRecommendationsUpdate = functions.pubsub
 
 /**
  * Callable: Manually regenerate recommendations for a user
- * Can be called from Admin Portal
+ * Can be called from Admin Portal via Firebase SDK
  */
 export const regenerateUserRecommendations = functions.https.onCall(
   async (data, context) => {
@@ -135,6 +145,104 @@ export const regenerateUserRecommendations = functions.https.onCall(
     } catch (error) {
       functions.logger.error(`Manual regeneration failed for user ${uid}:`, error);
       throw new functions.https.HttpsError("internal", `Failed to regenerate recommendations: ${error}`);
+    }
+  }
+);
+
+/**
+ * HTTP Endpoint: Manually regenerate recommendations for a user
+ * Called via direct HTTP POST from Admin Portal (OraWebApp)
+ *
+ * URL: https://us-central1-ora-app-f429a.cloudfunctions.net/regenerateUserRecommendationsHttp
+ *
+ * Request body:
+ *   { "uid": "user-id-here" }
+ *
+ * Response:
+ *   { "success": true, "message": "...", "uid": "..." }
+ *   or
+ *   { "error": "...", "details": "..." }
+ */
+export const regenerateUserRecommendationsHttp = functions.https.onRequest(
+  async (req, res) => {
+    // Enable CORS for admin portal
+    res.set("Access-Control-Allow-Origin", "*");
+    res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+    // Handle preflight OPTIONS request
+    if (req.method === "OPTIONS") {
+      res.status(204).send("");
+      return;
+    }
+
+    // Only accept POST requests
+    if (req.method !== "POST") {
+      res.status(405).json({
+        error: "Method not allowed",
+        details: "Only POST requests are accepted",
+      });
+      return;
+    }
+
+    try {
+      // Parse request body
+      const { uid } = req.body;
+
+      if (!uid || typeof uid !== "string") {
+        res.status(400).json({
+          error: "Invalid request",
+          details: "User ID (uid) is required in request body",
+        });
+        return;
+      }
+
+      functions.logger.info(`HTTP: Manual regeneration requested for user ${uid}`);
+
+      // Verify user exists
+      const db = admin.firestore();
+      const userDoc = await db.collection("users").doc(uid).get();
+
+      if (!userDoc.exists) {
+        res.status(404).json({
+          error: "User not found",
+          details: `No user found with ID: ${uid}`,
+        });
+        return;
+      }
+
+      // Generate recommendations
+      await generateUserRecommendations(uid, "manual");
+
+      functions.logger.info(`HTTP: Successfully regenerated recommendations for user ${uid}`);
+
+      res.status(200).json({
+        success: true,
+        message: `Recommendations regenerated successfully for user ${uid}`,
+        uid,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error: unknown) {
+      functions.logger.error("HTTP: Failed to regenerate recommendations:", error);
+
+      const errorMessage = getErrorMessage(error);
+
+      // Determine appropriate status code
+      let statusCode = 500;
+      let displayMessage = "Failed to regenerate recommendations";
+
+      if (errorMessage.includes("not found")) {
+        statusCode = 404;
+        displayMessage = errorMessage;
+      } else if (errorMessage.includes("no completed onboarding")) {
+        statusCode = 400;
+        displayMessage = "User has not completed onboarding";
+      }
+
+      res.status(statusCode).json({
+        error: displayMessage,
+        details: errorMessage,
+      });
     }
   }
 );
