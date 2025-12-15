@@ -40,7 +40,7 @@ import com.ora.wellbeing.presentation.screens.onboarding.OnboardingScreen
 import com.ora.wellbeing.presentation.screens.onboarding.OnboardingCelebrationScreen
 
 /**
- * FIX(auth): Navigation principale avec vérification d'authentification
+ * FIX(auth): Navigation principale avec verification d'authentification
  */
 @Composable
 fun OraNavigation(
@@ -53,7 +53,7 @@ fun OraNavigation(
     val isAuthenticated by authViewModel.isAuthenticated.collectAsStateWithLifecycle()
     val userProfile by authViewModel.userProfile.collectAsStateWithLifecycle()
 
-    // FIX(auth): Redirection vers Auth Flow si non connecté
+    // FIX(auth): Redirection vers Auth Flow si non connecte
     LaunchedEffect(isAuthenticated) {
         if (!isAuthenticated && currentDestination?.route != "auth_flow") {
             navController.navigate("auth_flow") {
@@ -65,7 +65,7 @@ fun OraNavigation(
         }
     }
 
-    // FIX(onboarding): Redirection vers Onboarding si non complété
+    // FIX(onboarding): Redirection vers Onboarding si non complete
     LaunchedEffect(isAuthenticated, userProfile) {
         val profile = userProfile; if (isAuthenticated && profile != null && !profile.hasCompletedOnboarding) {
             val currentRoute = currentDestination?.route
@@ -84,9 +84,9 @@ fun OraNavigation(
 
     Scaffold(
         modifier = modifier,
-        contentWindowInsets = WindowInsets(0.dp),  // Maximiser la surface d'écran - ne pas consommer les insets automatiquement
+        contentWindowInsets = WindowInsets(0.dp),  // Maximiser la surface d'ecran - ne pas consommer les insets automatiquement
         bottomBar = {
-            // Afficher la bottom bar seulement sur les écrans principaux et si authentifié
+            // Afficher la bottom bar seulement sur les ecrans principaux et si authentifie
             if (isAuthenticated && NavigationUtils.isMainDestination(currentDestination?.route)) {
                 OraBottomNavigationBar(
                     navController = navController,
@@ -160,7 +160,7 @@ fun OraNavigation(
                 )
             }
 
-            // Écrans principaux avec bottom navigation
+            // Ecrans principaux avec bottom navigation
             composable(OraDestinations.Home.route) {
                 HomeScreen(
                     onNavigateToContent = { contentId ->
@@ -171,7 +171,14 @@ fun OraNavigation(
                         navController.navigate(OraDestinations.ProgramDetail.createRoute(programId))
                     },
                     onNavigateToQuickSession = { sessionType ->
-                        navController.navigate(OraDestinations.QuickSession.createRoute(sessionType.name))
+                        // NEW: Navigate to library with category filter and max duration 10 minutes
+                        // Quick sessions are short sessions < 10 minutes
+                        navController.navigate(
+                            OraDestinations.CategoryDetailFiltered.createRoute(
+                                categoryId = sessionType.categoryId,
+                                maxDuration = 10 // Sessions rapides: moins de 10 minutes
+                            )
+                        )
                     }
                 )
             }
@@ -222,7 +229,7 @@ fun OraNavigation(
                 )
             }
 
-            // FIX(profile-edit): Écran d'édition de profil
+            // FIX(profile-edit): Ecran d'edition de profil
             composable(OraDestinations.EditProfile.route) {
                 ProfileEditScreen(
                     onNavigateBack = {
@@ -231,7 +238,7 @@ fun OraNavigation(
                 )
             }
 
-            // Écran de statistiques détaillées d'une pratique
+            // Ecran de statistiques detaillees d'une pratique
             composable(
                 route = OraDestinations.PracticeStats.route,
                 arguments = OraDestinations.PracticeStats.arguments
@@ -241,14 +248,14 @@ fun OraNavigation(
                         navController.popBackStack()
                     },
                     onStartNewSession = {
-                        // TODO: Naviguer vers l'écran de démarrage de session
-                        // Pour l'instant, on retourne à l'écran précédent
+                        // TODO: Naviguer vers l'ecran de demarrage de session
+                        // Pour l'instant, on retourne a l'ecran precedent
                         navController.popBackStack()
                     }
                 )
             }
 
-            // Écran de détail d'une pratique - Lecteurs spécialisés par discipline
+            // Ecran de detail d'une pratique - Lecteurs specialises par discipline
             composable(
                 route = OraDestinations.PracticeDetail.route,
                 arguments = OraDestinations.PracticeDetail.arguments
@@ -311,13 +318,30 @@ fun OraNavigation(
                 )
             }
 
+            // NEW: Category Detail Screen with duration filter (for Quick Sessions)
+            composable(
+                route = OraDestinations.CategoryDetailFiltered.route,
+                arguments = OraDestinations.CategoryDetailFiltered.arguments
+            ) { backStackEntry ->
+                val maxDuration = backStackEntry.arguments?.getInt("maxDuration") ?: -1
+                com.ora.wellbeing.presentation.screens.library.ContentCategoryDetailFilteredScreen(
+                    maxDurationMinutes = if (maxDuration > 0) maxDuration else null,
+                    onBackClick = {
+                        navController.popBackStack()
+                    },
+                    onContentClick = { contentId ->
+                        navController.navigate(OraDestinations.PracticeDetail.createRoute(contentId))
+                    }
+                )
+            }
+
             // Debug Screen - Firestore Diagnostic
             composable(OraDestinations.FirestoreDebug.route) {
                 FirestoreDebugScreen()
             }
 
             // TODO: Ajouter les autres destinations (ContentDetail, VideoPlayer, etc.)
-            // Ces composables seront ajoutés avec les écrans correspondants
+            // Ces composables seront ajoutes avec les ecrans correspondants
         }
     }
 }

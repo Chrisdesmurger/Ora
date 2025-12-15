@@ -9,6 +9,8 @@ import com.ora.wellbeing.presentation.theme.CategoryMeditationLavender
 import com.ora.wellbeing.presentation.theme.CategoryPilatesPeach
 import com.ora.wellbeing.presentation.theme.CategoryYogaGreen
 import com.ora.wellbeing.presentation.theme.CategoryWellnessBeige
+import com.ora.wellbeing.presentation.theme.CategoryAutoMassageOrange
+import com.ora.wellbeing.presentation.theme.CategoryBreathingBlue
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,12 +47,13 @@ class ContentLibraryCategoriesViewModel @Inject constructor(
 
     /**
      * Creates the MVP category list with predefined colors
+     * Order: Meditation, Yoga, Pilates, Bien-etre, Respiration, Auto-massage
      */
     private fun createCategories(): List<CategoryItem> {
         return listOf(
             CategoryItem(
-                id = "Méditation",
-                name = "Méditation",
+                id = "Meditation",
+                name = "Meditation",
                 color = CategoryMeditationLavender,
                 iconResId = R.drawable.category_meditation,
                 itemCount = 0 // TODO: Get real count from ContentRepository
@@ -70,10 +73,24 @@ class ContentLibraryCategoriesViewModel @Inject constructor(
                 itemCount = 0
             ),
             CategoryItem(
-                id = "Bien-être",
-                name = "Bien-être",
+                id = "Bien-etre",
+                name = "Bien-etre",
                 color = CategoryWellnessBeige,
                 iconResId = R.drawable.category_wellness,
+                itemCount = 0
+            ),
+            CategoryItem(
+                id = "Respiration",
+                name = "Respiration",
+                color = CategoryBreathingBlue,
+                iconResId = null, // TODO: Add respiration image
+                itemCount = 0
+            ),
+            CategoryItem(
+                id = "Auto-massage",
+                name = "Auto-massage",
+                color = CategoryAutoMassageOrange,
+                iconResId = R.drawable.category_auto_massage,
                 itemCount = 0
             )
         )

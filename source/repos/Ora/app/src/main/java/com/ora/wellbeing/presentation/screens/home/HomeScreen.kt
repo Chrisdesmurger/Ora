@@ -204,6 +204,7 @@ private fun QuickSessionCard(
         QuickSessionType.BREATHING -> Triple(CategoryBreathingBlue, OraIcons.Waves, "Respiration")
         QuickSessionType.YOGA_FLASH -> Triple(CategoryYogaGreen, OraIcons.YogaPerson, "Flash Yoga")
         QuickSessionType.MINI_MEDITATION -> Triple(CategoryMeditationLavender, OraIcons.MindHead, "Meditation")
+        QuickSessionType.AUTO_MASSAGE -> Triple(CategoryAutoMassageOrange, OraIcons.AutoMassage, "Auto-massage")
     }
 
     Card(

@@ -17,7 +17,7 @@ sealed class OraDestinations(
 ) {
     // FIX(auth): Destination d'authentification
     object Auth : OraDestinations("auth")
-    
+
     // Onboarding destinations (NEW)
     object Onboarding : OraDestinations("onboarding")
     object OnboardingCelebration : OraDestinations("onboarding_celebration")
@@ -126,6 +126,28 @@ sealed class OraDestinations(
         }
     }
 
+    // NEW: Category detail with optional filters (for Quick Sessions navigation)
+    object CategoryDetailFiltered : OraDestinations(
+        route = "category_detail_filtered/{categoryId}?maxDuration={maxDuration}",
+        arguments = listOf(
+            navArgument("categoryId") {
+                type = NavType.StringType
+            },
+            navArgument("maxDuration") {
+                type = NavType.IntType
+                defaultValue = -1 // -1 means no filter
+            }
+        )
+    ) {
+        fun createRoute(categoryId: String, maxDuration: Int? = null): String {
+            return if (maxDuration != null && maxDuration > 0) {
+                "category_detail_filtered/$categoryId?maxDuration=$maxDuration"
+            } else {
+                "category_detail_filtered/$categoryId"
+            }
+        }
+    }
+
     object LibrarySearch : OraDestinations("library_search")
 
     object LibraryFilters : OraDestinations("library_filters")
@@ -213,7 +235,7 @@ sealed class OraDestinations(
 }
 
 /**
- * Élément de navigation pour la bottom bar
+ * Element de navigation pour la bottom bar
  */
 data class BottomNavigationItem(
     val route: String,
@@ -235,7 +257,7 @@ val bottomNavigationItems = listOf(
     ),
     BottomNavigationItem(
         route = OraDestinations.Library.route,
-        label = "Bibliothèque",
+        label = "Bibliotheque",
         selectedIcon = Icons.Filled.LibraryBooks,
         unselectedIcon = Icons.Outlined.LibraryBooks
     ),
@@ -262,11 +284,16 @@ val bottomNavigationItems = listOf(
 
 /**
  * Types de sessions rapides
+ * Maps to library categories for navigation with filtering
  */
-enum class QuickSessionType(val displayName: String) {
-    BREATHING("Respiration Calme"),
-    YOGA_FLASH("Flash Yoga"),
-    MINI_MEDITATION("Mini Méditation");
+enum class QuickSessionType(
+    val displayName: String,
+    val categoryId: String // Maps to library category for navigation
+) {
+    BREATHING("Respiration Calme", "Respiration"),
+    YOGA_FLASH("Flash Yoga", "Yoga"),
+    MINI_MEDITATION("Mini Meditation", "Meditation"),
+    AUTO_MASSAGE("Auto-massage", "Auto-massage");
 
     companion object {
         fun fromString(value: String): QuickSessionType? {
@@ -280,7 +307,7 @@ enum class QuickSessionType(val displayName: String) {
  */
 object NavigationUtils {
     /**
-     * Vérifie si une route fait partie de la bottom navigation
+     * Verifie si une route fait partie de la bottom navigation
      */
     fun isMainDestination(route: String?): Boolean {
         return route in bottomNavigationItems.map { it.route }
@@ -297,7 +324,7 @@ object NavigationUtils {
     }
 
     /**
-     * Génère une route de contenu avec paramètres optionnels
+     * Genere une route de contenu avec parametres optionnels
      */
     fun createContentRoute(
         contentId: String,

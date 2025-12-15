@@ -43,6 +43,7 @@ val CategoryPilatesPeach = Color(0xFFFDB5A0)        // Pilates - Orange pêche (
 val CategoryMeditationLavender = Color(0xFFD4C4E8)  // Méditation - Lavande (conservée)
 val CategoryBreathingBlue = Color(0xFFC4D8E8)       // Respiration - Bleu clair
 val CategoryWellnessBeige = Color(0xFFFFE5CC)       // Bien-être - Orange pêche doux (GratitudePeach)
+val CategoryAutoMassageOrange = Color(0xFFF5B896)   // Auto-massage - Orange doux (NEW)
 
 // Couleurs pour les cartes de gratitude (mockup Journal)
 val GratitudePink = Color(0xFFFFD4CC)               // Rose pêche
