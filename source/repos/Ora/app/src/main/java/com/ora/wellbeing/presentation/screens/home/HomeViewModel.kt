@@ -6,7 +6,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.ora.wellbeing.data.model.ContentItem
 import com.ora.wellbeing.data.model.UserProgram
 import com.ora.wellbeing.data.repository.OnboardingRepository
+import com.ora.wellbeing.domain.model.DailyNeedCategory
 import com.ora.wellbeing.domain.repository.ContentRepository
+import com.ora.wellbeing.domain.repository.DailyNeedCategoryRepository
 import com.ora.wellbeing.domain.repository.FirestoreUserProfileRepository
 import com.ora.wellbeing.domain.repository.FirestoreUserStatsRepository
 import com.ora.wellbeing.domain.repository.ProgramRepository
@@ -32,6 +34,7 @@ class HomeViewModel @Inject constructor(
     private val userProgramRepository: UserProgramRepository,
     private val recommendationRepository: RecommendationRepository,
     private val onboardingRepository: OnboardingRepository,
+    private val dailyNeedCategoryRepository: DailyNeedCategoryRepository,  // NEW: Issue #33
     private val auth: FirebaseAuth
 ) : ViewModel() {
 
@@ -65,6 +68,9 @@ class HomeViewModel @Inject constructor(
                 // Check if user has completed onboarding
                 val onboardingResult = onboardingRepository.getUserOnboardingResponse(uid)
                 val hasCompletedOnboarding = onboardingResult.getOrNull()?.completed == true
+
+                // NEW: Load daily need categories (Issue #33)
+                loadDailyNeedCategories()
 
                 // Combine all data sources for real-time personalized recommendations
                 combine(
@@ -114,7 +120,7 @@ class HomeViewModel @Inject constructor(
                     // Map active programs to UI model
                     val activeProgramsUi = data.activePrograms.map { it.toActiveProgram() }
 
-                    _uiState.value = HomeUiState(
+                    _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         error = null,
                         userName = profile?.displayName() ?: "Invite",
@@ -139,6 +145,59 @@ class HomeViewModel @Inject constructor(
                     error = "Erreur lors du chargement de l'accueil: ${e.message}"
                 )
                 Timber.e(e, "Error observing home data")
+            }
+        }
+    }
+
+    /**
+     * NEW: Loads daily need categories from repository (Issue #33)
+     * Fetches categories and their associated content counts
+     */
+    private fun loadDailyNeedCategories() {
+        viewModelScope.launch {
+            try {
+                Timber.d("HomeViewModel: Loading daily need categories")
+
+                dailyNeedCategoryRepository.getAllCategories()
+                    .catch { e ->
+                        Timber.e(e, "HomeViewModel: Error loading daily need categories")
+                        emit(emptyList())
+                    }
+                    .collect { categories ->
+                        if (categories.isEmpty()) {
+                            Timber.w("HomeViewModel: No daily need categories found")
+                            _uiState.value = _uiState.value.copy(
+                                dailyNeedCategories = emptyList()
+                            )
+                            return@collect
+                        }
+
+                        Timber.d("HomeViewModel: Loaded ${categories.size} daily need categories")
+
+                        // Load content counts for each category
+                        val contentCounts = try {
+                            dailyNeedCategoryRepository.getContentCountsForCategories(categories)
+                        } catch (e: Exception) {
+                            Timber.w(e, "HomeViewModel: Error loading content counts")
+                            categories.associate { it.id to 0 }
+                        }
+
+                        // Build UI model with category and content count
+                        val categoriesWithContent = categories.map { category ->
+                            HomeUiState.DailyNeedCategoryWithContent(
+                                category = category,
+                                contentCount = contentCounts[category.id] ?: 0
+                            )
+                        }
+
+                        _uiState.value = _uiState.value.copy(
+                            dailyNeedCategories = categoriesWithContent
+                        )
+
+                        Timber.d("HomeViewModel: Daily need categories updated: ${categoriesWithContent.map { "${it.category.id}:${it.contentCount}" }}")
+                    }
+            } catch (e: Exception) {
+                Timber.e(e, "HomeViewModel: Error in loadDailyNeedCategories")
             }
         }
     }
@@ -274,7 +333,9 @@ data class HomeUiState(
     // NEW: Personalized recommendations from Cloud Functions
     val personalizedRecommendations: List<ContentRecommendation> = emptyList(),
     val showPersonalizedSection: Boolean = false,
-    val hasCompletedOnboarding: Boolean = false
+    val hasCompletedOnboarding: Boolean = false,
+    // NEW: Daily need categories for "Ton besoin du jour" section (Issue #33)
+    val dailyNeedCategories: List<DailyNeedCategoryWithContent> = emptyList()
 ) {
     /**
      * Recommandation de contenu pour l'ecran d'accueil
@@ -301,6 +362,15 @@ data class HomeUiState(
         val progressPercentage: Int,
         val nextSessionTitle: String = "",
         val nextSessionDuration: String = ""
+    )
+
+    /**
+     * NEW: Category with content count for "Ton besoin du jour" section (Issue #33)
+     * Combines DailyNeedCategory with the number of available lessons
+     */
+    data class DailyNeedCategoryWithContent(
+        val category: DailyNeedCategory,
+        val contentCount: Int
     )
 }
 

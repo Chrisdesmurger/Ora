@@ -1,19 +1,19 @@
 rules_version = '2';
 
-// FIX(user-dynamic): Règles de sécurité Firestore pour Ora
-// Privacy by design: Chaque utilisateur peut uniquement accéder à ses propres données
-// Basé sur user_data_contract.yaml
+// FIX(user-dynamic): Regles de securite Firestore pour Ora
+// Privacy by design: Chaque utilisateur peut uniquement acceder a ses propres donnees
+// Base sur user_data_contract.yaml
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
     // Collection users/{uid}
-    // Règle: Lecture/écriture uniquement si request.auth.uid == uid
+    // Regle: Lecture/ecriture uniquement si request.auth.uid == uid
     match /users/{uid} {
-      // Permet lecture et écriture uniquement si authentifié et c'est son propre document
+      // Permet lecture et ecriture uniquement si authentifie et c'est son propre document
       allow read, write: if request.auth != null && request.auth.uid == uid;
 
-      // Validation des champs à l'écriture
+      // Validation des champs a l'ecriture
       allow create: if request.auth != null
                     && request.auth.uid == uid
                     && validateUserProfile(request.resource.data);
@@ -26,7 +26,7 @@ service cloud.firestore {
       match /sessions/{sessionId} {
         allow read, write: if request.auth != null && request.auth.uid == uid;
 
-        // Validation des champs à l'écriture
+        // Validation des champs a l'ecriture
         allow create: if request.auth != null
                       && request.auth.uid == uid
                       && validatePracticeSession(request.resource.data);
@@ -36,11 +36,11 @@ service cloud.firestore {
                       && validatePracticeSession(request.resource.data);
       }
 
-      // FIX(stats): Sous-collection users/{uid}/practiceStats - Stats agrégées par type
+      // FIX(stats): Sous-collection users/{uid}/practiceStats - Stats agregees par type
       match /practiceStats/{practiceType} {
         allow read, write: if request.auth != null && request.auth.uid == uid;
 
-        // Validation des champs à l'écriture
+        // Validation des champs a l'ecriture
         allow create: if request.auth != null
                       && request.auth.uid == uid
                       && validatePracticeStats(request.resource.data);
@@ -50,11 +50,11 @@ service cloud.firestore {
                       && validatePracticeStats(request.resource.data);
       }
 
-      // NEW: Sous-collection users/{uid}/dailyJournal - Entrées de journal quotidien
+      // NEW: Sous-collection users/{uid}/dailyJournal - Entrees de journal quotidien
       match /dailyJournal/{date} {
         allow read, write: if request.auth != null && request.auth.uid == uid;
 
-        // Validation des champs à l'écriture
+        // Validation des champs a l'ecriture
         allow create: if request.auth != null
                       && request.auth.uid == uid
                       && validateDailyJournalEntry(request.resource.data);
@@ -68,11 +68,11 @@ service cloud.firestore {
 
     // NEW: Collection user_onboarding/{uid} - Onboarding par utilisateur
     match /user_onboarding/{uid} {
-      // Sous-collection responses - Réponses d'onboarding
+      // Sous-collection responses - Reponses d'onboarding
       match /responses/{responseId} {
         allow read, write: if request.auth != null && request.auth.uid == uid;
 
-        // Validation des champs à l'écriture
+        // Validation des champs a l'ecriture
         allow create: if request.auth != null
                       && request.auth.uid == uid
                       && validateOnboardingResponse(request.resource.data);
@@ -82,7 +82,7 @@ service cloud.firestore {
                       && validateOnboardingResponse(request.resource.data);
       }
 
-      // Sous-collection recommendations - Recommandations personnalisées
+      // Sous-collection recommendations - Recommandations personnalisees
       match /recommendations/{recommendationId} {
         allow read: if request.auth != null && request.auth.uid == uid;
         allow write: if false; // Only Cloud Functions can write
@@ -90,12 +90,12 @@ service cloud.firestore {
     }
 
     // Collection stats/{uid}
-    // Règle: Lecture/écriture uniquement si request.auth.uid == uid
+    // Regle: Lecture/ecriture uniquement si request.auth.uid == uid
     match /stats/{uid} {
-      // Permet lecture et écriture uniquement si authentifié et c'est son propre document
+      // Permet lecture et ecriture uniquement si authentifie et c'est son propre document
       allow read, write: if request.auth != null && request.auth.uid == uid;
 
-      // Validation des champs à l'écriture
+      // Validation des champs a l'ecriture
       allow create: if request.auth != null
                     && request.auth.uid == uid
                     && validateUserStats(request.resource.data);
@@ -106,11 +106,11 @@ service cloud.firestore {
     }
 
     // Collection gratitudes/{uid}/entries/{date}
-    // Règle: UID-based isolation - chaque utilisateur accède uniquement à ses propres entrées
+    // Regle: UID-based isolation - chaque utilisateur accede uniquement a ses propres entrees
     match /gratitudes/{uid}/entries/{date} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
 
-      // Validation des champs à l'écriture
+      // Validation des champs a l'ecriture
       allow create: if request.auth != null
                     && request.auth.uid == uid
                     && validateGratitudeEntry(request.resource.data);
@@ -121,18 +121,18 @@ service cloud.firestore {
     }
 
     // Collection programs/{programId}
-    // Règle: Lecture pour tous les utilisateurs authentifiés, écriture admin uniquement
+    // Regle: Lecture pour tous les utilisateurs authentifies, ecriture admin uniquement
     match /programs/{programId} {
       allow read: if request.auth != null;
       allow write: if false; // Admin only (future Cloud Functions)
     }
 
     // Collection user_programs/{uid}/enrolled/{programId}
-    // Règle: UID-based isolation - chaque utilisateur accède uniquement à ses propres programmes inscrits
+    // Regle: UID-based isolation - chaque utilisateur accede uniquement a ses propres programmes inscrits
     match /user_programs/{uid}/enrolled/{programId} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
 
-      // Validation des champs à l'écriture
+      // Validation des champs a l'ecriture
       allow create: if request.auth != null
                     && request.auth.uid == uid
                     && validateUserProgram(request.resource.data);
@@ -143,29 +143,37 @@ service cloud.firestore {
     }
 
     // Collection content/{contentId}
-    // Règle: Lecture pour tous les utilisateurs authentifiés, écriture admin uniquement
+    // Regle: Lecture pour tous les utilisateurs authentifies, ecriture admin uniquement
     match /content/{contentId} {
       allow read: if request.auth != null;
       allow write: if false; // Admin only (future Cloud Functions)
     }
 
     // Collection lessons/{lessonId}
-    // Règle: Lecture pour tous les utilisateurs authentifiés, écriture admin uniquement
+    // Regle: Lecture pour tous les utilisateurs authentifies, ecriture admin uniquement
     match /lessons/{lessonId} {
       allow read: if request.auth != null;
       allow write: if false; // Admin only (from OraWebApp)
     }
 
     // Collection onboarding_configs/{configId}
-    // Règle: Lecture pour tous les utilisateurs authentifiés, écriture admin uniquement
+    // Regle: Lecture pour tous les utilisateurs authentifies, ecriture admin uniquement
     match /onboarding_configs/{configId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Admin only (from OraWebApp)
+    }
+
+    // NEW: Collection daily_needs_categories/{categoryId} (Issue #33)
+    // Regle: Lecture pour tous les utilisateurs authentifies, ecriture admin uniquement
+    // Categories: anti-stress, energie-matinale, relaxation, pratique-du-soir
+    match /daily_needs_categories/{categoryId} {
       allow read: if request.auth != null;
       allow write: if false; // Admin only (from OraWebApp)
     }
 
     // Fonctions de validation
 
-    // Valide les données du profil utilisateur
+    // Valide les donnees du profil utilisateur
     function validateUserProfile(data) {
       return data.uid is string
           && data.uid.size() > 0
@@ -201,7 +209,7 @@ service cloud.firestore {
           && data.updatedAt is timestamp;
     }
 
-    // Valide une entrée de gratitude
+    // Valide une entree de gratitude
     function validateGratitudeEntry(data) {
       return data.uid is string
           && data.uid.size() > 0
@@ -215,7 +223,7 @@ service cloud.firestore {
           && (data.updatedAt == null || data.updatedAt is timestamp);
     }
 
-    // NEW: Valide une entrée de journal quotidien
+    // NEW: Valide une entree de journal quotidien
     function validateDailyJournalEntry(data) {
       return data.uid is string
           && data.uid.size() > 0
@@ -273,7 +281,7 @@ service cloud.firestore {
           && data.createdAt is int;  // timestamp
     }
 
-    // FIX(stats): Valide les stats agrégées par type de pratique
+    // FIX(stats): Valide les stats agregees par type de pratique
     function validatePracticeStats(data) {
       return data.practiceType in ['yoga', 'meditation', 'pilates', 'breathing']
           && data.totalMinutes is int
@@ -295,7 +303,7 @@ service cloud.firestore {
           && data.updatedAt is int;  // timestamp
     }
 
-    // NEW: Valide une réponse d'onboarding
+    // NEW: Valide une reponse d'onboarding
     function validateOnboardingResponse(data) {
       return data.uid is string
           && data.uid.size() > 0
@@ -306,7 +314,7 @@ service cloud.firestore {
           && (data.completedAt == null || data.completedAt is timestamp);
     }
 
-    // Bloquer tout accès aux autres collections par défaut
+    // Bloquer tout acces aux autres collections par defaut
     match /{document=**} {
       allow read, write: if false;
     }

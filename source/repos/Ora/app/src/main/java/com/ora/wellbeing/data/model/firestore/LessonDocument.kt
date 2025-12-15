@@ -68,6 +68,15 @@ class LessonDocument() {
     var tags: List<String> = emptyList()
 
     /**
+     * Need tags for "Ton besoin du jour" filtering
+     * Used to match lessons with DailyNeedCategory filter_tags
+     * Example: ["relaxation", "morning", "stress-relief", "energizing", "bedtime"]
+     *
+     * NEW: Added for Issue #33 - Daily Needs Section
+     */
+    var need_tags: List<String> = emptyList()
+
+    /**
      * Full transcript of the lesson (optional, for accessibility)
      */
     var transcript: String? = null

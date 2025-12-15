@@ -14,11 +14,12 @@ import java.util.concurrent.TimeUnit
  * - Android schema (camelCase fields for Ora app)
  *
  * Key Conversions:
- * - snake_case → camelCase (program_id → programId)
- * - duration_sec → durationMinutes (seconds to minutes)
- * - type ("video"|"audio") → category (mapped via tags)
- * - renditions (multi-quality) → videoUrl (best quality)
- * - status ("ready") → isActive (boolean)
+ * - snake_case -> camelCase (program_id -> programId)
+ * - duration_sec -> durationMinutes (seconds to minutes)
+ * - type ("video"|"audio") -> category (mapped via tags)
+ * - renditions (multi-quality) -> videoUrl (best quality)
+ * - status ("ready") -> isActive (boolean)
+ * - need_tags -> needTags (NEW: for "Ton besoin du jour" filtering)
  */
 object LessonMapper {
 
@@ -55,6 +56,11 @@ object LessonMapper {
             this.createdAt = doc.created_at as? Timestamp
             this.updatedAt = doc.updated_at as? Timestamp
             this.publishedAt = doc.scheduled_publish_at as? Timestamp
+            // NEW: Map need_tags for "Ton besoin du jour" filtering (Issue #33)
+            this.needTags = doc.need_tags.ifEmpty {
+                // Fallback: derive need_tags from regular tags if not explicitly set
+                deriveNeedTagsFromTags(doc.tags, doc.type)
+            }
         }
     }
 
@@ -132,7 +138,7 @@ object LessonMapper {
      * Maps lesson type and tags to Android category
      *
      * Uses tags to determine the most appropriate category from:
-     * - Méditation, Yoga, Respiration, Pilates, Bien-être, Sommeil, Massage
+     * - Meditation, Yoga, Respiration, Pilates, Bien-etre, Sommeil, Massage
      *
      * @param type Lesson type ("video" or "audio")
      * @param tags List of tags for categorization
@@ -142,13 +148,13 @@ object LessonMapper {
         // Priority-based category mapping from tags
         return when {
             tags.any { it.equals("yoga", ignoreCase = true) } -> "Yoga"
-            tags.any { it.equals("meditation", ignoreCase = true) || it.equals("méditation", ignoreCase = true) } -> "Méditation"
+            tags.any { it.equals("meditation", ignoreCase = true) || it.equals("meditation", ignoreCase = true) } -> "Meditation"
             tags.any { it.equals("breathing", ignoreCase = true) || it.equals("respiration", ignoreCase = true) } -> "Respiration"
             tags.any { it.equals("pilates", ignoreCase = true) } -> "Pilates"
             tags.any { it.equals("sleep", ignoreCase = true) || it.equals("sommeil", ignoreCase = true) } -> "Sommeil"
             tags.any { it.equals("massage", ignoreCase = true) || it.equals("auto-massage", ignoreCase = true) || it.equals("self-massage", ignoreCase = true) } -> "Massage"
-            tags.any { it.equals("wellness", ignoreCase = true) || it.equals("bien-être", ignoreCase = true) } -> "Bien-être"
-            else -> "Bien-être" // Default category
+            tags.any { it.equals("wellness", ignoreCase = true) || it.equals("bien-etre", ignoreCase = true) } -> "Bien-etre"
+            else -> "Bien-etre" // Default category
         }
     }
 
@@ -201,6 +207,82 @@ object LessonMapper {
     }
 
     /**
+     * Derives need_tags from regular tags when not explicitly set
+     * This provides backward compatibility for lessons without need_tags
+     *
+     * NEW: Added for Issue #33 - Daily Needs Section
+     *
+     * @param tags Regular lesson tags
+     * @param type Lesson type ("video" or "audio")
+     * @return Derived need_tags list
+     */
+    private fun deriveNeedTagsFromTags(tags: List<String>, type: String): List<String> {
+        val derivedTags = mutableListOf<String>()
+
+        // Map regular tags to need tags
+        tags.forEach { tag ->
+            when {
+                // Morning/energizing content
+                tag.equals("morning", ignoreCase = true) ||
+                tag.equals("matin", ignoreCase = true) ||
+                tag.equals("energizing", ignoreCase = true) ||
+                tag.equals("wake-up", ignoreCase = true) ||
+                tag.equals("reveil", ignoreCase = true) -> {
+                    derivedTags.add("morning")
+                    derivedTags.add("energizing")
+                }
+
+                // Evening/bedtime content
+                tag.equals("evening", ignoreCase = true) ||
+                tag.equals("soir", ignoreCase = true) ||
+                tag.equals("bedtime", ignoreCase = true) ||
+                tag.equals("sleep", ignoreCase = true) ||
+                tag.equals("sommeil", ignoreCase = true) -> {
+                    derivedTags.add("evening")
+                    derivedTags.add("bedtime")
+                    derivedTags.add("sleep")
+                }
+
+                // Relaxation content
+                tag.equals("relaxation", ignoreCase = true) ||
+                tag.equals("relax", ignoreCase = true) ||
+                tag.equals("detente", ignoreCase = true) ||
+                tag.equals("calm", ignoreCase = true) ||
+                tag.equals("stress", ignoreCase = true) ||
+                tag.equals("anti-stress", ignoreCase = true) -> {
+                    derivedTags.add("relaxation")
+                    derivedTags.add("stress-relief")
+                }
+
+                // Breathing content
+                tag.equals("breathing", ignoreCase = true) ||
+                tag.equals("respiration", ignoreCase = true) ||
+                tag.equals("breathwork", ignoreCase = true) -> {
+                    derivedTags.add("breathing")
+                    derivedTags.add("relaxation")
+                }
+
+                // Stretching content
+                tag.equals("stretching", ignoreCase = true) ||
+                tag.equals("etirement", ignoreCase = true) ||
+                tag.equals("gentle", ignoreCase = true) ||
+                tag.equals("doux", ignoreCase = true) -> {
+                    derivedTags.add("stretching")
+                    derivedTags.add("gentle")
+                }
+
+                // Meditation content
+                tag.equals("meditation", ignoreCase = true) -> {
+                    derivedTags.add("meditation")
+                    derivedTags.add("relaxation")
+                }
+            }
+        }
+
+        return derivedTags.distinct()
+    }
+
+    /**
      * Converts ContentItem back to LessonDocument (for updates)
      * Note: This is primarily for future use when we allow editing from Android
      *
@@ -214,6 +296,7 @@ object LessonMapper {
             this.type = mapCategoryToLessonType(content.category)
             this.duration_sec = content.durationMinutes * 60
             this.tags = content.tags
+            this.need_tags = content.needTags  // NEW: Map needTags back to need_tags
             this.status = if (content.isActive) "ready" else "draft"
             this.thumbnail_url = content.thumbnailUrl
             // Note: renditions and audio_variants are not mapped back

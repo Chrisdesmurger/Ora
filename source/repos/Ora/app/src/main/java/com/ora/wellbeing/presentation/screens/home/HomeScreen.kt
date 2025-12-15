@@ -2,6 +2,7 @@ package com.ora.wellbeing.presentation.screens.home
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -30,6 +31,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.rememberAsyncImagePainter
 import com.ora.wellbeing.R
+import com.ora.wellbeing.domain.model.DailyNeedCategory
 import com.ora.wellbeing.presentation.components.OraIcons
 import com.ora.wellbeing.presentation.navigation.QuickSessionType
 import com.ora.wellbeing.presentation.theme.*
@@ -39,6 +41,7 @@ fun HomeScreen(
     onNavigateToContent: (String) -> Unit,
     onNavigateToProgram: (String) -> Unit,
     onNavigateToQuickSession: (QuickSessionType) -> Unit,
+    onNavigateToDailyNeedCategory: ((String) -> Unit)? = null,  // NEW: Issue #33
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -86,6 +89,16 @@ fun HomeScreen(
                     showSection = uiState.showPersonalizedSection,
                     hasCompletedOnboarding = uiState.hasCompletedOnboarding,
                     onContentClick = onNavigateToContent
+                )
+            }
+
+            // NEW: Section "Ton besoin du jour" - Daily need categories (Issue #33)
+            item {
+                DailyNeedSection(
+                    categories = uiState.dailyNeedCategories,
+                    onCategoryClick = { categoryId ->
+                        onNavigateToDailyNeedCategory?.invoke(categoryId)
+                    }
                 )
             }
 
@@ -369,6 +382,142 @@ private fun PersonalizedEmptyState() {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+/**
+ * NEW: Section "Ton besoin du jour" - Daily Need Categories (Issue #33)
+ * Displays horizontal scroll of 4 category cards
+ * Position: After "Pense pour toi", before "Programmes en cours"
+ */
+@Composable
+private fun DailyNeedSection(
+    categories: List<HomeUiState.DailyNeedCategoryWithContent>,
+    onCategoryClick: (String) -> Unit
+) {
+    // Don't show section if no categories available
+    if (categories.isEmpty()) {
+        return
+    }
+
+    Column {
+        // Section header
+        Text(
+            text = "Ton besoin du jour",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = TitleOrangeDark
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = "Choisis selon ton etat",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Horizontal scroll of category cards
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(end = 16.dp)
+        ) {
+            items(categories) { categoryWithContent ->
+                DailyNeedCategoryCard(
+                    category = categoryWithContent.category,
+                    contentCount = categoryWithContent.contentCount,
+                    onClick = { onCategoryClick(categoryWithContent.category.id) }
+                )
+            }
+        }
+    }
+}
+
+/**
+ * NEW: Card for a daily need category (Issue #33)
+ * Displays category name, description, and content count
+ * Uses category-specific color with 15% alpha for background
+ */
+@Composable
+private fun DailyNeedCategoryCard(
+    category: DailyNeedCategory,
+    contentCount: Int,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .width(180.dp)
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = category.color.copy(alpha = 0.15f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            // Category icon placeholder (colored circle)
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(
+                        color = category.color.copy(alpha = 0.3f),
+                        shape = CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                // Icon based on category
+                val icon = when (category.id) {
+                    "anti-stress" -> OraIcons.MindHead
+                    "energie-matinale" -> OraIcons.Waves
+                    "relaxation" -> OraIcons.YogaPerson
+                    "pratique-du-soir" -> OraIcons.MindHead
+                    else -> OraIcons.MindHead
+                }
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = category.color
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Category name
+            Text(
+                text = category.nameFr,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = category.color,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Category description
+            Text(
+                text = category.descriptionFr,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Content count
+            Text(
+                text = if (contentCount > 0) "$contentCount pratiques" else "Bientot disponible",
+                style = MaterialTheme.typography.labelMedium,
+                color = if (contentCount > 0) category.color else MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Medium
             )
         }
     }
@@ -730,11 +879,12 @@ private fun ActiveProgramCard(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Barre de progression avec pourcentage
+            // FIX(build-debug-android): Utiliser Float direct au lieu de lambda pour compatibilite Material 3
             LinearProgressIndicator(
                 progress = program.progressPercentage / 100f,
                 modifier = Modifier.fillMaxWidth(),
                 color = MaterialTheme.colorScheme.primary,
-                trackColor = Color(0xFFFFE4D9)
+                trackColor = Color(0xFFFFE4D9),
             )
 
             Spacer(modifier = Modifier.height(4.dp))
