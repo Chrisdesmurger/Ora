@@ -182,49 +182,71 @@ private fun QuickSessionsSection(
     }
 }
 
+/**
+ * Quick Session Card with background image and title overlay
+ * Issue #35: Replaced color background with images
+ * Design: Image de fond avec titre en overlay blanc semi-transparent
+ */
 @Composable
 private fun QuickSessionCard(
     sessionType: QuickSessionType,
     onClick: () -> Unit
 ) {
-    val (backgroundColor, icon, sessionName) = when (sessionType) {
-        QuickSessionType.BREATHING -> Triple(CategoryBreathingBlue, OraIcons.Waves, "Respiration")
-        QuickSessionType.YOGA_FLASH -> Triple(CategoryYogaGreen, OraIcons.YogaPerson, "Flash Yoga")
-        QuickSessionType.MINI_MEDITATION -> Triple(CategoryMeditationLavender, OraIcons.MindHead, "Meditation")
+    // Mapping session type to image resource and display name
+    val (imageRes, sessionName) = when (sessionType) {
+        QuickSessionType.BREATHING -> Pair(R.drawable.quick_session_respiration, "Respiration")
+        QuickSessionType.YOGA_FLASH -> Pair(R.drawable.quick_session_yoga, "Yoga")
+        QuickSessionType.MINI_MEDITATION -> Pair(R.drawable.quick_session_meditation, "Meditation")
     }
 
     Card(
         onClick = onClick,
         modifier = Modifier
             .width(140.dp)
-            .height(120.dp), // Hauteur fixe pour un meilleur centrage
-        colors = CardDefaults.cardColors(
-            containerColor = backgroundColor
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp) // Suppression de l'ombre
+            .height(120.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 4.dp,
+            pressedElevation = 8.dp
+        )
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Box(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(48.dp), // Icone agrandie
-                tint = MaterialTheme.colorScheme.background // Meme couleur que le fond de l'app
+            // Background image
+            Image(
+                painter = painterResource(id = imageRes),
+                contentDescription = sessionName,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            // Dark gradient overlay for text readability
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.5f)
+                            ),
+                            startY = 0f,
+                            endY = Float.POSITIVE_INFINITY
+                        )
+                    )
+            )
 
+            // Session title centered with white text at 85% opacity
             Text(
                 text = sessionName,
-                style = MaterialTheme.typography.titleMedium, // Titre plus grand
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                color = TitleGreenSage // Vert sage pale fonce
+                color = Color.White.copy(alpha = 0.85f),
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(8.dp)
             )
         }
     }
