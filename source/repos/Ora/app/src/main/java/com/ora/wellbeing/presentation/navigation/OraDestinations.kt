@@ -17,7 +17,7 @@ sealed class OraDestinations(
 ) {
     // FIX(auth): Destination d'authentification
     object Auth : OraDestinations("auth")
-    
+
     // Onboarding destinations (NEW)
     object Onboarding : OraDestinations("onboarding")
     object OnboardingCelebration : OraDestinations("onboarding_celebration")
@@ -126,6 +126,24 @@ sealed class OraDestinations(
         }
     }
 
+    // NEW (Issue #37): Category detail with duration filter for Quick Sessions
+    object CategoryDetailFiltered : OraDestinations(
+        route = "category_detail_filtered/{categoryId}/{maxDurationMinutes}",
+        arguments = listOf(
+            navArgument("categoryId") {
+                type = NavType.StringType
+            },
+            navArgument("maxDurationMinutes") {
+                type = NavType.IntType
+                defaultValue = 10
+            }
+        )
+    ) {
+        fun createRoute(categoryId: String, maxDurationMinutes: Int = 10): String {
+            return "category_detail_filtered/$categoryId/$maxDurationMinutes"
+        }
+    }
+
     object LibrarySearch : OraDestinations("library_search")
 
     object LibraryFilters : OraDestinations("library_filters")
@@ -213,7 +231,7 @@ sealed class OraDestinations(
 }
 
 /**
- * Élément de navigation pour la bottom bar
+ * Element de navigation pour la bottom bar
  */
 data class BottomNavigationItem(
     val route: String,
@@ -235,7 +253,7 @@ val bottomNavigationItems = listOf(
     ),
     BottomNavigationItem(
         route = OraDestinations.Library.route,
-        label = "Bibliothèque",
+        label = "Bibliotheque",
         selectedIcon = Icons.Filled.LibraryBooks,
         unselectedIcon = Icons.Outlined.LibraryBooks
     ),
@@ -262,11 +280,13 @@ val bottomNavigationItems = listOf(
 
 /**
  * Types de sessions rapides
+ * Issue #37: Added AUTO_MASSAGE type
  */
-enum class QuickSessionType(val displayName: String) {
-    BREATHING("Respiration Calme"),
-    YOGA_FLASH("Flash Yoga"),
-    MINI_MEDITATION("Mini Méditation");
+enum class QuickSessionType(val displayName: String, val categoryId: String) {
+    BREATHING("Respiration Calme", "Respiration"),
+    YOGA_FLASH("Flash Yoga", "Yoga"),
+    MINI_MEDITATION("Mini Meditation", "Meditation"),
+    AUTO_MASSAGE("Auto-massage", "Auto-massage");
 
     companion object {
         fun fromString(value: String): QuickSessionType? {
@@ -280,7 +300,7 @@ enum class QuickSessionType(val displayName: String) {
  */
 object NavigationUtils {
     /**
-     * Vérifie si une route fait partie de la bottom navigation
+     * Verifie si une route fait partie de la bottom navigation
      */
     fun isMainDestination(route: String?): Boolean {
         return route in bottomNavigationItems.map { it.route }
@@ -297,7 +317,7 @@ object NavigationUtils {
     }
 
     /**
-     * Génère une route de contenu avec paramètres optionnels
+     * Genere une route de contenu avec parametres optionnels
      */
     fun createContentRoute(
         contentId: String,

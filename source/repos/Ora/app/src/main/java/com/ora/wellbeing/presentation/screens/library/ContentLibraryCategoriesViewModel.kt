@@ -9,6 +9,8 @@ import com.ora.wellbeing.presentation.theme.CategoryMeditationLavender
 import com.ora.wellbeing.presentation.theme.CategoryPilatesPeach
 import com.ora.wellbeing.presentation.theme.CategoryYogaGreen
 import com.ora.wellbeing.presentation.theme.CategoryWellnessBeige
+import com.ora.wellbeing.presentation.theme.CategoryBreathingBlue
+import com.ora.wellbeing.presentation.theme.CategoryAutoMassageWarm
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +23,8 @@ import javax.inject.Inject
  *
  * Manages the state for the content library categories screen
  * Provides the list of main categories to display
+ *
+ * Issue #37: Added Respiration and Auto-massage categories
  */
 @HiltViewModel
 class ContentLibraryCategoriesViewModel @Inject constructor(
@@ -45,12 +49,13 @@ class ContentLibraryCategoriesViewModel @Inject constructor(
 
     /**
      * Creates the MVP category list with predefined colors
+     * Issue #37: Added Respiration and Auto-massage categories
      */
     private fun createCategories(): List<CategoryItem> {
         return listOf(
             CategoryItem(
-                id = "Méditation",
-                name = "Méditation",
+                id = "Meditation",
+                name = "Meditation",
                 color = CategoryMeditationLavender,
                 iconResId = R.drawable.category_meditation,
                 itemCount = 0 // TODO: Get real count from ContentRepository
@@ -69,9 +74,25 @@ class ContentLibraryCategoriesViewModel @Inject constructor(
                 iconResId = R.drawable.category_pilates,
                 itemCount = 0
             ),
+            // Issue #37: New category - Respiration
             CategoryItem(
-                id = "Bien-être",
-                name = "Bien-être",
+                id = "Respiration",
+                name = "Respiration",
+                color = CategoryBreathingBlue,
+                iconResId = R.drawable.category_respiration,
+                itemCount = 0
+            ),
+            // Issue #37: New category - Auto-massage
+            CategoryItem(
+                id = "Auto-massage",
+                name = "Auto-massage",
+                color = CategoryAutoMassageWarm,
+                iconResId = R.drawable.category_auto_massage,
+                itemCount = 0
+            ),
+            CategoryItem(
+                id = "Bien-etre",
+                name = "Bien-etre",
                 color = CategoryWellnessBeige,
                 iconResId = R.drawable.category_wellness,
                 itemCount = 0

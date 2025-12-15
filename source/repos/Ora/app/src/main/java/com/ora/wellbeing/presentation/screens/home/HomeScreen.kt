@@ -65,6 +65,7 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             // FIX(build-debug-android): Sessions rapides restaurees avec textes
+            // Issue #37: Quick sessions now navigate to filtered library
             item {
                 QuickSessionsSection(
                     onStartQuickSession = onNavigateToQuickSession
@@ -169,6 +170,7 @@ private fun QuickSessionsSection(
 
         Spacer(modifier = Modifier.height(12.dp))
 
+        // Issue #37: Display all 4 quick session types including AUTO_MASSAGE
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -185,6 +187,7 @@ private fun QuickSessionsSection(
 /**
  * Quick Session Card with background image and title overlay
  * Issue #35: Replaced color background with images
+ * Issue #37: Added AUTO_MASSAGE category and clickable navigation
  * Design: Image de fond avec titre en overlay blanc semi-transparent
  */
 @Composable
@@ -193,10 +196,12 @@ private fun QuickSessionCard(
     onClick: () -> Unit
 ) {
     // Mapping session type to image resource and display name
+    // Issue #37: Added AUTO_MASSAGE mapping
     val (imageRes, sessionName) = when (sessionType) {
         QuickSessionType.BREATHING -> Pair(R.drawable.quick_session_respiration, "Respiration")
         QuickSessionType.YOGA_FLASH -> Pair(R.drawable.quick_session_yoga, "Yoga")
         QuickSessionType.MINI_MEDITATION -> Pair(R.drawable.quick_session_meditation, "Meditation")
+        QuickSessionType.AUTO_MASSAGE -> Pair(R.drawable.quick_session_auto_massage, "Auto-massage")
     }
 
     Card(
