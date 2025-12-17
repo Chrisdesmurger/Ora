@@ -171,13 +171,12 @@ fun OraNavigation(
                     onNavigateToProgram = { programId ->
                         navController.navigate(OraDestinations.ProgramDetail.createRoute(programId))
                     },
+                    // Issue #37: Quick Sessions navigate to filtered library
                     onNavigateToQuickSession = { sessionType ->
-                        // NEW: Navigate to library with category filter and max duration 10 minutes
-                        // Quick sessions are short sessions < 10 minutes
                         navController.navigate(
                             OraDestinations.CategoryDetailFiltered.createRoute(
                                 categoryId = sessionType.categoryId,
-                                maxDuration = 10 // Sessions rapides: moins de 10 minutes
+                                maxDurationMinutes = 10 // Sessions rapides: moins de 10 minutes
                             )
                         )
                     },
@@ -324,14 +323,12 @@ fun OraNavigation(
                 )
             }
 
-            // NEW: Category Detail Screen with duration filter (for Quick Sessions)
+            // NEW (Issue #37): Category Detail with Duration Filter for Quick Sessions
             composable(
                 route = OraDestinations.CategoryDetailFiltered.route,
                 arguments = OraDestinations.CategoryDetailFiltered.arguments
-            ) { backStackEntry ->
-                val maxDuration = backStackEntry.arguments?.getInt("maxDuration") ?: -1
+            ) {
                 com.ora.wellbeing.presentation.screens.library.ContentCategoryDetailFilteredScreen(
-                    maxDurationMinutes = if (maxDuration > 0) maxDuration else null,
                     onBackClick = {
                         navController.popBackStack()
                     },
@@ -357,6 +354,7 @@ fun OraNavigation(
                     }
                 )
             }
+
 
             // Debug Screen - Firestore Diagnostic
             composable(OraDestinations.FirestoreDebug.route) {

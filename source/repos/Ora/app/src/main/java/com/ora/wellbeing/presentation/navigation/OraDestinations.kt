@@ -126,25 +126,21 @@ sealed class OraDestinations(
         }
     }
 
-    // NEW: Category detail with optional filters (for Quick Sessions navigation)
+    // NEW (Issue #37): Category detail with duration filter for Quick Sessions
     object CategoryDetailFiltered : OraDestinations(
-        route = "category_detail_filtered/{categoryId}?maxDuration={maxDuration}",
+        route = "category_detail_filtered/{categoryId}/{maxDurationMinutes}",
         arguments = listOf(
             navArgument("categoryId") {
                 type = NavType.StringType
             },
-            navArgument("maxDuration") {
+            navArgument("maxDurationMinutes") {
                 type = NavType.IntType
-                defaultValue = -1 // -1 means no filter
+                defaultValue = 10
             }
         )
     ) {
-        fun createRoute(categoryId: String, maxDuration: Int? = null): String {
-            return if (maxDuration != null && maxDuration > 0) {
-                "category_detail_filtered/$categoryId?maxDuration=$maxDuration"
-            } else {
-                "category_detail_filtered/$categoryId"
-            }
+        fun createRoute(categoryId: String, maxDurationMinutes: Int = 10): String {
+            return "category_detail_filtered/$categoryId/$maxDurationMinutes"
         }
     }
 
@@ -298,12 +294,10 @@ val bottomNavigationItems = listOf(
 
 /**
  * Types de sessions rapides
+ * Issue #37: Added AUTO_MASSAGE type
  * Maps to library categories for navigation with filtering
  */
-enum class QuickSessionType(
-    val displayName: String,
-    val categoryId: String // Maps to library category for navigation
-) {
+enum class QuickSessionType(val displayName: String, val categoryId: String) {
     BREATHING("Respiration Calme", "Respiration"),
     YOGA_FLASH("Flash Yoga", "Yoga"),
     MINI_MEDITATION("Mini Meditation", "Meditation"),

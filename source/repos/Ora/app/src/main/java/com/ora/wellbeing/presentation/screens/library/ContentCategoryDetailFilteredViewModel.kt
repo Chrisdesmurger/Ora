@@ -13,13 +13,13 @@ import javax.inject.Inject
 /**
  * ContentCategoryDetailFilteredViewModel
  *
- * Manages the state for a category detail screen with optional duration filtering
- * Used by Quick Sessions to show only short content (< 10 minutes)
+ * Issue #37: ViewModel for filtered category detail screen
+ * Manages the state for a category with duration filter (< X minutes)
+ * Used by Quick Sessions to show only short content
  *
  * Handles:
  * - Loading content for a specific category
- * - Filtering by duration (maxDurationMinutes)
- * - Filtering by subcategory (tags)
+ * - Filtering by maximum duration
  * - Providing available subcategories dynamically
  */
 @HiltViewModel
@@ -29,12 +29,7 @@ class ContentCategoryDetailFilteredViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val categoryId: String = savedStateHandle.get<String>("categoryId") ?: ""
-    private val maxDurationMinutesParam: Int = savedStateHandle.get<Int>("maxDuration") ?: -1
-
-    private val _maxDurationMinutes = MutableStateFlow<Int?>(
-        if (maxDurationMinutesParam > 0) maxDurationMinutesParam else null
-    )
-    val maxDurationMinutes: StateFlow<Int?> = _maxDurationMinutes.asStateFlow()
+    private val maxDurationMinutes: Int = savedStateHandle.get<Int>("maxDurationMinutes") ?: 10
 
     private val _selectedSubcategory = MutableStateFlow<String?>(null)
     val selectedSubcategory: StateFlow<String?> = _selectedSubcategory.asStateFlow()
@@ -46,42 +41,26 @@ class ContentCategoryDetailFilteredViewModel @Inject constructor(
     val uiState: StateFlow<ContentCategoryDetailFilteredUiState> = _uiState.asStateFlow()
 
     init {
-        loadCategoryContent()
+        loadFilteredCategoryContent()
     }
 
-    /**
-     * Sets the max duration filter from the composable
-     */
-    fun setMaxDurationFilter(maxMinutes: Int?) {
-        _maxDurationMinutes.value = maxMinutes
-    }
-
-    private fun loadCategoryContent() {
+    private fun loadFilteredCategoryContent() {
         viewModelScope.launch {
             contentRepository.getContentByCategory(categoryId)
                 .catch { exception ->
-                    timber.log.Timber.e(exception, "Error loading category content: $categoryId")
+                    timber.log.Timber.e(exception, "Error loading filtered category content: $categoryId")
                     _uiState.value = ContentCategoryDetailFilteredUiState(
                         error = exception.message ?: "Erreur de chargement"
                     )
                 }
                 .combine(_selectedSubcategory) { allContent, selectedTag ->
-                    Pair(allContent, selectedTag)
-                }
-                .combine(_maxDurationMinutes) { (allContent, selectedTag), maxDuration ->
-                    // Filter by duration first (if specified)
-                    val durationFilteredContent = if (maxDuration != null && maxDuration > 0) {
-                        allContent.filter { content ->
-                            // Parse duration string like "5 min" or "10 min"
-                            val durationMinutes = parseDurationMinutes(content.duration)
-                            durationMinutes <= maxDuration
-                        }
-                    } else {
-                        allContent
+                    // Filter by duration (use durationMinutes field from ContentItem)
+                    val durationFiltered = allContent.filter { content ->
+                        content.durationMinutes <= maxDurationMinutes
                     }
 
                     // Extract unique tags from duration-filtered content
-                    val uniqueTags = durationFilteredContent
+                    val uniqueTags = durationFiltered
                         .flatMap { it.tags }
                         .distinct()
                         .sorted()
@@ -89,69 +68,23 @@ class ContentCategoryDetailFilteredViewModel @Inject constructor(
                     _availableSubcategories.value = uniqueTags
 
                     // Filter by selected tag if any
-                    val finalFilteredContent = if (selectedTag != null) {
-                        durationFilteredContent.filter { it.tags.contains(selectedTag) }
+                    val finalContent = if (selectedTag != null) {
+                        durationFiltered.filter { it.tags.contains(selectedTag) }
                     } else {
-                        durationFilteredContent
+                        durationFiltered
                     }
 
-                    // Generate title based on category and duration filter
-                    val title = generateTitle(categoryId, maxDuration)
-
                     ContentCategoryDetailFilteredUiState(
-                        categoryName = title,
-                        allContent = finalFilteredContent,
-                        isLoading = false,
-                        maxDurationFilter = maxDuration
+                        categoryName = categoryId,
+                        maxDurationMinutes = maxDurationMinutes,
+                        allContent = finalContent,
+                        totalCount = finalContent.size,
+                        isLoading = false
                     )
                 }
                 .collect { state ->
                     _uiState.value = state
                 }
-        }
-    }
-
-    /**
-     * Parses duration string like "5 min", "10 min", "1h 30min" to minutes
-     */
-    private fun parseDurationMinutes(duration: String): Int {
-        return try {
-            // Handle formats like "5 min", "10min", "1h 30min"
-            val lowerDuration = duration.lowercase().trim()
-
-            // Check for hour format
-            if (lowerDuration.contains("h")) {
-                val parts = lowerDuration.split("h")
-                val hours = parts[0].trim().toIntOrNull() ?: 0
-                val minutes = parts.getOrNull(1)?.replace("min", "")?.trim()?.toIntOrNull() ?: 0
-                hours * 60 + minutes
-            } else {
-                // Simple minutes format
-                lowerDuration.replace("min", "").replace(" ", "").toIntOrNull() ?: Int.MAX_VALUE
-            }
-        } catch (e: Exception) {
-            Int.MAX_VALUE // If we can't parse, assume it's long
-        }
-    }
-
-    /**
-     * Generates a user-friendly title based on category and filter
-     */
-    private fun generateTitle(categoryId: String, maxDuration: Int?): String {
-        val baseTitle = when (categoryId.lowercase()) {
-            "meditation", "mediation" -> "Meditation"
-            "yoga" -> "Yoga"
-            "respiration" -> "Respiration"
-            "auto-massage" -> "Auto-massage"
-            "pilates" -> "Pilates"
-            "bien-etre", "bien-être" -> "Bien-etre"
-            else -> categoryId
-        }
-
-        return if (maxDuration != null && maxDuration > 0) {
-            "$baseTitle - Sessions courtes"
-        } else {
-            baseTitle
         }
     }
 
@@ -174,12 +107,14 @@ class ContentCategoryDetailFilteredViewModel @Inject constructor(
 }
 
 /**
- * UI State for category detail screen with filtering
+ * UI State for filtered category detail screen
+ * Issue #37: Includes maxDurationMinutes for badge display
  */
 data class ContentCategoryDetailFilteredUiState(
     val categoryName: String = "",
+    val maxDurationMinutes: Int = 10,
     val allContent: List<ContentItem> = emptyList(),
+    val totalCount: Int = 0,
     val isLoading: Boolean = true,
-    val error: String? = null,
-    val maxDurationFilter: Int? = null
+    val error: String? = null
 )

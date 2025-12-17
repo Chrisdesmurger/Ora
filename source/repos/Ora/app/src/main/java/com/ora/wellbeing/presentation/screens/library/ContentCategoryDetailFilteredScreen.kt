@@ -1,45 +1,45 @@
 package com.ora.wellbeing.presentation.screens.library
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ora.wellbeing.presentation.components.SubcategoryChip
 import com.ora.wellbeing.presentation.components.ContentCard
+import com.ora.wellbeing.presentation.theme.TitleOrangeDark
 
 /**
  * ContentCategoryDetailFilteredScreen
  *
- * Detail screen for a category with optional duration filtering
- * Used by Quick Sessions to show only short content (< 10 minutes)
+ * Issue #37: Detail screen for a category with duration filter
+ * Used by Quick Sessions to show only short content (< X minutes)
  *
  * Displays:
- * - Category title with duration indicator
+ * - Category title with duration badge (e.g., "< 10 min")
  * - Horizontal scrollable filter chips (subcategories/tags)
- * - 2-column grid of filtered content items
+ * - 2-column grid of content items (filtered by duration)
  *
- * @param maxDurationMinutes Optional max duration filter (e.g., 10 for quick sessions)
- * @param onBackClick Callback when back button is pressed
- * @param onContentClick Callback when a content item is clicked
+ * Design inspired by ContentCategoryDetailScreen with added duration badge
  */
 @Composable
 fun ContentCategoryDetailFilteredScreen(
-    maxDurationMinutes: Int? = null,
     onBackClick: () -> Unit,
     onContentClick: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -49,38 +49,44 @@ fun ContentCategoryDetailFilteredScreen(
     val selectedSubcategory by viewModel.selectedSubcategory.collectAsState()
     val availableSubcategories by viewModel.availableSubcategories.collectAsState()
 
-    // Set the duration filter from navigation parameter
-    LaunchedEffect(maxDurationMinutes) {
-        viewModel.setMaxDurationFilter(maxDurationMinutes)
-    }
-
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Column {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Category name
                         Text(
                             text = uiState.categoryName,
                             style = MaterialTheme.typography.headlineMedium.copy(
                                 fontWeight = FontWeight.Bold
                             )
                         )
-                        // Show duration filter indicator
-                        if (uiState.maxDurationFilter != null) {
+
+                        // Duration badge
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        ) {
                             Row(
-                                verticalAlignment = Alignment.CenterVertically
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Timer,
                                     contentDescription = null,
                                     modifier = Modifier.size(14.dp),
-                                    tint = MaterialTheme.colorScheme.primary
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
-                                Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "Moins de ${uiState.maxDurationFilter} min",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.primary
+                                    text = "< ${uiState.maxDurationMinutes} min",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
                                 )
                             }
                         }
@@ -137,11 +143,19 @@ fun ContentCategoryDetailFilteredScreen(
                     Column(
                         modifier = Modifier.fillMaxSize()
                     ) {
+                        // Count indicator
+                        Text(
+                            text = "${uiState.totalCount} session${if (uiState.totalCount > 1) "s" else ""} disponible${if (uiState.totalCount > 1) "s" else ""}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+
                         // Subcategory filter chips
                         if (availableSubcategories.isNotEmpty()) {
                             LazyRow(
                                 modifier = Modifier.fillMaxWidth(),
-                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 // "Tous" chip (clear filter)
@@ -184,23 +198,24 @@ fun ContentCategoryDetailFilteredScreen(
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Timer,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(48.dp),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
                                     Text(
-                                        text = if (uiState.maxDurationFilter != null) {
-                                            "Aucun contenu court disponible"
-                                        } else {
-                                            "Aucun contenu disponible"
-                                        },
+                                        text = "Aucun contenu de moins de ${uiState.maxDurationMinutes} minutes",
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
-                                    if (uiState.maxDurationFilter != null) {
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Text(
-                                            text = "Essayez la bibliotheque complete",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "Essayez une autre categorie",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                    )
                                 }
                             }
                         } else {
