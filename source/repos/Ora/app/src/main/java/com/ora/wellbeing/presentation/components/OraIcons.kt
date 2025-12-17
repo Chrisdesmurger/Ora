@@ -12,235 +12,241 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
 /**
- * Icônes personnalisées pour l'application Ora.
- * Utilise Material Icons où possible, avec des icônes custom pour les pratiques spécifiques.
+ * Icones personnalisees pour l'application Ora.
+ * Utilise Material Icons ou possible, avec des icones custom pour les pratiques specifiques.
  */
 object OraIcons {
 
     /**
-     * Icône Yoga - personne en position de méditation/lotus
+     * Icone Yoga - personne en position de meditation/lotus
      */
     val Yoga: ImageVector
         get() = Icons.Default.SelfImprovement
 
     /**
-     * Icône Pilates - personne en mouvement/exercice
+     * Icone Pilates - personne en mouvement/exercice
      */
     val Pilates: ImageVector
         get() = Icons.Default.FitnessCenter
 
     /**
-     * Icône Méditation - lotus ou position zen
+     * Icone Meditation - lotus ou position zen
      */
     val Meditation: ImageVector
         get() = Icons.Default.Spa
 
     /**
-     * Icône Respiration - cercle avec vagues ou @ stylisé
+     * Icone Respiration - cercle avec vagues ou @ stylise
      */
     val Respiration: ImageVector
         get() = Icons.Default.Air
 
     /**
-     * Icône Gratitude - coeur ou étoile
+     * Icone Auto-massage - mains ou toucher therapeutique
+     */
+    val AutoMassage: ImageVector
+        get() = Icons.Default.BackHand
+
+    /**
+     * Icone Gratitude - coeur ou etoile
      */
     val Gratitude: ImageVector
         get() = Icons.Default.FavoriteBorder
 
     /**
-     * Icône Objectifs - cible ou check
+     * Icone Objectifs - cible ou check
      */
     val Goals: ImageVector
         get() = Icons.Default.CheckCircleOutline
 
     /**
-     * Icône Streak (jours d'affilée) - flamme
+     * Icone Streak (jours d'affilee) - flamme
      */
     val Streak: ImageVector
         get() = Icons.Default.LocalFireDepartment
 
     /**
-     * Icône Temps total - horloge
+     * Icone Temps total - horloge
      */
     val TotalTime: ImageVector
         get() = Icons.Default.Schedule
 
     /**
-     * Icône Dernière activité - play ou historique
+     * Icone Derniere activite - play ou historique
      */
     val LastActivity: ImageVector
         get() = Icons.Default.History
 
     /**
-     * Icône Calendrier
+     * Icone Calendrier
      */
     val Calendar: ImageVector
         get() = Icons.Default.CalendarToday
 
     /**
-     * Icône Badge/Récompense
+     * Icone Badge/Recompense
      */
     val Badge: ImageVector
         get() = Icons.Default.EmojiEvents
 
     /**
-     * Icône Paramètres
+     * Icone Parametres
      */
     val Settings: ImageVector
         get() = Icons.Default.Settings
 
     /**
-     * Icône Modifier/Editer
+     * Icone Modifier/Editer
      */
     val Edit: ImageVector
         get() = Icons.Default.Edit
 
     /**
-     * Icône Fermer
+     * Icone Fermer
      */
     val Close: ImageVector
         get() = Icons.Default.Close
 
     /**
-     * Icône Play
+     * Icone Play
      */
     val Play: ImageVector
         get() = Icons.Default.PlayArrow
 
     /**
-     * Icône Pause
+     * Icone Pause
      */
     val Pause: ImageVector
         get() = Icons.Default.Pause
 
     /**
-     * Icône Favoris
+     * Icone Favoris
      */
     val Favorite: ImageVector
         get() = Icons.Default.Favorite
 
     /**
-     * Icône Recherche
+     * Icone Recherche
      */
     val Search: ImageVector
         get() = Icons.Default.Search
 
     /**
-     * Icône Filtre
+     * Icone Filtre
      */
     val Filter: ImageVector
         get() = Icons.Default.FilterList
 
     /**
-     * Icône Accueil
+     * Icone Accueil
      */
     val Home: ImageVector
         get() = Icons.Default.Home
 
     /**
-     * Icône Bibliothèque
+     * Icone Bibliotheque
      */
     val Library: ImageVector
         get() = Icons.Default.VideoLibrary
 
     /**
-     * Icône Journal
+     * Icone Journal
      */
     val Journal: ImageVector
         get() = Icons.Default.MenuBook
 
     /**
-     * Icône Programmes
+     * Icone Programmes
      */
     val Programs: ImageVector
         get() = Icons.Default.Layers
 
     /**
-     * Icône Profil
+     * Icone Profil
      */
     val Profile: ImageVector
         get() = Icons.Default.Person
 
     /**
-     * Icône Notification
+     * Icone Notification
      */
     val Notification: ImageVector
         get() = Icons.Default.Notifications
 
     /**
-     * Icône Notif OFF
+     * Icone Notif OFF
      */
     val NotificationOff: ImageVector
         get() = Icons.Default.NotificationsOff
 
     /**
-     * Icône Mode sombre
+     * Icone Mode sombre
      */
     val DarkMode: ImageVector
         get() = Icons.Default.DarkMode
 
     /**
-     * Icône Mode clair
+     * Icone Mode clair
      */
     val LightMode: ImageVector
         get() = Icons.Default.LightMode
 
     /**
-     * Icône Info
+     * Icone Info
      */
     val Info: ImageVector
         get() = Icons.Default.Info
 
     /**
-     * Icône Partager
+     * Icone Partager
      */
     val Share: ImageVector
         get() = Icons.Default.Share
 
     /**
-     * Icône Télécharger
+     * Icone Telecharger
      */
     val Download: ImageVector
         get() = Icons.Default.Download
 
     /**
-     * Icône Plus/Ajouter
+     * Icone Plus/Ajouter
      */
     val Add: ImageVector
         get() = Icons.Default.Add
 
     /**
-     * Icône Check/Validé
+     * Icone Check/Valide
      */
     val Check: ImageVector
         get() = Icons.Default.Check
 
     /**
-     * Icône Flèche retour
+     * Icone Fleche retour
      */
     val ArrowBack: ImageVector
         get() = Icons.Default.ArrowBack
 
     /**
-     * Icône Flèche avant
+     * Icone Fleche avant
      */
     val ArrowForward: ImageVector
         get() = Icons.Default.ArrowForward
 
     /**
-     * Icône Vagues pour Respiration - 3 lignes ondulées
+     * Icone Vagues pour Respiration - 3 lignes ondulees
      */
     val Waves: ImageVector
         get() = Icons.Default.Air
 
     /**
-     * Icône Personne en position Lotus/Yoga
+     * Icone Personne en position Lotus/Yoga
      */
     val YogaPerson: ImageVector
         get() = Icons.Default.SelfImprovement
 
     /**
-     * Icône Tête/Profil pour Méditation
+     * Icone Tete/Profil pour Meditation
      */
     val MindHead: ImageVector
         get() = Icons.Default.Psychology

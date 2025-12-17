@@ -50,6 +50,7 @@ class ContentLibraryCategoriesViewModel @Inject constructor(
     /**
      * Creates the MVP category list with predefined colors
      * Issue #37: Added Respiration and Auto-massage categories
+     * Order: Meditation, Yoga, Pilates, Respiration, Auto-massage, Bien-etre
      */
     private fun createCategories(): List<CategoryItem> {
         return listOf(

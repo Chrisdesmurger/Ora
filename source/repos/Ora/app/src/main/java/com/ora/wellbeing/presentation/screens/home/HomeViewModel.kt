@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.ora.wellbeing.data.model.ContentItem
 import com.ora.wellbeing.data.model.UserProgram
+import com.ora.wellbeing.data.model.DailyNeedCategory
 import com.ora.wellbeing.data.repository.OnboardingRepository
 import com.ora.wellbeing.domain.repository.ContentRepository
 import com.ora.wellbeing.domain.repository.FirestoreUserProfileRepository
@@ -66,6 +67,9 @@ class HomeViewModel @Inject constructor(
                 val onboardingResult = onboardingRepository.getUserOnboardingResponse(uid)
                 val hasCompletedOnboarding = onboardingResult.getOrNull()?.completed == true
 
+                // NEW: Load daily need categories (Issue #33)
+                loadDailyNeedCategories()
+
                 // Combine all data sources for real-time personalized recommendations
                 combine(
                     userProfileRepository.getUserProfile(uid),
@@ -114,7 +118,7 @@ class HomeViewModel @Inject constructor(
                     // Map active programs to UI model
                     val activeProgramsUi = data.activePrograms.map { it.toActiveProgram() }
 
-                    _uiState.value = HomeUiState(
+                    _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         error = null,
                         userName = profile?.displayName() ?: "Invite",
@@ -139,6 +143,49 @@ class HomeViewModel @Inject constructor(
                     error = "Erreur lors du chargement de l'accueil: ${e.message}"
                 )
                 Timber.e(e, "Error observing home data")
+            }
+        }
+    }
+
+    /**
+     * NEW: Loads daily need categories from hardcoded list (Issue #33)
+     * Fetches categories and their associated content counts
+     */
+    private fun loadDailyNeedCategories() {
+        viewModelScope.launch {
+            try {
+                Timber.d("HomeViewModel: Loading daily need categories")
+
+                // Get hardcoded categories
+                val categories = DailyNeedCategory.getAllCategories()
+
+                // Get all content to calculate counts
+                contentRepository.getAllContent()
+                    .catch { e ->
+                        Timber.e(e, "HomeViewModel: Error loading content for category counts")
+                        emit(emptyList())
+                    }
+                    .collect { allContent ->
+                        // Calculate content counts for each category
+                        val categoriesWithContent = categories.map { category ->
+                            val contentCount = allContent.count { content ->
+                                content.needTags.any { tag -> tag in category.filterTags }
+                            }
+
+                            HomeUiState.DailyNeedCategoryWithContent(
+                                category = category,
+                                contentCount = contentCount
+                            )
+                        }
+
+                        _uiState.value = _uiState.value.copy(
+                            dailyNeedCategories = categoriesWithContent
+                        )
+
+                        Timber.d("HomeViewModel: Daily need categories updated: ${categoriesWithContent.map { "${it.category.id}:${it.contentCount}" }}")
+                    }
+            } catch (e: Exception) {
+                Timber.e(e, "HomeViewModel: Error in loadDailyNeedCategories")
             }
         }
     }
@@ -274,7 +321,9 @@ data class HomeUiState(
     // NEW: Personalized recommendations from Cloud Functions
     val personalizedRecommendations: List<ContentRecommendation> = emptyList(),
     val showPersonalizedSection: Boolean = false,
-    val hasCompletedOnboarding: Boolean = false
+    val hasCompletedOnboarding: Boolean = false,
+    // NEW: Daily need categories for "Ton besoin du jour" section (Issue #33)
+    val dailyNeedCategories: List<DailyNeedCategoryWithContent> = emptyList()
 ) {
     /**
      * Recommandation de contenu pour l'ecran d'accueil
@@ -301,6 +350,15 @@ data class HomeUiState(
         val progressPercentage: Int,
         val nextSessionTitle: String = "",
         val nextSessionDuration: String = ""
+    )
+
+    /**
+     * NEW: Category with content count for "Ton besoin du jour" section (Issue #33)
+     * Combines DailyNeedCategory with the number of available lessons
+     */
+    data class DailyNeedCategoryWithContent(
+        val category: DailyNeedCategory,
+        val contentCount: Int
     )
 }
 

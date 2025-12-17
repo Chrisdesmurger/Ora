@@ -2,6 +2,7 @@ package com.ora.wellbeing.presentation.screens.home
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -30,6 +31,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.rememberAsyncImagePainter
 import com.ora.wellbeing.R
+import com.ora.wellbeing.data.model.DailyNeedCategory
 import com.ora.wellbeing.presentation.components.OraIcons
 import com.ora.wellbeing.presentation.navigation.QuickSessionType
 import com.ora.wellbeing.presentation.theme.*
@@ -39,6 +41,7 @@ fun HomeScreen(
     onNavigateToContent: (String) -> Unit,
     onNavigateToProgram: (String) -> Unit,
     onNavigateToQuickSession: (QuickSessionType) -> Unit,
+    onNavigateToDailyNeedCategory: ((String) -> Unit)? = null,  // NEW: Issue #33
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -87,6 +90,16 @@ fun HomeScreen(
                     showSection = uiState.showPersonalizedSection,
                     hasCompletedOnboarding = uiState.hasCompletedOnboarding,
                     onContentClick = onNavigateToContent
+                )
+            }
+
+            // NEW: Section "Ton besoin du jour" - Daily need categories (Issue #33)
+            item {
+                DailyNeedSection(
+                    categories = uiState.dailyNeedCategories,
+                    onCategoryClick = { categoryId ->
+                        onNavigateToDailyNeedCategory?.invoke(categoryId)
+                    }
                 )
             }
 
@@ -397,6 +410,130 @@ private fun PersonalizedEmptyState() {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
+        }
+    }
+}
+
+/**
+ * NEW: Section "Ton besoin du jour" - Daily Need Categories (Issue #33)
+ * Displays horizontal scroll of 4 category cards
+ * Position: After "Pense pour toi", before "Programmes en cours"
+ */
+@Composable
+private fun DailyNeedSection(
+    categories: List<HomeUiState.DailyNeedCategoryWithContent>,
+    onCategoryClick: (String) -> Unit
+) {
+    // Don't show section if no categories available
+    if (categories.isEmpty()) {
+        return
+    }
+
+    Column {
+        // Section header
+        Text(
+            text = "Ton besoin du jour",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = TitleOrangeDark
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = "Choisis selon ton etat",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Horizontal scroll of category cards
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(end = 16.dp)
+        ) {
+            items(categories) { categoryWithContent ->
+                DailyNeedCategoryCard(
+                    category = categoryWithContent.category,
+                    contentCount = categoryWithContent.contentCount,
+                    onClick = { onCategoryClick(categoryWithContent.category.id) }
+                )
+            }
+        }
+    }
+}
+
+/**
+ * NEW: Card for a daily need category (Issue #33)
+ * Displays category with background image and title overlay
+ * Image de fond locale + titre blanc 85% transparence centré
+ */
+@Composable
+private fun DailyNeedCategoryCard(
+    category: DailyNeedCategory,
+    contentCount: Int,
+    onClick: () -> Unit
+) {
+    // Sélection de l'image de fond selon la catégorie
+    val backgroundImage = when (category.id) {
+        "anti-stress" -> R.drawable.daily_need_anti_stress
+        "energie-matinale" -> R.drawable.daily_need_energie_matinale
+        "relaxation" -> R.drawable.daily_need_relaxation
+        "pratique-du-soir" -> R.drawable.daily_need_pratique_du_soir
+        else -> R.drawable.daily_need_anti_stress
+    }
+
+    Card(
+        modifier = Modifier
+            .width(180.dp)
+            .height(240.dp)
+            .clickable(onClick = onClick),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // Image de fond
+            Image(
+                painter = painterResource(id = backgroundImage),
+                contentDescription = category.nameFr,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+
+            // Overlay gradient pour améliorer la lisibilité
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.4f)
+                            )
+                        )
+                    )
+            )
+
+            // Titre centré avec background blanc 85% transparence
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = category.nameFr,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White.copy(alpha = 0.85f),
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }
@@ -757,11 +894,12 @@ private fun ActiveProgramCard(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Barre de progression avec pourcentage
+            // FIX(build-debug-android): Utiliser Float direct au lieu de lambda pour compatibilite Material 3
             LinearProgressIndicator(
                 progress = program.progressPercentage / 100f,
                 modifier = Modifier.fillMaxWidth(),
                 color = MaterialTheme.colorScheme.primary,
-                trackColor = Color(0xFFFFE4D9)
+                trackColor = Color(0xFFFFE4D9),
             )
 
             Spacer(modifier = Modifier.height(4.dp))

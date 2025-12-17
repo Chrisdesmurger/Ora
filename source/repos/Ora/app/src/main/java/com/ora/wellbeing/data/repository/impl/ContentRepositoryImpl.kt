@@ -81,6 +81,7 @@ class ContentRepositoryImpl @Inject constructor(
             rating = 0.0f // TODO: Calculate from ratings
             completionCount = 0 // TODO: From user stats
             tags = this@toContentItem.tags
+            needTags = this@toContentItem.needTags  // NEW: Daily needs filtering (Issue #33)
             isActive = this@toContentItem.status == STATUS_READY
             order = this@toContentItem.order  // Order for sorting (lower = higher priority)
             // FIX(build-debug-android): Use correct Timestamp constructor with seconds (Long) and nanoseconds (Int)
@@ -117,7 +118,8 @@ class ContentRepositoryImpl @Inject constructor(
             programId = null, // TODO: Extract from lesson data
             order = order,  // Preserve sort order
             status = if (isActive) STATUS_READY else "draft",
-            updatedAt = System.currentTimeMillis()
+            updatedAt = System.currentTimeMillis(),
+            needTags = needTags  // NEW: Daily needs filtering (Issue #33)
         )
     }
 

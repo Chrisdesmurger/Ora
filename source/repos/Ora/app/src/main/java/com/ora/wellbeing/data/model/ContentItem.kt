@@ -35,6 +35,15 @@ class ContentItem() {
     var isActive: Boolean = true
     var order: Int = 0  // Order for sorting (lower values appear first, negative for featured content)
 
+    /**
+     * Need tags for "Ton besoin du jour" filtering
+     * Used to match content with DailyNeedCategory filter_tags
+     * Example: ["relaxation", "morning", "stress-relief", "energizing", "bedtime"]
+     *
+     * NEW: Added for Issue #33 - Daily Needs Section
+     */
+    var needTags: List<String> = emptyList()
+
     // Firestore Timestamp - automatically populated with @ServerTimestamp on create/update
     @ServerTimestamp
     var createdAt: Timestamp? = null
@@ -47,11 +56,11 @@ class ContentItem() {
     companion object {
         // Valid categories
         val VALID_CATEGORIES = listOf(
-            "Méditation",
+            "Meditation",
             "Yoga",
             "Respiration",
             "Pilates",
-            "Bien-être",
+            "Bien-etre",
             "Sommeil"
         )
 
@@ -60,6 +69,22 @@ class ContentItem() {
             "video",
             "audio",
             "article"
+        )
+
+        // Valid need tags for "Ton besoin du jour"
+        val VALID_NEED_TAGS = listOf(
+            "relaxation",
+            "morning",
+            "evening",
+            "energizing",
+            "bedtime",
+            "breathing",
+            "stretching",
+            "meditation",
+            "stress-relief",
+            "gentle",
+            "wake-up",
+            "sleep"
         )
     }
 
@@ -88,7 +113,8 @@ class ContentItem() {
         return title.lowercase().contains(lowerQuery) ||
                 description.lowercase().contains(lowerQuery) ||
                 instructor.lowercase().contains(lowerQuery) ||
-                tags.any { it.lowercase().contains(lowerQuery) }
+                tags.any { it.lowercase().contains(lowerQuery) } ||
+                needTags.any { it.lowercase().contains(lowerQuery) }
     }
 
     /**
@@ -100,6 +126,22 @@ class ContentItem() {
             "${description.take(97)}..."
         } else {
             description
+        }
+    }
+
+    /**
+     * Checks if this content matches any of the given need tags
+     * Used by DailyNeedCategoryRepository for filtering
+     *
+     * @param filterTags List of tags to match against
+     * @return True if any needTag matches any filterTag (case-insensitive)
+     */
+    @Exclude
+    fun matchesNeedTags(filterTags: List<String>): Boolean {
+        return needTags.any { needTag ->
+            filterTags.any { filterTag ->
+                needTag.equals(filterTag, ignoreCase = true)
+            }
         }
     }
 }

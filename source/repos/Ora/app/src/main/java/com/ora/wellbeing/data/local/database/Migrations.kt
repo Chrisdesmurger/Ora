@@ -142,4 +142,30 @@ object Migrations {
             )
         }
     }
+
+    /**
+     * Migration 3 -> 4
+     *
+     * Changes:
+     * 1. Add new field to Content table:
+     *    - needTags (List<String> stored as JSON, for "Ton besoin du jour" filtering)
+     *
+     * Context: Issue #33 - Daily needs section
+     * This field stores tags for filtering content by daily needs categories:
+     * - anti-stress: stress_relief, anxiety_relief, calm
+     * - energie-matinale: morning_energy, energizing, wake_up
+     * - relaxation: relaxation, deep_relaxation, unwind
+     * - pratique-du-soir: evening_practice, sleep_preparation, bedtime
+     */
+    val MIGRATION_3_4 = object : Migration(3, 4) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Add needTags column to content table (stored as JSON array)
+            db.execSQL(
+                """
+                ALTER TABLE content
+                ADD COLUMN needTags TEXT NOT NULL DEFAULT '[]'
+                """.trimIndent()
+            )
+        }
+    }
 }

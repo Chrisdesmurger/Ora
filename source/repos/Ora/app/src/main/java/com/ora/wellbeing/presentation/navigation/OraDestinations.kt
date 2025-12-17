@@ -148,6 +148,20 @@ sealed class OraDestinations(
 
     object LibraryFilters : OraDestinations("library_filters")
 
+    // NEW (Issue #33): Daily need detail screen - filters by need_tags across all content types
+    object DailyNeedDetail : OraDestinations(
+        route = "daily_need_detail/{categoryId}",
+        arguments = listOf(
+            navArgument("categoryId") {
+                type = NavType.StringType
+            }
+        )
+    ) {
+        fun createRoute(categoryId: String): String {
+            return "daily_need_detail/$categoryId"
+        }
+    }
+
     // Profile specific destinations
     object EditProfile : OraDestinations("edit_profile")
 
@@ -281,6 +295,7 @@ val bottomNavigationItems = listOf(
 /**
  * Types de sessions rapides
  * Issue #37: Added AUTO_MASSAGE type
+ * Maps to library categories for navigation with filtering
  */
 enum class QuickSessionType(val displayName: String, val categoryId: String) {
     BREATHING("Respiration Calme", "Respiration"),
