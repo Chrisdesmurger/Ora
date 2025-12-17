@@ -50,6 +50,7 @@
     <string name="profile_edit_language">Langue</string>
     <string name="profile_edit_language_french">Français</string>
     <string name="profile_edit_language_english">English</string>
+    <string name="profile_edit_language_spanish">Español</string>
     <string name="profile_edit_notifications">Notifications</string>
     <string name="profile_edit_notifications_desc">Recevoir des rappels quotidiens</string>
     <string name="profile_edit_evening_reminder">Rappel du soir</string>
@@ -96,8 +97,8 @@
     <string name="stats_this_month">%1$s ce mois-ci</string>
 
     <!-- Home Screen -->
-    <string name="home_suggestion_title">Your suggestion of the day</string>
-    <string name="home_get_started">Get Started</string>
+    <string name="home_suggestion_title">Votre suggestion du jour</string>
+    <string name="home_get_started">Commencer</string>
     <string name="home_quick_sessions_title">Sessions rapides</string>
     <string name="home_recommendations_title">Recommandations du jour</string>
     <string name="home_active_programs_title">Programmes en cours</string>
@@ -230,4 +231,85 @@
     <string name="edit">Modifier</string>
     <string name="delete">Supprimer</string>
     <string name="confirm">Confirmer</string>
+
+    <!-- Onboarding (NEW - Issue #39) -->
+    <string name="onboarding_splash_tagline">Respire. Rayonne.</string>
+    <string name="onboarding_welcome_title">Bienvenue dans ORA 🌙</string>
+    <string name="onboarding_welcome_message">Ici, tu peux ralentir, relâcher la pression, te recentrer... Tu es à la bonne place.</string>
+    <string name="onboarding_welcome_cta">Créer mon espace ORA</string>
+    <string name="onboarding_welcome_login">J\'ai déjà un compte</string>
+    <string name="onboarding_transition_message">Ton espace ORA se crée avec toi 🤍</string>
+    <string name="onboarding_email_title">Ton email</string>
+    <string name="onboarding_email_placeholder">ton@email.com</string>
+    <string name="onboarding_email_continue">Continuer</string>
+    <string name="onboarding_email_or">ou</string>
+    <string name="onboarding_email_google">Continuer avec Google</string>
+    <string name="onboarding_questionnaire_intro_title">Faisons connaissance 🌿</string>
+    <string name="onboarding_questionnaire_intro_subtitle">Pour personnaliser ton expérience</string>
+    <string name="onboarding_questionnaire_intro_cta">Commencer</string>
+    <string name="onboarding_question_title">Question %1$d sur %2$d</string>
+    <string name="onboarding_question_next">Suivant</string>
+    <string name="onboarding_question_previous">Précédent</string>
+    <string name="onboarding_question_skip">Passer</string>
+    <string name="onboarding_celebration_title">Bienvenue dans Ora !</string>
+    <string name="onboarding_celebration_subtitle">Ton voyage vers le bien-être commence maintenant</string>
+    <string name="onboarding_celebration_cta">Découvrir</string>
+
+    <!-- Auth (NEW - Issue #39) -->
+    <string name="auth_create_account">Créer un compte</string>
+    <string name="auth_login">Se connecter</string>
+    <string name="auth_email_label">Email</string>
+    <string name="auth_password_label">Mot de passe</string>
+    <string name="auth_forgot_password">Mot de passe oublié ?</string>
+    <string name="auth_or_divider">ou</string>
+    <string name="auth_google_signin">Continuer avec Google</string>
+    <string name="auth_terms">En continuant, vous acceptez nos Conditions Générales</string>
+    <string name="auth_error_invalid_email">Email invalide</string>
+    <string name="auth_error_weak_password">Le mot de passe est trop faible</string>
+    <string name="auth_error_user_not_found">Utilisateur non trouvé</string>
+    <string name="auth_error_wrong_password">Mot de passe incorrect</string>
+    <string name="auth_error_generic">Erreur d\'authentification</string>
+
+    <!-- Home Screen - Additional (NEW - Issue #39) -->
+    <string name="home_personalized_title">Pensé pour toi</string>
+    <string name="home_daily_need_title">Ton besoin du jour</string>
+    <string name="home_coming_soon">Bientôt disponible</string>
+    <string name="home_continue_program">Continuer</string>
+
+    <!-- Library - Additional (NEW - Issue #39) -->
+    <string name="library_search_placeholder">Rechercher du contenu...</string>
+    <string name="library_filter_category">Catégories</string>
+    <string name="library_filter_duration">Durée</string>
+    <string name="library_filter_level">Niveau</string>
+    <string name="library_sort_popular">Populaire</string>
+    <string name="library_sort_recent">Récents</string>
+    <string name="library_badge_new">NOUVEAU</string>
+    <string name="library_content_count">%1$d contenus</string>
+
+    <!-- Programs - Additional (NEW - Issue #39) -->
+    <string name="programs_title">Programmes & Défis</string>
+    <string name="programs_active_title">Vos programmes en cours</string>
+    <string name="programs_browse_title">Explorer les programmes</string>
+    <string name="programs_participants">%1$d participants</string>
+    <string name="programs_duration">%1$d jours</string>
+    <string name="programs_continue">Continuer</string>
+    <string name="programs_start">Commencer</string>
+
+    <!-- Journal - Additional (NEW - Issue #39) -->
+    <string name="journal_recent_entries">Entrées récentes</string>
+    <string name="journal_streak_current">%1$d jour(s) d\'affilée</string>
+    <string name="journal_total_entries">Total d\'entrées</string>
+    <string name="journal_current_streak">Série actuelle</string>
+
+    <!-- Daily Needs (NEW - Issue #39) -->
+    <string name="daily_need_anti_stress">Anti-stress</string>
+    <string name="daily_need_morning_energy">Énergie matinale</string>
+    <string name="daily_need_relaxation">Relaxation</string>
+    <string name="daily_need_evening_practice">Pratique du soir</string>
+
+    <!-- Difficulty Levels (NEW - Issue #39) -->
+    <string name="difficulty_beginner">Débutant</string>
+    <string name="difficulty_intermediate">Intermédiaire</string>
+    <string name="difficulty_advanced">Avancé</string>
+    <string name="difficulty_all_levels">Tous niveaux</string>
 </resources>
