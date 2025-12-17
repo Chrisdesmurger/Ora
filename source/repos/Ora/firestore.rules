@@ -163,14 +163,6 @@ service cloud.firestore {
       allow write: if false; // Admin only (from OraWebApp)
     }
 
-    // NEW: Collection daily_needs_categories/{categoryId} (Issue #33)
-    // Regle: Lecture pour tous les utilisateurs authentifies, ecriture admin uniquement
-    // Categories: anti-stress, energie-matinale, relaxation, pratique-du-soir
-    match /daily_needs_categories/{categoryId} {
-      allow read: if request.auth != null;
-      allow write: if false; // Admin only (from OraWebApp)
-    }
-
     // Fonctions de validation
 
     // Valide les donnees du profil utilisateur

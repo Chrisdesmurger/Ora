@@ -14,3 +14,9 @@ export {
   weeklyRecommendationsUpdate,
   regenerateUserRecommendations,
 } from "./recommendations/generateRecommendations";
+
+// Export migration functions
+export {
+  analyzeLessonTags,
+  migrateLessonTags,
+} from "./migrateLessonTags";

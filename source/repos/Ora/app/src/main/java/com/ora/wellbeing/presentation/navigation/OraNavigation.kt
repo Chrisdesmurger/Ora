@@ -27,6 +27,7 @@ import androidx.navigation.compose.rememberNavController
 import com.ora.wellbeing.presentation.screens.auth.AuthScreen
 import com.ora.wellbeing.presentation.screens.home.HomeScreen
 import com.ora.wellbeing.presentation.screens.library.LibraryScreen
+import com.ora.wellbeing.presentation.screens.library.DailyNeedDetailScreen
 import com.ora.wellbeing.presentation.screens.journal.DailyJournalEntryScreen
 import com.ora.wellbeing.presentation.screens.journal.JournalCalendarScreen
 import com.ora.wellbeing.presentation.screens.journal.JournalScreen
@@ -179,6 +180,11 @@ fun OraNavigation(
                                 maxDuration = 10 // Sessions rapides: moins de 10 minutes
                             )
                         )
+                    },
+                    onNavigateToDailyNeedCategory = { categoryId ->
+                        // NEW (Issue #33): Navigate to DailyNeedDetail screen
+                        // Filtre par need_tags tous types de contenu (Yoga, Méditation, Pilates, Auto-massage)
+                        navController.navigate(OraDestinations.DailyNeedDetail.createRoute(categoryId))
                     }
                 )
             }
@@ -330,6 +336,23 @@ fun OraNavigation(
                         navController.popBackStack()
                     },
                     onContentClick = { contentId ->
+                        navController.navigate(OraDestinations.PracticeDetail.createRoute(contentId))
+                    }
+                )
+            }
+
+            // NEW (Issue #33): Daily Need Detail Screen - filters by need_tags across all content types
+            composable(
+                route = OraDestinations.DailyNeedDetail.route,
+                arguments = OraDestinations.DailyNeedDetail.arguments
+            ) { backStackEntry ->
+                val categoryId = backStackEntry.arguments?.getString("categoryId") ?: return@composable
+                DailyNeedDetailScreen(
+                    categoryId = categoryId,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onNavigateToContent = { contentId ->
                         navController.navigate(OraDestinations.PracticeDetail.createRoute(contentId))
                     }
                 )

@@ -5,10 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.ora.wellbeing.data.model.ContentItem
 import com.ora.wellbeing.data.model.UserProgram
+import com.ora.wellbeing.data.model.DailyNeedCategory
 import com.ora.wellbeing.data.repository.OnboardingRepository
-import com.ora.wellbeing.domain.model.DailyNeedCategory
 import com.ora.wellbeing.domain.repository.ContentRepository
-import com.ora.wellbeing.domain.repository.DailyNeedCategoryRepository
 import com.ora.wellbeing.domain.repository.FirestoreUserProfileRepository
 import com.ora.wellbeing.domain.repository.FirestoreUserStatsRepository
 import com.ora.wellbeing.domain.repository.ProgramRepository
@@ -34,7 +33,6 @@ class HomeViewModel @Inject constructor(
     private val userProgramRepository: UserProgramRepository,
     private val recommendationRepository: RecommendationRepository,
     private val onboardingRepository: OnboardingRepository,
-    private val dailyNeedCategoryRepository: DailyNeedCategoryRepository,  // NEW: Issue #33
     private val auth: FirebaseAuth
 ) : ViewModel() {
 
@@ -150,7 +148,7 @@ class HomeViewModel @Inject constructor(
     }
 
     /**
-     * NEW: Loads daily need categories from repository (Issue #33)
+     * NEW: Loads daily need categories from hardcoded list (Issue #33)
      * Fetches categories and their associated content counts
      */
     private fun loadDailyNeedCategories() {
@@ -158,35 +156,25 @@ class HomeViewModel @Inject constructor(
             try {
                 Timber.d("HomeViewModel: Loading daily need categories")
 
-                dailyNeedCategoryRepository.getAllCategories()
+                // Get hardcoded categories
+                val categories = DailyNeedCategory.getAllCategories()
+
+                // Get all content to calculate counts
+                contentRepository.getAllContent()
                     .catch { e ->
-                        Timber.e(e, "HomeViewModel: Error loading daily need categories")
+                        Timber.e(e, "HomeViewModel: Error loading content for category counts")
                         emit(emptyList())
                     }
-                    .collect { categories ->
-                        if (categories.isEmpty()) {
-                            Timber.w("HomeViewModel: No daily need categories found")
-                            _uiState.value = _uiState.value.copy(
-                                dailyNeedCategories = emptyList()
-                            )
-                            return@collect
-                        }
-
-                        Timber.d("HomeViewModel: Loaded ${categories.size} daily need categories")
-
-                        // Load content counts for each category
-                        val contentCounts = try {
-                            dailyNeedCategoryRepository.getContentCountsForCategories(categories)
-                        } catch (e: Exception) {
-                            Timber.w(e, "HomeViewModel: Error loading content counts")
-                            categories.associate { it.id to 0 }
-                        }
-
-                        // Build UI model with category and content count
+                    .collect { allContent ->
+                        // Calculate content counts for each category
                         val categoriesWithContent = categories.map { category ->
+                            val contentCount = allContent.count { content ->
+                                content.needTags.any { tag -> tag in category.filterTags }
+                            }
+
                             HomeUiState.DailyNeedCategoryWithContent(
                                 category = category,
-                                contentCount = contentCounts[category.id] ?: 0
+                                contentCount = contentCount
                             )
                         }
 

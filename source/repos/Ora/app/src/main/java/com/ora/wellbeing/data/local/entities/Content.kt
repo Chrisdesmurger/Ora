@@ -31,7 +31,10 @@ data class Content(
     val programId: String? = null, // ID of program this lesson belongs to
     val order: Int = 0, // Order/position within program (0-indexed)
     val status: String = "ready", // Firestore status: draft|uploading|processing|ready|failed
-    val updatedAt: Long = System.currentTimeMillis() // Timestamp for sync tracking
+    val updatedAt: Long = System.currentTimeMillis(), // Timestamp for sync tracking
+
+    // NEW FIELD - Issue #33: Daily needs filtering
+    val needTags: List<String> = emptyList() // Tags for "Ton besoin du jour" categories
 )
 
 enum class ContentType {

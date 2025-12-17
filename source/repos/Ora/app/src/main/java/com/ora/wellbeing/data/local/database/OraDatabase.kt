@@ -20,7 +20,7 @@ import com.ora.wellbeing.data.local.entities.*
         Settings::class,
         NotificationPreference::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -47,7 +47,11 @@ abstract class OraDatabase : RoomDatabase() {
                     OraDatabase::class.java,
                     "ora_database"
                 )
-                    .addMigrations(Migrations.MIGRATION_1_2, Migrations.MIGRATION_2_3)
+                    .addMigrations(
+                        Migrations.MIGRATION_1_2,
+                        Migrations.MIGRATION_2_3,
+                        Migrations.MIGRATION_3_4
+                    )
                     .build()
                 INSTANCE = instance
                 instance

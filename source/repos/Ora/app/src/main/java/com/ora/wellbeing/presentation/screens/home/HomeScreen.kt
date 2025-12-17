@@ -31,7 +31,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.rememberAsyncImagePainter
 import com.ora.wellbeing.R
-import com.ora.wellbeing.domain.model.DailyNeedCategory
+import com.ora.wellbeing.data.model.DailyNeedCategory
 import com.ora.wellbeing.presentation.components.OraIcons
 import com.ora.wellbeing.presentation.navigation.QuickSessionType
 import com.ora.wellbeing.presentation.theme.*
@@ -440,8 +440,8 @@ private fun DailyNeedSection(
 
 /**
  * NEW: Card for a daily need category (Issue #33)
- * Displays category name, description, and content count
- * Uses category-specific color with 15% alpha for background
+ * Displays category with background image and title overlay
+ * Image de fond locale + titre blanc 85% transparence centré
  */
 @Composable
 private fun DailyNeedCategoryCard(
@@ -449,77 +449,65 @@ private fun DailyNeedCategoryCard(
     contentCount: Int,
     onClick: () -> Unit
 ) {
+    // Sélection de l'image de fond selon la catégorie
+    val backgroundImage = when (category.id) {
+        "anti-stress" -> R.drawable.daily_need_anti_stress
+        "energie-matinale" -> R.drawable.daily_need_energie_matinale
+        "relaxation" -> R.drawable.daily_need_relaxation
+        "pratique-du-soir" -> R.drawable.daily_need_pratique_du_soir
+        else -> R.drawable.daily_need_anti_stress
+    }
+
     Card(
         modifier = Modifier
             .width(180.dp)
+            .height(240.dp)
             .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = category.color.copy(alpha = 0.15f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(16.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
+        Box(
+            modifier = Modifier.fillMaxSize()
         ) {
-            // Category icon placeholder (colored circle)
+            // Image de fond
+            Image(
+                painter = painterResource(id = backgroundImage),
+                contentDescription = category.nameFr,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+
+            // Overlay gradient pour améliorer la lisibilité
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .fillMaxSize()
                     .background(
-                        color = category.color.copy(alpha = 0.3f),
-                        shape = CircleShape
-                    ),
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.4f)
+                            )
+                        )
+                    )
+            )
+
+            // Titre centré avec background blanc 85% transparence
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
                 contentAlignment = Alignment.Center
             ) {
-                // Icon based on category
-                val icon = when (category.id) {
-                    "anti-stress" -> OraIcons.MindHead
-                    "energie-matinale" -> OraIcons.Waves
-                    "relaxation" -> OraIcons.YogaPerson
-                    "pratique-du-soir" -> OraIcons.MindHead
-                    else -> OraIcons.MindHead
-                }
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                    tint = category.color
+                Text(
+                    text = category.nameFr,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White.copy(alpha = 0.85f),
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Category name
-            Text(
-                text = category.nameFr,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = category.color,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Category description
-            Text(
-                text = category.descriptionFr,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Content count
-            Text(
-                text = if (contentCount > 0) "$contentCount pratiques" else "Bientot disponible",
-                style = MaterialTheme.typography.labelMedium,
-                color = if (contentCount > 0) category.color else MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Medium
-            )
         }
     }
 }

@@ -11,7 +11,6 @@ import com.ora.wellbeing.data.local.dao.ContentDao
 import com.ora.wellbeing.data.local.dao.ProgramDao
 import com.ora.wellbeing.data.repository.impl.ContentRepositoryImpl
 import com.ora.wellbeing.data.repository.impl.DailyJournalRepositoryImpl
-import com.ora.wellbeing.data.repository.impl.DailyNeedCategoryRepositoryImpl
 import com.ora.wellbeing.data.repository.impl.FirestoreUserProfileRepositoryImpl
 import com.ora.wellbeing.data.repository.impl.FirestoreUserStatsRepositoryImpl
 import com.ora.wellbeing.data.repository.impl.GratitudeRepositoryImpl
@@ -20,7 +19,6 @@ import com.ora.wellbeing.data.repository.impl.RecommendationRepositoryImpl
 import com.ora.wellbeing.data.repository.impl.UserProgramRepositoryImpl
 import com.ora.wellbeing.domain.repository.ContentRepository
 import com.ora.wellbeing.domain.repository.DailyJournalRepository
-import com.ora.wellbeing.domain.repository.DailyNeedCategoryRepository
 import com.ora.wellbeing.domain.repository.FirestoreUserProfileRepository
 import com.ora.wellbeing.domain.repository.FirestoreUserStatsRepository
 import com.ora.wellbeing.domain.repository.GratitudeRepository
@@ -167,23 +165,6 @@ object FirestoreModule {
     ): RecommendationRepository {
         Timber.d("provideRecommendationRepository: Creating repository")
         return RecommendationRepositoryImpl(firestore, contentRepository)
-    }
-
-    /**
-     * Fournit le repository pour les categories de besoins quotidiens ("Ton besoin du jour")
-     * NEW: Issue #33 - Daily Needs Section on HomeScreen
-     *
-     * Fetches categories from Firestore collection: daily_needs_categories
-     * Uses ContentRepository for filtering content by need_tags
-     */
-    @Provides
-    @Singleton
-    fun provideDailyNeedCategoryRepository(
-        firestore: FirebaseFirestore,
-        contentRepository: ContentRepository
-    ): DailyNeedCategoryRepository {
-        Timber.d("provideDailyNeedCategoryRepository: Creating repository")
-        return DailyNeedCategoryRepositoryImpl(firestore, contentRepository)
     }
 
     /**
