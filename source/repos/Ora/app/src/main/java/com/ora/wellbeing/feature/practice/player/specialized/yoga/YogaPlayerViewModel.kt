@@ -74,7 +74,7 @@ class YogaPlayerViewModel @Inject constructor(
                 },
                 onFailure = { error ->
                     _uiState.update {
-                        it.copy(isLoading = false, error = error.message ?: "Erreur de chargement")
+                        it.copy(isLoading = false, error = error.message ?: getApplication<Application>().getString(com.ora.wellbeing.R.string.yoga_error_loading))
                     }
                     Timber.e(error, "Error loading practice for yoga player")
                 }
@@ -226,12 +226,13 @@ class YogaPlayerViewModel @Inject constructor(
     private fun generateChaptersForPractice(durationMin: Int): List<Chapter> {
         // Générer des chapitres par défaut basés sur la durée
         val durationMs = durationMin * 60 * 1000L
+        val context = getApplication<Application>()
         val chapterNames = listOf(
-            "Échauffement",
-            "Salutation au soleil",
-            "Postures debout",
-            "Postures au sol",
-            "Relaxation"
+            context.getString(com.ora.wellbeing.R.string.yoga_chapter_warmup),
+            context.getString(com.ora.wellbeing.R.string.yoga_chapter_sun_salutation),
+            context.getString(com.ora.wellbeing.R.string.yoga_chapter_standing_poses),
+            context.getString(com.ora.wellbeing.R.string.yoga_chapter_floor_poses),
+            context.getString(com.ora.wellbeing.R.string.yoga_chapter_relaxation)
         )
 
         val chapterDuration = durationMs / chapterNames.size
