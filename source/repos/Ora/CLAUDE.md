@@ -297,6 +297,158 @@ docs/
 - Timber logging
 - Offline-first design
 
+### 🌍 Internationalization (i18n) - CRITICAL REQUIREMENT
+
+**IMPORTANT**: ALL new development MUST follow these i18n rules. Every feature, screen, and code change must be internationalized from the start.
+
+#### Supported Languages
+- **French (FR)** - Default language (`res/values/strings.xml`)
+- **English (EN)** - `res/values-en/strings.xml`
+- **Spanish (ES)** - `res/values-es/strings.xml`
+
+#### Mandatory i18n Rules
+
+1. **NO Hardcoded Strings in Code**
+   - ❌ NEVER: `Text("Échauffement")`, `"Erreur de chargement"`, `error = "Login failed"`
+   - ✅ ALWAYS: `Text(stringResource(R.string.yoga_chapter_warmup))`, `getString(R.string.error_loading)`
+
+2. **String Resources Required for ALL Text**
+   - UI labels and titles
+   - Button text
+   - Error messages
+   - Toast/Snackbar messages
+   - Dialog content
+   - Placeholder text
+   - Content descriptions (accessibility)
+   - Analytics event names (optional, but recommended)
+
+3. **Compose UI Pattern**
+   ```kotlin
+   import androidx.compose.ui.res.stringResource
+   import com.ora.wellbeing.R
+
+   @Composable
+   fun MyScreen() {
+       Text(text = stringResource(R.string.screen_title))
+       Button(onClick = {}) {
+           Text(stringResource(R.string.button_save))
+       }
+   }
+   ```
+
+4. **ViewModel Pattern** (when context needed)
+   ```kotlin
+   class MyViewModel @Inject constructor(
+       application: Application
+   ) : AndroidViewModel(application) {
+
+       fun loadData() {
+           val context = getApplication<Application>()
+           _state.update {
+               it.copy(error = context.getString(R.string.error_loading))
+           }
+       }
+   }
+   ```
+
+5. **Enum/Data Class Pattern**
+   ```kotlin
+   import androidx.annotation.StringRes
+   import com.ora.wellbeing.R
+
+   enum class YogaSide(@StringRes val nameRes: Int) {
+       NONE(R.string.yoga_side_none),
+       LEFT(R.string.yoga_side_left),
+       RIGHT(R.string.yoga_side_right)
+   }
+
+   data class BodyZone(
+       val id: String,
+       @StringRes val nameRes: Int,
+       val instructionRes: List<Int>  // List of @StringRes
+   )
+   ```
+
+6. **String Resource Organization**
+   - Group by feature/screen in comments
+   - Use consistent naming: `{feature}_{element}_{description}`
+   - Examples:
+     - `yoga_preparing`, `yoga_error_loading`, `yoga_chapter_warmup`
+     - `meditation_breathing_inhale`, `meditation_ambient_rain`
+     - `massage_zone_neck`, `massage_pressure_low`
+
+7. **Translation Requirements**
+   - Add strings to ALL THREE language files simultaneously
+   - French: Natural, warm tone (tu/vous according to context)
+   - English: Professional, friendly tone
+   - Spanish: Professional, warm tone (tú/usted according to context)
+
+8. **Pre-Commit i18n Checklist** (Automatic)
+   ```
+   ✅ All Text() composables use stringResource()
+   ✅ No hardcoded strings in ViewModels
+   ✅ All @StringRes annotations present
+   ✅ String resources exist in FR/EN/ES
+   ✅ No duplicate string keys
+   ```
+
+#### Common i18n Mistakes to AVOID
+
+❌ **Mistake 1**: Hardcoded chapter/content names
+```kotlin
+// WRONG
+val chapters = listOf("Échauffement", "Salutation au soleil")
+```
+```kotlin
+// CORRECT
+val chapters = listOf(
+    getString(R.string.yoga_chapter_warmup),
+    getString(R.string.yoga_chapter_sun_salutation)
+)
+```
+
+❌ **Mistake 2**: Error messages in code
+```kotlin
+// WRONG
+error = "Erreur de chargement"
+```
+```kotlin
+// CORRECT
+error = getString(R.string.error_loading)
+```
+
+❌ **Mistake 3**: Enum values with hardcoded strings
+```kotlin
+// WRONG
+enum class Side(val label: String) {
+    LEFT("Côté Gauche"),
+    RIGHT("Côté Droit")
+}
+```
+```kotlin
+// CORRECT
+enum class Side(@StringRes val labelRes: Int) {
+    LEFT(R.string.yoga_side_left),
+    RIGHT(R.string.yoga_side_right)
+}
+```
+
+#### i18n Testing
+- Test ALL screens in French, English, and Spanish
+- Verify text truncation doesn't occur
+- Test with fontScale 1.3x and 2.0x (accessibility)
+- Use pseudo-localization for layout testing
+
+#### i18n Agent
+When working on ANY feature, the `i18n-l10n-android` agent will automatically:
+1. Scan for hardcoded strings
+2. Extract strings to resources
+3. Add translations for FR/EN/ES
+4. Verify @StringRes annotations
+5. Test text scaling
+
+**This is non-negotiable**: Every PR will be rejected if it contains hardcoded user-facing strings.
+
 ### Offline-First Architecture
 
 **CRITICAL:** The app now follows an offline-first architecture:
