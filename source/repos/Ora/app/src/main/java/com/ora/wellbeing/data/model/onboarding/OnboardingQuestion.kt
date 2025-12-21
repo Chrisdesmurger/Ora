@@ -2,11 +2,12 @@ package com.ora.wellbeing.data.model.onboarding
 
 import com.google.firebase.firestore.IgnoreExtraProperties
 import com.google.firebase.firestore.PropertyName
+import com.ora.wellbeing.core.localization.LocalizationProvider
 
 /**
  * Onboarding Question Model
  * Matches TypeScript OnboardingQuestion from OraWebApp
- * IMPORTANT: Firestore uses snake_case field names
+ * IMPORTANT: Firestore uses camelCase field names (consistent with ContentItem)
  */
 
 enum class QuestionCategory {
@@ -54,23 +55,17 @@ class OnboardingQuestion {
     var order: Int = 0
     var title: String = ""
 
-    @get:PropertyName("title_fr")
-    @set:PropertyName("title_fr")
+    // i18n fields - camelCase (consistent with ContentItem)
     var titleFr: String? = null
-
-    @get:PropertyName("title_en")
-    @set:PropertyName("title_en")
     var titleEn: String? = null
+    var titleEs: String? = null
 
     var subtitle: String? = null
 
-    @get:PropertyName("subtitle_fr")
-    @set:PropertyName("subtitle_fr")
+    // i18n fields - camelCase
     var subtitleFr: String? = null
-
-    @get:PropertyName("subtitle_en")
-    @set:PropertyName("subtitle_en")
     var subtitleEn: String? = null
+    var subtitleEs: String? = null
 
     var type: QuestionTypeConfig = QuestionTypeConfig()
     var options: List<AnswerOption> = emptyList()
@@ -89,9 +84,11 @@ class OnboardingQuestion {
         title: String,
         titleFr: String? = null,
         titleEn: String? = null,
+        titleEs: String? = null,
         subtitle: String? = null,
         subtitleFr: String? = null,
         subtitleEn: String? = null,
+        subtitleEs: String? = null,
         type: QuestionTypeConfig,
         options: List<AnswerOption>,
         required: Boolean = true,
@@ -103,28 +100,32 @@ class OnboardingQuestion {
         this.title = title
         this.titleFr = titleFr
         this.titleEn = titleEn
+        this.titleEs = titleEs
         this.subtitle = subtitle
         this.subtitleFr = subtitleFr
         this.subtitleEn = subtitleEn
+        this.subtitleEs = subtitleEs
         this.type = type
         this.options = options
         this.required = required
         this.skipLogic = skipLogic
     }
 
-    fun getLocalizedTitle(locale: String = "fr"): String {
+    fun getLocalizedTitle(locale: String = LocalizationProvider.DEFAULT_LOCALE): String {
         return when (locale.lowercase()) {
             "fr" -> titleFr ?: title
             "en" -> titleEn ?: title
-            else -> title
+            "es" -> titleEs ?: titleEn ?: title
+            else -> titleEn ?: titleFr ?: title
         }
     }
 
-    fun getLocalizedSubtitle(locale: String = "fr"): String? {
+    fun getLocalizedSubtitle(locale: String = LocalizationProvider.DEFAULT_LOCALE): String? {
         return when (locale.lowercase()) {
             "fr" -> subtitleFr ?: subtitle
             "en" -> subtitleEn ?: subtitle
-            else -> subtitle
+            "es" -> subtitleEs ?: subtitleEn ?: subtitle
+            else -> subtitleEn ?: subtitleFr ?: subtitle
         }
     }
 

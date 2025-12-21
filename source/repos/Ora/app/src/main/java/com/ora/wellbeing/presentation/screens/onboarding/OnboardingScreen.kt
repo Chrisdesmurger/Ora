@@ -31,12 +31,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ora.wellbeing.R
 import com.ora.wellbeing.data.model.onboarding.AnswerOption
 import com.ora.wellbeing.data.model.onboarding.OnboardingQuestion
 import com.ora.wellbeing.data.model.onboarding.QuestionTypeKind
@@ -92,7 +94,7 @@ fun OnboardingScreen(
                 }
                 uiState.config == null -> {
                     OnboardingErrorScreen(
-                        error = uiState.error ?: "Impossible de charger le questionnaire",
+                        error = uiState.error ?: stringResource(R.string.onboarding_error_load_config),
                         onRetry = { viewModel.onEvent(OnboardingUiEvent.RetryLoad) }
                     )
                 }
@@ -122,7 +124,7 @@ fun OnboardingLoadingScreen() {
                 color = MaterialTheme.colorScheme.primary
             )
             Text(
-                text = "Préparation de votre questionnaire...",
+                text = stringResource(R.string.onboarding_preparing),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
             )
@@ -160,7 +162,7 @@ fun OnboardingErrorScreen(
                     containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
-                Text("Réessayer")
+                Text(stringResource(R.string.common_retry))
             }
         }
     }
@@ -195,7 +197,11 @@ fun OnboardingQuestionnaireContent(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "Question ${uiState.currentQuestionIndex + 1} sur ${uiState.totalQuestions}",
+                text = stringResource(
+                    R.string.onboarding_question_progress,
+                    uiState.currentQuestionIndex + 1,
+                    uiState.totalQuestions
+                ),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
             )
@@ -228,6 +234,7 @@ fun OnboardingQuestionnaireContent(
                 OnboardingQuestionCard(
                     question = question,
                     selectedOptions = uiState.currentAnswers[question.id] ?: emptyList(),
+                    currentLocale = uiState.currentLocale,
                     onAnswerChange = { selectedOptions, textAnswer ->
                         onEvent(OnboardingUiEvent.AnswerQuestion(selectedOptions, textAnswer))
                     }
@@ -247,6 +254,7 @@ fun OnboardingQuestionnaireContent(
 fun OnboardingQuestionCard(
     question: OnboardingQuestion,
     selectedOptions: List<String>,
+    currentLocale: String,
     onAnswerChange: (List<String>, String?) -> Unit
 ) {
     // Check if question type uses LazyVerticalGrid (no vertical scroll needed)
@@ -288,7 +296,7 @@ fun OnboardingQuestionCard(
 
         // Question title
         Text(
-            text = question.getLocalizedTitle(),
+            text = question.getLocalizedTitle(currentLocale),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
@@ -296,7 +304,7 @@ fun OnboardingQuestionCard(
         )
 
         // Subtitle
-        question.getLocalizedSubtitle()?.let { subtitle ->
+        question.getLocalizedSubtitle(currentLocale)?.let { subtitle ->
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodyLarge,
@@ -313,6 +321,7 @@ fun OnboardingQuestionCard(
             QuestionTypeKind.INFORMATION_SCREEN -> {
                 InformationScreenContent(
                     question = question,
+                    currentLocale = currentLocale,
                     onAnswerChange = onAnswerChange
                 )
             }
@@ -323,6 +332,7 @@ fun OnboardingQuestionCard(
                         selectedOptions = selectedOptions,
                         allowMultiple = question.type.allowMultiple ?: false,
                         gridColumns = question.type.gridColumns ?: 2,
+                        currentLocale = currentLocale,
                         onSelectionChange = { newSelection ->
                             onAnswerChange(newSelection, null)
                         }
@@ -332,6 +342,7 @@ fun OnboardingQuestionCard(
                         options = question.options,
                         selectedOptions = selectedOptions,
                         allowMultiple = question.type.allowMultiple ?: false,
+                        currentLocale = currentLocale,
                         onSelectionChange = { newSelection ->
                             onAnswerChange(newSelection, null)
                         }
@@ -341,6 +352,7 @@ fun OnboardingQuestionCard(
             QuestionTypeKind.TEXT_INPUT -> {
                 EnhancedTextInput(
                     question = question,
+                    currentLocale = currentLocale,
                     onTextChange = { text ->
                         onAnswerChange(emptyList(), text)
                     }
@@ -351,6 +363,7 @@ fun OnboardingQuestionCard(
                     options = question.options,
                     selectedOption = selectedOptions.firstOrNull(),
                     showLabels = question.type.showLabels ?: false,
+                    currentLocale = currentLocale,
                     onSelectionChange = { optionId ->
                         onAnswerChange(listOf(optionId), null)
                     }
@@ -361,6 +374,7 @@ fun OnboardingQuestionCard(
                     options = question.options,
                     selectedOptions = selectedOptions,
                     allowMultiple = question.type.allowMultiple ?: false,
+                    currentLocale = currentLocale,
                     onSelectionChange = { newSelection ->
                         onAnswerChange(newSelection, null)
                     }
@@ -372,6 +386,7 @@ fun OnboardingQuestionCard(
                     selectedOptions = selectedOptions,
                     allowMultiple = question.type.allowMultiple ?: false,
                     gridColumns = question.type.gridColumns ?: 2,
+                    currentLocale = currentLocale,
                     onSelectionChange = { newSelection ->
                         onAnswerChange(newSelection, null)
                     }
@@ -381,6 +396,7 @@ fun OnboardingQuestionCard(
                 ToggleListOptions(
                     options = question.options,
                     selectedOptions = selectedOptions,
+                    currentLocale = currentLocale,
                     onSelectionChange = { newSelection ->
                         onAnswerChange(newSelection, null)
                     }
@@ -409,6 +425,7 @@ fun OnboardingQuestionCard(
                     selectedOptions = selectedOptions,
                     allowMultiple = question.type.allowMultiple ?: false,
                     gridColumns = question.type.gridColumns ?: 2,
+                    currentLocale = currentLocale,
                     onSelectionChange = { newSelection ->
                         onAnswerChange(newSelection, null)
                     }
@@ -436,7 +453,7 @@ fun OnboardingQuestionCard(
         // Required indicator
         if (question.required) {
             Text(
-                text = "* Cette question est obligatoire",
+                text = stringResource(R.string.onboarding_question_required),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
                 textAlign = TextAlign.Center,
@@ -451,6 +468,7 @@ fun MultipleChoiceOptions(
     options: List<AnswerOption>,
     selectedOptions: List<String>,
     allowMultiple: Boolean,
+    currentLocale: String,
     onSelectionChange: (List<String>) -> Unit
 ) {
     Column(
@@ -462,6 +480,7 @@ fun MultipleChoiceOptions(
             OptionCard(
                 option = option,
                 isSelected = isSelected,
+                currentLocale = currentLocale,
                 onClick = {
                     val newSelection = if (allowMultiple) {
                         if (isSelected) {
@@ -484,6 +503,7 @@ fun RatingOptions(
     options: List<AnswerOption>,
     selectedOption: String?,
     showLabels: Boolean = false,
+    currentLocale: String,
     onSelectionChange: (String) -> Unit
 ) {
     val optionCount = options.size
@@ -529,7 +549,7 @@ fun RatingOptions(
                 // Optional label below icon
                 if (showLabels) {
                     Text(
-                        text = option.getLocalizedLabel(),
+                        text = option.getLocalizedLabel(currentLocale),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                         textAlign = TextAlign.Center,
@@ -545,6 +565,7 @@ fun RatingOptions(
 fun OptionCard(
     option: AnswerOption,
     isSelected: Boolean,
+    currentLocale: String,
     onClick: () -> Unit
 ) {
     Surface(
@@ -576,7 +597,7 @@ fun OptionCard(
 
             // Label
             Text(
-                text = option.getLocalizedLabel(),
+                text = option.getLocalizedLabel(currentLocale),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -587,7 +608,7 @@ fun OptionCard(
             AnimatedVisibility(visible = isSelected) {
                 Icon(
                     imageVector = Icons.Default.Check,
-                    contentDescription = "Selected",
+                    contentDescription = stringResource(R.string.content_desc_selected),
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
@@ -618,11 +639,11 @@ fun OnboardingNavigationButtons(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
-                        contentDescription = "Previous",
+                        contentDescription = stringResource(R.string.content_desc_previous),
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Précédent")
+                    Text(stringResource(R.string.common_previous))
                 }
             }
 
@@ -652,7 +673,11 @@ fun OnboardingNavigationButtons(
                     )
                 } else {
                     Text(
-                        text = if (uiState.isLastQuestion) "Terminer" else "Suivant"
+                        text = if (uiState.isLastQuestion) {
+                            stringResource(R.string.common_finish)
+                        } else {
+                            stringResource(R.string.common_next)
+                        }
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Icon(
@@ -661,7 +686,11 @@ fun OnboardingNavigationButtons(
                         } else {
                             Icons.Filled.ArrowForward
                         },
-                        contentDescription = if (uiState.isLastQuestion) "Complete" else "Next",
+                        contentDescription = if (uiState.isLastQuestion) {
+                            stringResource(R.string.content_desc_complete)
+                        } else {
+                            stringResource(R.string.content_desc_next)
+                        },
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -678,6 +707,7 @@ fun GridSelectionOptions(
     selectedOptions: List<String>,
     allowMultiple: Boolean,
     gridColumns: Int = 2,
+    currentLocale: String,
     onSelectionChange: (List<String>) -> Unit
 ) {
     LazyVerticalGrid(
@@ -727,7 +757,7 @@ fun GridSelectionOptions(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = option.getLocalizedLabel(),
+                        text = option.getLocalizedLabel(currentLocale),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.Center,
@@ -743,6 +773,7 @@ fun GridSelectionOptions(
 fun ToggleListOptions(
     options: List<AnswerOption>,
     selectedOptions: List<String>,
+    currentLocale: String,
     onSelectionChange: (List<String>) -> Unit
 ) {
     Column(
@@ -765,7 +796,7 @@ fun ToggleListOptions(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = option.getLocalizedLabel(),
+                        text = option.getLocalizedLabel(currentLocale),
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.weight(1f)
                     )
@@ -863,7 +894,7 @@ fun CircularPickerOptions(
     val minValue = question.type.sliderMin ?: 1
     val maxValue = question.type.sliderMax ?: 7
     val step = question.type.sliderStep ?: 1
-    val unit = question.type.sliderUnit ?: "jours"
+    val unit = question.type.sliderUnit ?: stringResource(R.string.common_days_unit)
 
     var currentValue by remember { mutableStateOf(initialValue ?: minValue) }
 
@@ -915,7 +946,7 @@ fun CircularPickerOptions(
             ) {
                 Icon(
                     imageVector = Icons.Default.Remove,
-                    contentDescription = "Décrémenter"
+                    contentDescription = stringResource(R.string.accessibility_decrement)
                 )
             }
 
@@ -933,7 +964,7 @@ fun CircularPickerOptions(
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "Incrémenter"
+                    contentDescription = stringResource(R.string.accessibility_increment)
                 )
             }
         }
@@ -968,6 +999,7 @@ fun ImageCardOptions(
     selectedOptions: List<String>,
     allowMultiple: Boolean,
     gridColumns: Int = 2,
+    currentLocale: String,
     onSelectionChange: (List<String>) -> Unit
 ) {
     LazyVerticalGrid(
@@ -1023,7 +1055,7 @@ fun ImageCardOptions(
 
                     // Label
                     Text(
-                        text = option.getLocalizedLabel(),
+                        text = option.getLocalizedLabel(currentLocale),
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                         modifier = Modifier.padding(12.dp),
@@ -1040,6 +1072,7 @@ fun TimeSelectionOptions(
     options: List<AnswerOption>,
     selectedOptions: List<String>,
     allowMultiple: Boolean,
+    currentLocale: String,
     onSelectionChange: (List<String>) -> Unit
 ) {
     Column(
@@ -1078,14 +1111,14 @@ fun TimeSelectionOptions(
                     // Clock icon
                     Icon(
                         imageVector = Icons.Default.Schedule,
-                        contentDescription = "Time",
+                        contentDescription = stringResource(R.string.content_desc_time),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(32.dp)
                     )
 
                     // Label
                     Text(
-                        text = option.getLocalizedLabel(),
+                        text = option.getLocalizedLabel(currentLocale),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                         modifier = Modifier.weight(1f)
@@ -1095,7 +1128,7 @@ fun TimeSelectionOptions(
                     AnimatedVisibility(visible = isSelected) {
                         Icon(
                             imageVector = Icons.Default.Check,
-                            contentDescription = "Selected",
+                            contentDescription = stringResource(R.string.content_desc_selected),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -1108,6 +1141,7 @@ fun TimeSelectionOptions(
 @Composable
 fun InformationScreenContent(
     question: OnboardingQuestion,
+    currentLocale: String,
     onAnswerChange: (List<String>, String?) -> Unit
 ) {
     // Information screens don't need user input
@@ -1116,15 +1150,13 @@ fun InformationScreenContent(
         onAnswerChange(listOf("acknowledged"), null)
     }
 
-    val locale = java.util.Locale.getDefault().language
-
     // Get localized content from question type config
-    val content = when (locale) {
+    val content = when (currentLocale) {
         "en" -> question.type.contentEn ?: question.type.content
         else -> question.type.contentFr ?: question.type.content
     } ?: ""
 
-    val bulletPoints = when (locale) {
+    val bulletPoints = when (currentLocale) {
         "en" -> question.type.bulletPointsEn ?: question.type.bulletPoints
         else -> question.type.bulletPointsFr ?: question.type.bulletPoints
     } ?: emptyList()
@@ -1154,7 +1186,7 @@ fun InformationScreenContent(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Subtitle (shown above as well, this is secondary display)
-        question.getLocalizedSubtitle()?.let { subtitle ->
+        question.getLocalizedSubtitle(currentLocale)?.let { subtitle ->
             if (subtitle.isNotBlank()) {
                 Text(
                     text = subtitle,
@@ -1202,12 +1234,15 @@ fun InformationScreenContent(
 @Composable
 fun EnhancedTextInput(
     question: OnboardingQuestion,
+    currentLocale: String,
     onTextChange: (String) -> Unit
 ) {
     var textInput by remember { mutableStateOf("") }
     val maxLines = question.type.maxLines ?: 1
     val maxCharacters = question.type.maxCharacters ?: 500
-    val placeholder = question.type.placeholder ?: question.getLocalizedSubtitle() ?: "Votre réponse"
+    val placeholder = question.type.placeholder
+        ?: question.getLocalizedSubtitle(currentLocale)
+        ?: stringResource(R.string.onboarding_your_answer_placeholder)
 
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -1234,7 +1269,11 @@ fun EnhancedTextInput(
 
         // Character counter
         Text(
-            text = "${textInput.length} / $maxCharacters caractères",
+            text = stringResource(
+                R.string.onboarding_character_count,
+                textInput.length,
+                maxCharacters
+            ),
             style = MaterialTheme.typography.bodySmall,
             color = if (textInput.length >= maxCharacters) {
                 MaterialTheme.colorScheme.error
@@ -1309,7 +1348,7 @@ fun ProfileGroupContent(
                         trailingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Schedule,
-                                contentDescription = "Sélectionner une date",
+                                contentDescription = stringResource(R.string.common_select_date),
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
@@ -1337,12 +1376,12 @@ fun ProfileGroupContent(
                                         showDatePicker = false
                                     }
                                 ) {
-                                    Text("OK")
+                                    Text(stringResource(R.string.common_ok))
                                 }
                             },
                             dismissButton = {
                                 TextButton(onClick = { showDatePicker = false }) {
-                                    Text("Annuler")
+                                    Text(stringResource(R.string.common_cancel))
                                 }
                             }
                         ) {
@@ -1414,13 +1453,13 @@ fun ProfileGroupContent(
                                         modifier = Modifier.weight(1f)
                                     )
 
-                                    if (isSelected) {
-                                        Icon(
-                                            imageVector = Icons.Default.Check,
-                                            contentDescription = "Selected",
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
+                    if (isSelected) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = stringResource(R.string.content_desc_selected),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                                 }
                             }
                         }
