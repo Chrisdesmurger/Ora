@@ -253,6 +253,11 @@
     <string name="common_next">Suivant</string>
     <string name="common_finish">Terminer</string>
     <string name="common_ok">OK</string>
+    <string name="content_desc_previous">Précédent</string>
+    <string name="content_desc_next">Suivant</string>
+    <string name="content_desc_complete">Terminer</string>
+    <string name="content_desc_selected">Sélectionné</string>
+    <string name="content_desc_time">Temps</string>
     <string name="common_days_unit">jours</string>
     <string name="common_select_date">Sélectionner une date</string>
     <string name="common_select">Sélectionner</string>
@@ -291,10 +296,6 @@
     <string name="onboarding_character_count">%1$d / %2$d caractères</string>
     <string name="onboarding_error_load_config">Impossible de charger le questionnaire</string>
     <string name="onboarding_preparing">Préparation de votre questionnaire...</string>
-    <string name="onboarding_category_goals">🎯 Objectifs</string>
-    <string name="onboarding_category_experience">⭐ Expérience</string>
-    <string name="onboarding_category_preferences">❤️ Préférences</string>
-    <string name="onboarding_category_personalization">✨ Personnalisation</string>
 
     <!-- Accessibility -->
     <string name="accessibility_decrement">Décrémenter</string>
@@ -316,6 +317,7 @@
     <string name="error_config_not_loaded">Configuration non chargée</string>
     <string name="error_load_questionnaire">Impossible de charger le questionnaire : %1$s</string>
     <string name="error_save_onboarding">Erreur lors de la sauvegarde : %1$s</string>
+    <string name="onboarding_error_load_config_with_reason">Impossible de charger le questionnaire : %1$s</string>
 
     <!-- Auth (Issue #39 - Phase 1a) -->
     <string name="app_tagline">Body · Mind · Soul</string>
@@ -431,6 +433,13 @@
     <string name="massage_pressure_low">Légère</string>
     <string name="massage_pressure_medium">Moyenne</string>
     <string name="massage_pressure_high">Forte</string>
+
+    <!-- Onboarding Categories (NEW - Issue #39 - Phase 1d.2) -->
+    <string name="onboarding_category_goals">🎯 Objectifs</string>
+    <string name="onboarding_category_experience">⭐ Expérience</string>
+    <string name="onboarding_category_preferences">❤️ Préférences</string>
+    <string name="onboarding_category_personalization">✨ Personnalisation</string>
+    <string name="onboarding_category_information">ℹ️ Information</string>
     <string name="massage_zones_completed">Zones terminées : %1$d/%2$d</string>
     <string name="massage_zone_previous">Zone précédente</string>
     <string name="massage_zone_next">Zone suivante</string>

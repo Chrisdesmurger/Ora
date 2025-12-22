@@ -54,12 +54,16 @@ class QuestionTypeConfig {
     var content: String? = null
     var contentFr: String? = null
     var contentEn: String? = null
+    var contentEs: String? = null
     var bulletPoints: List<String>? = null
     var bulletPointsFr: List<String>? = null
     var bulletPointsEn: List<String>? = null
+    var bulletPointsEs: List<String>? = null
+    var features: List<InformationScreenFeature>? = null
     var ctaText: String? = null
     var ctaTextFr: String? = null
     var ctaTextEn: String? = null
+    var ctaTextEs: String? = null
     var backgroundColor: String? = null
 
     constructor()

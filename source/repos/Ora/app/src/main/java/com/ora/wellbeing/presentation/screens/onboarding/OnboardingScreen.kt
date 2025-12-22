@@ -437,6 +437,7 @@ fun OnboardingQuestionCard(
 
                 ProfileGroupContent(
                     question = question,
+                    currentLocale = currentLocale,
                     profileData = profileData,
                     onProfileDataChange = { newData ->
                         profileData = newData
@@ -1151,13 +1152,15 @@ fun InformationScreenContent(
     }
 
     // Get localized content from question type config
-    val content = when (currentLocale) {
+    val content = when (currentLocale.lowercase()) {
         "en" -> question.type.contentEn ?: question.type.content
+        "es" -> question.type.contentEs ?: question.type.contentEn ?: question.type.content
         else -> question.type.contentFr ?: question.type.content
     } ?: ""
 
-    val bulletPoints = when (currentLocale) {
+    val bulletPoints = when (currentLocale.lowercase()) {
         "en" -> question.type.bulletPointsEn ?: question.type.bulletPoints
+        "es" -> question.type.bulletPointsEs ?: question.type.bulletPointsEn ?: question.type.bulletPoints
         else -> question.type.bulletPointsFr ?: question.type.bulletPoints
     } ?: emptyList()
 
@@ -1209,8 +1212,54 @@ fun InformationScreenContent(
             )
         }
 
-        // Bullet points
-        if (bulletPoints.isNotEmpty()) {
+        // Features or Bullet points
+        val features = question.type.features
+        if (features != null && features.isNotEmpty()) {
+            // Display features with icons and descriptions
+            Spacer(modifier = Modifier.height(16.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                features.sortedBy { it.order }.forEach { feature ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        // Icon
+                        feature.icon?.let { emoji ->
+                            Text(
+                                text = emoji,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontSize = 24.sp
+                            )
+                        }
+
+                        // Title and description
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = feature.getLocalizedTitle(currentLocale),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Text(
+                                text = feature.getLocalizedDescription(currentLocale),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+                }
+            }
+        } else if (bulletPoints.isNotEmpty()) {
+            // Fallback to bullet points if no features
             Spacer(modifier = Modifier.height(8.dp))
             Column(
                 modifier = Modifier
@@ -1288,6 +1337,7 @@ fun EnhancedTextInput(
 @Composable
 fun ProfileGroupContent(
     question: OnboardingQuestion,
+    currentLocale: String,
     profileData: Map<String, String>,
     onProfileDataChange: (Map<String, String>) -> Unit
 ) {
@@ -1307,8 +1357,8 @@ fun ProfileGroupContent(
                             newData[field.id] = value
                             onProfileDataChange(newData)
                         },
-                        label = { Text(field.label) },
-                        placeholder = field.placeholder?.let { { Text(it) } },
+                        label = { Text(field.getLocalizedLabel(currentLocale)) },
+                        placeholder = field.getLocalizedPlaceholder(currentLocale)?.let { { Text(it) } },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
                         singleLine = true,
@@ -1329,8 +1379,8 @@ fun ProfileGroupContent(
                     OutlinedTextField(
                         value = selectedDate,
                         onValueChange = { }, // Read-only, opens date picker on click
-                        label = { Text(field.label) },
-                        placeholder = field.placeholder?.let { { Text(it) } },
+                        label = { Text(field.getLocalizedLabel(currentLocale)) },
+                        placeholder = field.getLocalizedPlaceholder(currentLocale)?.let { { Text(it) } },
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { showDatePicker = true },
@@ -1396,7 +1446,7 @@ fun ProfileGroupContent(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = field.label,
+                            text = field.getLocalizedLabel(currentLocale),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onBackground
                         )
@@ -1443,7 +1493,7 @@ fun ProfileGroupContent(
                                     }
 
                                     Text(
-                                        text = option.label,
+                                        text = option.getLocalizedLabel(currentLocale),
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = if (isSelected) {
                                             MaterialTheme.colorScheme.onPrimaryContainer
@@ -1470,12 +1520,14 @@ fun ProfileGroupContent(
     }
 }
 
+@Composable
 fun getCategoryLabel(category: String): String {
     return when (category.lowercase()) {
-        "goals" -> "🎯 Objectifs"
-        "experience" -> "⭐ Expérience"
-        "preferences" -> "❤️ Préférences"
-        "personalization" -> "✨ Personnalisation"
+        "goals" -> stringResource(R.string.onboarding_category_goals)
+        "experience" -> stringResource(R.string.onboarding_category_experience)
+        "preferences" -> stringResource(R.string.onboarding_category_preferences)
+        "personalization" -> stringResource(R.string.onboarding_category_personalization)
+        "information" -> stringResource(R.string.onboarding_category_information)
         else -> category
     }
 }

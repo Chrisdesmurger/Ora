@@ -383,6 +383,13 @@
     <string name="massage_pressure_low">Ligera</string>
     <string name="massage_pressure_medium">Media</string>
     <string name="massage_pressure_high">Fuerte</string>
+
+    <!-- Onboarding Categories (NEW - Issue #39 - Phase 1d.2) -->
+    <string name="onboarding_category_goals">🎯 Objetivos</string>
+    <string name="onboarding_category_experience">⭐ Experiencia</string>
+    <string name="onboarding_category_preferences">❤️ Preferencias</string>
+    <string name="onboarding_category_personalization">✨ Personalización</string>
+    <string name="onboarding_category_information">ℹ️ Información</string>
     <string name="massage_zones_completed">Zonas completadas: %1$d/%2$d</string>
     <string name="massage_zone_previous">Zona anterior</string>
     <string name="massage_zone_next">Zona siguiente</string>
@@ -461,6 +468,11 @@
     <string name="common_next">Siguiente</string>
     <string name="common_finish">Terminar</string>
     <string name="common_ok">OK</string>
+    <string name="content_desc_previous">Anterior</string>
+    <string name="content_desc_next">Siguiente</string>
+    <string name="content_desc_complete">Completar</string>
+    <string name="content_desc_selected">Seleccionado</string>
+    <string name="content_desc_time">Tiempo</string>
     <string name="common_days_unit">días</string>
     <string name="common_select_date">Seleccionar una fecha</string>
     <string name="common_select">Seleccionar</string>
@@ -488,10 +500,6 @@
     <string name="onboarding_character_count">%1$d / %2$d caracteres</string>
     <string name="onboarding_error_load_config">No se puede cargar el cuestionario</string>
     <string name="onboarding_preparing">Preparando tu cuestionario...</string>
-    <string name="onboarding_category_goals">🎯 Objetivos</string>
-    <string name="onboarding_category_experience">⭐ Experiencia</string>
-    <string name="onboarding_category_preferences">❤️ Preferencias</string>
-    <string name="onboarding_category_personalization">✨ Personalización</string>
     <string name="onboarding_feature_personalized_title">Contenido personalizado</string>
     <string name="onboarding_feature_personalized_desc">Recomendaciones adaptadas a tus objetivos</string>
     <string name="onboarding_feature_tracking_title">Seguimiento de progreso</string>
@@ -505,6 +513,7 @@
     <string name="error_config_not_loaded">Configuración no cargada</string>
     <string name="error_load_questionnaire">No se puede cargar el cuestionario: %1$s</string>
     <string name="error_save_onboarding">Error al guardar: %1$s</string>
+    <string name="onboarding_error_load_config_with_reason">No se puede cargar el cuestionario: %1$s</string>
 
     <!-- Home Personalized Section -->
     <string name="home_personalized_description">Basado en tus objetivos y preferencias</string>

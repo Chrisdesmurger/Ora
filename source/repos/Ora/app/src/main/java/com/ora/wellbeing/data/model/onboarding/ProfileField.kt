@@ -18,8 +18,12 @@ class ProfileField {
     var label: String = ""
     var labelFr: String = ""
     var labelEn: String = ""
+    var labelEs: String = ""
     var inputType: String = "text"
     var placeholder: String? = null
+    var placeholderFr: String? = null
+    var placeholderEn: String? = null
+    var placeholderEs: String? = null
     var maxLength: Int? = null
     var required: Boolean = false
     var order: Int = 0
@@ -32,8 +36,12 @@ class ProfileField {
         label: String,
         labelFr: String,
         labelEn: String,
+        labelEs: String,
         inputType: String,
         placeholder: String? = null,
+        placeholderFr: String? = null,
+        placeholderEn: String? = null,
+        placeholderEs: String? = null,
         maxLength: Int? = null,
         required: Boolean = false,
         order: Int = 0,
@@ -43,8 +51,12 @@ class ProfileField {
         this.label = label
         this.labelFr = labelFr
         this.labelEn = labelEn
+        this.labelEs = labelEs
         this.inputType = inputType
         this.placeholder = placeholder
+        this.placeholderFr = placeholderFr
+        this.placeholderEn = placeholderEn
+        this.placeholderEs = placeholderEs
         this.maxLength = maxLength
         this.required = required
         this.order = order
@@ -59,6 +71,22 @@ class ProfileField {
             else -> ProfileFieldInputType.TEXT
         }
     }
+
+    fun getLocalizedLabel(locale: String = "fr"): String {
+        return when (locale.lowercase()) {
+            "en" -> labelEn.takeIf { it.isNotBlank() } ?: label
+            "es" -> labelEs.takeIf { it.isNotBlank() } ?: labelEn.takeIf { it.isNotBlank() } ?: label
+            else -> labelFr.takeIf { it.isNotBlank() } ?: label
+        }
+    }
+
+    fun getLocalizedPlaceholder(locale: String = "fr"): String? {
+        return when (locale.lowercase()) {
+            "en" -> placeholderEn?.takeIf { it.isNotBlank() } ?: placeholder
+            "es" -> placeholderEs?.takeIf { it.isNotBlank() } ?: placeholderEn?.takeIf { it.isNotBlank() } ?: placeholder
+            else -> placeholderFr?.takeIf { it.isNotBlank() } ?: placeholder
+        }
+    }
 }
 
 @IgnoreExtraProperties
@@ -67,6 +95,7 @@ class ProfileFieldOption {
     var label: String = ""
     var labelFr: String = ""
     var labelEn: String = ""
+    var labelEs: String = ""
     var icon: String? = null
     var order: Int = 0
 
@@ -77,6 +106,7 @@ class ProfileFieldOption {
         label: String,
         labelFr: String,
         labelEn: String,
+        labelEs: String,
         icon: String? = null,
         order: Int = 0
     ) {
@@ -84,7 +114,16 @@ class ProfileFieldOption {
         this.label = label
         this.labelFr = labelFr
         this.labelEn = labelEn
+        this.labelEs = labelEs
         this.icon = icon
         this.order = order
+    }
+
+    fun getLocalizedLabel(locale: String = "fr"): String {
+        return when (locale.lowercase()) {
+            "en" -> labelEn.takeIf { it.isNotBlank() } ?: label
+            "es" -> labelEs.takeIf { it.isNotBlank() } ?: labelEn.takeIf { it.isNotBlank() } ?: label
+            else -> labelFr.takeIf { it.isNotBlank() } ?: label
+        }
     }
 }
