@@ -1,11 +1,14 @@
 package com.ora.wellbeing.presentation.screens.onboarding
 
+import android.content.Context
 import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.ora.wellbeing.BuildConfig
+import com.ora.wellbeing.R
+import com.ora.wellbeing.core.localization.LocalizationProvider
 import com.ora.wellbeing.data.model.onboarding.OnboardingConfig
 import com.ora.wellbeing.data.model.onboarding.OnboardingMetadata
 import com.ora.wellbeing.data.model.onboarding.OnboardingQuestion
@@ -13,13 +16,13 @@ import com.ora.wellbeing.data.model.onboarding.QuestionTypeKind
 import com.ora.wellbeing.data.model.onboarding.UserOnboardingAnswer
 import com.ora.wellbeing.data.model.onboarding.UserOnboardingResponse
 import com.ora.wellbeing.data.repository.OnboardingRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.util.Locale
 import javax.inject.Inject
 
 /**
@@ -30,10 +33,14 @@ import javax.inject.Inject
 class OnboardingViewModel @Inject constructor(
     private val onboardingRepository: OnboardingRepository,
     private val userProfileRepository: com.ora.wellbeing.domain.repository.FirestoreUserProfileRepository,
-    private val auth: FirebaseAuth
+    private val auth: FirebaseAuth,
+    private val localizationProvider: LocalizationProvider,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(OnboardingUiState())
+    private val _uiState = MutableStateFlow(
+        OnboardingUiState(currentLocale = localizationProvider.getCurrentLocale())
+    )
     val uiState: StateFlow<OnboardingUiState> = _uiState.asStateFlow()
 
     private var config: OnboardingConfig? = null
@@ -76,15 +83,21 @@ class OnboardingViewModel @Inject constructor(
                         questions = allQuestions,
                         currentQuestionIndex = 0,
                         totalQuestions = allQuestions.size,
-                        isComplete = false
+                        isComplete = false,
+                        currentLocale = localizationProvider.getCurrentLocale()
                     )
 
                     Timber.d("Onboarding config loaded: ${loadedConfig.questions.size} questions + ${loadedConfig.informationScreens.size} information screens = ${allQuestions.size} total items")
                 }
                 .onFailure { error ->
+                    // Note: Error messages with dynamic data stay in ViewModel
+                    // Static error strings are shown via UI from strings.xml
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        error = "Impossible de charger le questionnaire : ${error.message}"
+                        error = context.getString(
+                            R.string.onboarding_error_load_config_with_reason,
+                            error.message ?: ""
+                        )
                     )
                     Timber.e(error, "Failed to load onboarding config")
                 }
@@ -126,20 +139,26 @@ class OnboardingViewModel @Inject constructor(
             title = screen.title,
             titleFr = screen.titleFr,
             titleEn = screen.titleEn,
+            titleEs = screen.titleEs,
             subtitle = screen.subtitle,
             subtitleFr = screen.subtitleFr,
             subtitleEn = screen.subtitleEn,
+            subtitleEs = screen.subtitleEs,
             type = com.ora.wellbeing.data.model.onboarding.QuestionTypeConfig().apply {
                 kind = "information_screen"
                 content = screen.content
                 contentFr = screen.contentFr
                 contentEn = screen.contentEn
+                contentEs = screen.contentEs
                 bulletPoints = screen.bulletPoints
                 bulletPointsFr = screen.bulletPointsFr
                 bulletPointsEn = screen.bulletPointsEn
+                bulletPointsEs = screen.bulletPointsEs
+                features = screen.features
                 ctaText = screen.ctaText
                 ctaTextFr = screen.ctaTextFr
                 ctaTextEn = screen.ctaTextEn
+                ctaTextEs = screen.ctaTextEs
                 backgroundColor = screen.backgroundColor
             },
             options = emptyList(),
@@ -149,12 +168,16 @@ class OnboardingViewModel @Inject constructor(
 
     private fun startOnboarding() {
         val uid = auth.currentUser?.uid ?: run {
-            _uiState.value = _uiState.value.copy(error = "Vous devez être connecté")
+            // Static error string - matches R.string.error_must_be_authenticated
+            _uiState.value = _uiState.value.copy(
+                error = context.getString(R.string.error_must_be_authenticated)
+            )
             return
         }
 
         val configVersion = config?.id ?: run {
-            _uiState.value = _uiState.value.copy(error = "Configuration non chargée")
+            // Static error string - matches R.string.error_config_not_loaded
+            _uiState.value = _uiState.value.copy(error = context.getString(R.string.error_config_not_loaded))
             return
         }
 
@@ -272,12 +295,14 @@ class OnboardingViewModel @Inject constructor(
 
     private fun completeOnboarding() {
         val uid = auth.currentUser?.uid ?: run {
-            _uiState.value = _uiState.value.copy(error = "Vous devez être connecté")
+            // Static error string - matches R.string.error_must_be_authenticated
+            _uiState.value = _uiState.value.copy(error = "context.getString(R.string.error_must_be_authenticated) // replaced")
             return
         }
 
         val configVersion = config?.id ?: run {
-            _uiState.value = _uiState.value.copy(error = "Configuration non chargée")
+            // Static error string - matches R.string.error_config_not_loaded
+            _uiState.value = _uiState.value.copy(error = context.getString(R.string.error_config_not_loaded))
             return
         }
 
@@ -292,13 +317,13 @@ class OnboardingViewModel @Inject constructor(
             completedAt = Timestamp.now(),
             startedAt = Timestamp(startTime / 1000, 0),
             answers = answers.values.toList(),
-            metadata = OnboardingMetadata(
-                deviceType = "Android ${Build.VERSION.RELEASE}",
-                appVersion = BuildConfig.VERSION_NAME,
-                totalTimeSeconds = totalTimeSeconds,
-                locale = Locale.getDefault().language
+                metadata = OnboardingMetadata(
+                    deviceType = "Android ${Build.VERSION.RELEASE}",
+                    appVersion = BuildConfig.VERSION_NAME,
+                    totalTimeSeconds = totalTimeSeconds,
+                    locale = localizationProvider.getCurrentLocale()
+                )
             )
-        )
 
         viewModelScope.launch {
             onboardingRepository.saveUserOnboardingResponse(uid, response)
@@ -324,6 +349,7 @@ class OnboardingViewModel @Inject constructor(
                     Timber.d("Onboarding completed successfully for user $uid")
                 }
                 .onFailure { error ->
+                    // Error message with dynamic data stays in ViewModel
                     _uiState.value = _uiState.value.copy(
                         isSaving = false,
                         error = "Erreur lors de la sauvegarde : ${error.message}"
@@ -441,6 +467,7 @@ data class OnboardingUiState(
     val isComplete: Boolean = false,
     val error: String? = null,
     val config: OnboardingConfig? = null,
+    val currentLocale: String = LocalizationProvider.DEFAULT_LOCALE,
     val questions: List<OnboardingQuestion> = emptyList(),
     val currentQuestionIndex: Int = 0,
     val totalQuestions: Int = 0,
