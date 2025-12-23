@@ -7,12 +7,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ora.wellbeing.R
 import com.ora.wellbeing.presentation.theme.OraTheme
 
 /**
@@ -69,7 +71,7 @@ fun ProfileStatCard(
  */
 @Composable
 fun GratitudeStatCard(
-    todayText: String = "Aujourd'hui",
+    todayText: String = stringResource(R.string.profile_gratitude_today),
     backgroundColor: Color = Color(0xFFF5F0E8),
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null
@@ -88,7 +90,7 @@ fun GratitudeStatCard(
         Card(
             onClick = onClick,
             modifier = modifier.semantics {
-                contentDescription = "Gratitudes, $todayText"
+                contentDescription = "GRATITUDES, $todayText"
             },
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
@@ -106,7 +108,7 @@ fun GratitudeStatCard(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "GRATITUDES",
+                    text = stringResource(R.string.profile_gratitudes_title),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp,
@@ -117,7 +119,7 @@ fun GratitudeStatCard(
         }
     } else {
         ProfileStatCard(
-            title = "GRATITUDES",
+            title = stringResource(R.string.profile_gratitudes_title),
             backgroundColor = backgroundColor,
             modifier = modifier,
             content = cardContent
@@ -174,7 +176,7 @@ fun GoalsStatCard(
     modifier: Modifier = Modifier
 ) {
     ProfileStatCard(
-        title = "OBJECTIFS",
+        title = stringResource(R.string.profile_goals_title),
         backgroundColor = backgroundColor,
         modifier = modifier
     ) {
@@ -200,7 +202,6 @@ private fun ProfileStatCardPreview() {
         ) {
             // Carte Gratitudes
             GratitudeStatCard(
-                todayText = "Aujourd'hui",
                 modifier = Modifier.fillMaxWidth()
             )
 

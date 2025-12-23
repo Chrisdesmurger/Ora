@@ -13,6 +13,11 @@ import com.google.firebase.firestore.IgnoreExtraProperties
  * This model represents programs (meditation/yoga courses) created via OraWebApp admin portal.
  * Programs consist of multiple lessons arranged in a specific order.
  *
+ * **i18n Support** (Issue #39 - Phase 2):
+ * - French (fr): title_fr, description_fr, category_fr, difficulty_fr
+ * - English (en): title_en, description_en, category_en, difficulty_en
+ * - Spanish (es): title_es, description_es, category_es, difficulty_es
+ *
  * @see com.ora.wellbeing.data.mapper.ProgramMapper for conversion to Program
  */
 @IgnoreExtraProperties
@@ -24,13 +29,91 @@ class ProgramDocument() {
 
     /**
      * Program title (e.g., "7-Day Meditation Challenge", "Beginner Yoga Series")
+     * Default/fallback title (usually French)
      */
     var title: String = ""
 
     /**
      * Detailed description of the program content and goals
+     * Default/fallback description (usually French)
      */
     var description: String = ""
+
+    // ============================================================================
+    // i18n Fields (Issue #39 - Phase 2)
+    // ============================================================================
+
+    /**
+     * French title
+     * NEW (Issue #39): Added for i18n support
+     */
+    var title_fr: String? = null
+
+    /**
+     * English title
+     * NEW (Issue #39): Added for i18n support
+     */
+    var title_en: String? = null
+
+    /**
+     * Spanish title
+     * NEW (Issue #39): Added for i18n support
+     */
+    var title_es: String? = null
+
+    /**
+     * French description
+     * NEW (Issue #39): Added for i18n support
+     */
+    var description_fr: String? = null
+
+    /**
+     * English description
+     * NEW (Issue #39): Added for i18n support
+     */
+    var description_en: String? = null
+
+    /**
+     * Spanish description
+     * NEW (Issue #39): Added for i18n support
+     */
+    var description_es: String? = null
+
+    /**
+     * French category (e.g., "Méditation", "Yoga")
+     * NEW (Issue #39): Added for i18n support
+     */
+    var category_fr: String? = null
+
+    /**
+     * English category (e.g., "Meditation", "Yoga")
+     * NEW (Issue #39): Added for i18n support
+     */
+    var category_en: String? = null
+
+    /**
+     * Spanish category (e.g., "Meditación", "Yoga")
+     * NEW (Issue #39): Added for i18n support
+     */
+    var category_es: String? = null
+
+    /**
+     * French difficulty level (e.g., "Débutant", "Intermédiaire", "Avancé")
+     * NEW (Issue #39): Added for i18n support
+     */
+    var difficulty_fr: String? = null
+
+    /**
+     * English difficulty level (e.g., "Beginner", "Intermediate", "Advanced")
+     * NEW (Issue #39): Added for i18n support
+     */
+    var difficulty_en: String? = null
+
+    /**
+     * Spanish difficulty level (e.g., "Principiante", "Intermedio", "Avanzado")
+     * NEW (Issue #39): Added for i18n support
+     */
+    var difficulty_es: String? = null
 
     // ============================================================================
     // Classification
@@ -39,12 +122,14 @@ class ProgramDocument() {
     /**
      * Program category
      * Valid values: "meditation", "yoga", "mindfulness", "wellness"
+     * Default/fallback category (usually English/lowercase)
      */
     var category: String = "meditation"
 
     /**
      * Difficulty level
      * Valid values: "beginner", "intermediate", "advanced"
+     * Default/fallback difficulty (usually English/lowercase)
      */
     var difficulty: String = "beginner"
 

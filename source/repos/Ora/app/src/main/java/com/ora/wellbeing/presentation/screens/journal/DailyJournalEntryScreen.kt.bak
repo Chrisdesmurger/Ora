@@ -246,7 +246,7 @@ private fun MoodSelectorSection(
     onMoodSelected: (String) -> Unit
 ) {
     JournalSectionCard(
-        title = stringResource(R.string.journal_entry_mood_title),
+        title = "Humeur du jour",
         icon = Icons.Default.Mood
     ) {
         Row(
@@ -304,15 +304,15 @@ private fun ShortNoteSection(
     onNoteChange: (String) -> Unit
 ) {
     JournalSectionCard(
-        title = stringResource(R.string.journal_entry_note_title),
-        subtitle = stringResource(R.string.journal_entry_note_count, note.length),
+        title = "Note quelques mots",
+        subtitle = "${note.length}/200",
         icon = Icons.Default.Notes
     ) {
         OutlinedTextField(
             value = note,
             onValueChange = onNoteChange,
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text(stringResource(R.string.journal_entry_note_placeholder)) },
+            placeholder = { Text("Résumé rapide de ta journée...") },
             maxLines = 3,
             colors = OutlinedTextFieldDefaults.colors()
         )
@@ -325,8 +325,8 @@ private fun DailyStorySection(
     onStoryChange: (String) -> Unit
 ) {
     JournalSectionCard(
-        title = stringResource(R.string.journal_entry_story_title),
-        subtitle = stringResource(R.string.journal_entry_story_count, story.length),
+        title = "Qu'as-tu envie de raconter aujourd'hui?",
+        subtitle = "${story.length}/2000",
         icon = Icons.Default.AutoStories
     ) {
         OutlinedTextField(
@@ -335,7 +335,7 @@ private fun DailyStorySection(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 150.dp),
-            placeholder = { Text(stringResource(R.string.journal_entry_story_placeholder)) },
+            placeholder = { Text("Raconte ta journée en détail...") },
             maxLines = 10,
             colors = OutlinedTextFieldDefaults.colors()
         )
@@ -348,7 +348,7 @@ private fun GratitudesSection(
     onGratitudeChange: (Int, String) -> Unit
 ) {
     JournalSectionCard(
-        title = stringResource(R.string.journal_entry_gratitude_title),
+        title = "Aujourd'hui, je suis reconnaissant(e) pour...",
         icon = Icons.Default.Favorite
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -383,7 +383,7 @@ private fun GratitudeField(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = stringResource(R.string.journal_entry_gratitude_number, index + 1),
+            text = "${index + 1}.",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(end = 8.dp)
@@ -392,7 +392,7 @@ private fun GratitudeField(
             value = text,
             onValueChange = onTextChange,
             modifier = Modifier.weight(1f),
-            placeholder = { Text(stringResource(R.string.journal_entry_gratitude_placeholder)) },
+            placeholder = { Text("Ta gratitude...") },
             maxLines = 2,
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedContainerColor = Color.White.copy(alpha = 0.5f),
@@ -410,7 +410,7 @@ private fun AccomplishmentsSection(
     onRemoveAccomplishment: (Int) -> Unit
 ) {
     JournalSectionCard(
-        title = stringResource(R.string.journal_entry_accomplishments_title),
+        title = "Aujourd'hui, j'ai accompli...",
         icon = Icons.Default.CheckCircle
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -423,7 +423,7 @@ private fun AccomplishmentsSection(
                         value = accomplishment,
                         onValueChange = { onAccomplishmentChange(index, it) },
                         modifier = Modifier.weight(1f),
-                        placeholder = { Text(stringResource(R.string.journal_entry_accomplishment_placeholder)) },
+                        placeholder = { Text("Un accomplissement...") },
                         maxLines = 2,
                         leadingIcon = {
                             Icon(Icons.Default.CheckCircle, null, tint = MaterialTheme.colorScheme.primary)
@@ -432,7 +432,7 @@ private fun AccomplishmentsSection(
                     )
                     if (accomplishments.size > 1) {
                         IconButton(onClick = { onRemoveAccomplishment(index) }) {
-                            Icon(Icons.Default.RemoveCircle, stringResource(R.string.journal_entry_delete))
+                            Icon(Icons.Default.RemoveCircle, "Supprimer")
                         }
                     }
                 }
@@ -444,7 +444,7 @@ private fun AccomplishmentsSection(
             ) {
                 Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(4.dp))
-                Text(stringResource(R.string.journal_entry_add_accomplishment))
+                Text("Ajouter un accomplissement")
             }
         }
     }
@@ -456,7 +456,7 @@ private fun ImprovementsSection(
     onImprovementChange: (Int, String) -> Unit
 ) {
     JournalSectionCard(
-        title = stringResource(R.string.journal_entry_improvements_title),
+        title = "Qu'est-ce que je peux améliorer pour demain?",
         icon = Icons.Default.TrendingUp
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -465,7 +465,7 @@ private fun ImprovementsSection(
                     value = improvement,
                     onValueChange = { onImprovementChange(index, it) },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text(stringResource(R.string.journal_entry_improvement_placeholder)) },
+                    placeholder = { Text("Un point d'amélioration...") },
                     maxLines = 2,
                     leadingIcon = {
                         Icon(Icons.Default.Flag, null, tint = MaterialTheme.colorScheme.secondary)
@@ -485,8 +485,8 @@ private fun LearningsSection(
     onRemindMeTomorrowChange: (Boolean) -> Unit
 ) {
     JournalSectionCard(
-        title = stringResource(R.string.journal_entry_learning_title),
-        subtitle = stringResource(R.string.journal_entry_learning_count, learnings.length),
+        title = "Qu'est-ce que j'ai appris aujourd'hui?",
+        subtitle = "${learnings.length}/1000",
         icon = Icons.Default.School
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -496,7 +496,7 @@ private fun LearningsSection(
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 120.dp),
-                placeholder = { Text(stringResource(R.string.journal_entry_learning_placeholder)) },
+                placeholder = { Text("Tes apprentissages du jour...") },
                 maxLines = 6,
                 colors = OutlinedTextFieldDefaults.colors()
             )
@@ -514,7 +514,7 @@ private fun LearningsSection(
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    stringResource(R.string.journal_entry_reminder),
+                    "Me le rappeler demain",
                     style = MaterialTheme.typography.bodyMedium
                 )
             }

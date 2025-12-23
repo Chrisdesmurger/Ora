@@ -1,5 +1,7 @@
 package com.ora.wellbeing.feature.practice.player.specialized.massage
 
+import androidx.annotation.StringRes
+import com.ora.wellbeing.R
 import com.ora.wellbeing.core.domain.practice.Practice
 import com.ora.wellbeing.feature.practice.player.PlayerState
 
@@ -22,7 +24,7 @@ data class MassagePlayerState(
     val zoneRepetitions: Int = 0,                // Répétitions restantes
     val targetRepetitions: Int = 3,              // Nombre cible de répétitions
     val pressureLevel: PressureLevel = PressureLevel.MEDIUM,
-    val currentInstruction: String = "",          // Instruction textuelle actuelle
+    @StringRes val currentInstructionRes: Int = 0, // Instruction textuelle actuelle (@StringRes)
     val showBodyMap: Boolean = true               // Afficher la carte corporelle
 )
 
@@ -31,10 +33,10 @@ data class MassagePlayerState(
  */
 data class BodyZone(
     val id: String,
-    val name: String,
+    @StringRes val nameRes: Int,
     val icon: String,
     val duration: Long,                          // Durée recommandée en ms
-    val instructions: List<String>,              // Instructions étape par étape
+    val instructionRes: List<Int>,               // Instructions étape par étape (@StringRes)
     val pressureRecommended: PressureLevel,
     val state: ZoneState = ZoneState.PENDING
 ) {
@@ -42,61 +44,61 @@ data class BodyZone(
         fun defaultZones(): List<BodyZone> = listOf(
             BodyZone(
                 id = "neck",
-                name = "Nuque",
+                nameRes = R.string.massage_zone_neck,
                 icon = "🔵",
                 duration = 60000L,
-                instructions = listOf(
-                    "Placez vos doigts à la base du crâne",
-                    "Effectuez des mouvements circulaires",
-                    "Descendez progressivement vers les épaules"
+                instructionRes = listOf(
+                    R.string.massage_instruction_neck_1,
+                    R.string.massage_instruction_neck_2,
+                    R.string.massage_instruction_neck_3
                 ),
                 pressureRecommended = PressureLevel.MEDIUM
             ),
             BodyZone(
                 id = "shoulders",
-                name = "Épaules",
+                nameRes = R.string.massage_zone_shoulders,
                 icon = "🟢",
                 duration = 90000L,
-                instructions = listOf(
-                    "Pétrissez le trapèze avec le pouce",
-                    "Alternez pression et relâchement",
-                    "Travaillez des deux côtés"
+                instructionRes = listOf(
+                    R.string.massage_instruction_shoulders_1,
+                    R.string.massage_instruction_shoulders_2,
+                    R.string.massage_instruction_shoulders_3
                 ),
                 pressureRecommended = PressureLevel.HIGH
             ),
             BodyZone(
                 id = "back",
-                name = "Dos",
+                nameRes = R.string.massage_zone_back,
                 icon = "🟡",
                 duration = 120000L,
-                instructions = listOf(
-                    "Utilisez une balle de massage",
-                    "Roulez le long de la colonne",
-                    "Insistez sur les points de tension"
+                instructionRes = listOf(
+                    R.string.massage_instruction_back_1,
+                    R.string.massage_instruction_back_2,
+                    R.string.massage_instruction_back_3
                 ),
                 pressureRecommended = PressureLevel.MEDIUM
             ),
             BodyZone(
                 id = "arms",
-                name = "Bras",
+                nameRes = R.string.massage_zone_arms,
                 icon = "🟠",
                 duration = 60000L,
-                instructions = listOf(
-                    "Massez de l'épaule vers le poignet",
-                    "Insistez sur l'avant-bras",
-                    "Étirez les doigts"
+                instructionRes = listOf(
+                    R.string.massage_instruction_arms_1,
+                    R.string.massage_instruction_arms_2,
+                    R.string.massage_instruction_arms_3
                 ),
                 pressureRecommended = PressureLevel.LOW
             ),
             BodyZone(
                 id = "hands",
-                name = "Mains",
+                nameRes = R.string.massage_zone_hands,
                 icon = "🔴",
                 duration = 45000L,
-                instructions = listOf(
-                    "Massez la paume avec le pouce",
-                    "Étirez chaque doigt",
-                    "Terminez par le poignet"
+                instructionRes = listOf(
+                    R.string.massage_instruction_hands_1,
+                    R.string.massage_instruction_hands_2,
+                    R.string.massage_instruction_hands_3
                 ),
                 pressureRecommended = PressureLevel.LOW
             )
@@ -116,10 +118,10 @@ enum class ZoneState {
 /**
  * Niveau de pression recommandé
  */
-enum class PressureLevel(val displayName: String, val intensity: Float) {
-    LOW("Légère", 0.33f),
-    MEDIUM("Moyenne", 0.66f),
-    HIGH("Forte", 1f)
+enum class PressureLevel(@StringRes val nameRes: Int, val intensity: Float) {
+    LOW(R.string.massage_pressure_low, 0.33f),
+    MEDIUM(R.string.massage_pressure_medium, 0.66f),
+    HIGH(R.string.massage_pressure_high, 1f)
 }
 
 /**

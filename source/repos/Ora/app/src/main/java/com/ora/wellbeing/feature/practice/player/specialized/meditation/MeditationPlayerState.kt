@@ -1,5 +1,7 @@
 package com.ora.wellbeing.feature.practice.player.specialized.meditation
 
+import androidx.annotation.StringRes
+import com.ora.wellbeing.R
 import com.ora.wellbeing.core.domain.practice.Practice
 import com.ora.wellbeing.feature.practice.player.PlayerState
 
@@ -39,12 +41,12 @@ data class MeditationPlayerState(
 /**
  * Phase de respiration
  */
-enum class BreathingPhase(val displayName: String, val durationMs: Long) {
-    IDLE("Prêt", 0L),
-    INHALE("Inspirez", 4000L),
-    HOLD_IN("Retenez", 4000L),
-    EXHALE("Expirez", 6000L),
-    HOLD_OUT("Pause", 2000L);
+enum class BreathingPhase(@StringRes val nameRes: Int, val durationMs: Long) {
+    IDLE(R.string.meditation_breathing_ready, 0L),
+    INHALE(R.string.meditation_breathing_inhale, 4000L),
+    HOLD_IN(R.string.meditation_breathing_hold_in, 4000L),
+    EXHALE(R.string.meditation_breathing_exhale, 6000L),
+    HOLD_OUT(R.string.meditation_breathing_hold_out, 2000L);
 
     fun next(): BreathingPhase {
         return when (this) {
@@ -62,17 +64,17 @@ enum class BreathingPhase(val displayName: String, val durationMs: Long) {
  */
 data class AmbientSound(
     val id: String,
-    val name: String,
+    @StringRes val nameRes: Int,
     val icon: String, // Emoji pour simplicité
     val resourceName: String? = null // Nom du fichier audio (pour implémentation future)
 ) {
     companion object {
         fun defaultSounds(): List<AmbientSound> = listOf(
-            AmbientSound("rain", "Pluie", "🌧️"),
-            AmbientSound("forest", "Forêt", "🌲"),
-            AmbientSound("ocean", "Océan", "🌊"),
-            AmbientSound("fire", "Feu", "🔥"),
-            AmbientSound("silence", "Silence", "🔇")
+            AmbientSound("rain", R.string.meditation_ambient_rain, "🌧️"),
+            AmbientSound("forest", R.string.meditation_ambient_forest, "🌲"),
+            AmbientSound("ocean", R.string.meditation_ambient_ocean, "🌊"),
+            AmbientSound("fire", R.string.meditation_ambient_fire, "🔥"),
+            AmbientSound("silence", R.string.meditation_ambient_silence, "🔇")
         )
     }
 }

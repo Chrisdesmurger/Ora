@@ -66,7 +66,7 @@ class MassagePlayerViewModel @Inject constructor(
                         it.copy(
                             isLoading = false,
                             bodyZones = zones,
-                            currentInstruction = zones.firstOrNull()?.instructions?.firstOrNull() ?: "",
+                            currentInstructionRes = zones.firstOrNull()?.instructionRes?.firstOrNull() ?: 0,
                             pressureLevel = zones.firstOrNull()?.pressureRecommended ?: PressureLevel.MEDIUM
                         )
                     }
@@ -168,11 +168,11 @@ class MassagePlayerViewModel @Inject constructor(
 
     private fun updateInstruction(zone: BodyZone, elapsed: Long) {
         val totalDuration = zone.duration
-        val instructionIndex = ((elapsed.toFloat() / totalDuration) * zone.instructions.size).toInt()
-            .coerceIn(0, zone.instructions.size - 1)
+        val instructionIndex = ((elapsed.toFloat() / totalDuration) * zone.instructionRes.size).toInt()
+            .coerceIn(0, zone.instructionRes.size - 1)
 
-        val instruction = zone.instructions.getOrNull(instructionIndex) ?: ""
-        _uiState.update { it.copy(currentInstruction = instruction) }
+        val instructionRes = zone.instructionRes.getOrNull(instructionIndex) ?: 0
+        _uiState.update { it.copy(currentInstructionRes = instructionRes) }
     }
 
     private fun onZoneCompleted() {
@@ -221,7 +221,7 @@ class MassagePlayerViewModel @Inject constructor(
             it.copy(
                 bodyZones = updatedZones,
                 currentZoneIndex = index,
-                currentInstruction = selectedZone.instructions.firstOrNull() ?: "",
+                currentInstructionRes = selectedZone.instructionRes.firstOrNull() ?: 0,
                 pressureLevel = selectedZone.pressureRecommended,
                 zoneRepetitions = it.targetRepetitions
             )
@@ -233,7 +233,6 @@ class MassagePlayerViewModel @Inject constructor(
 
         analytics.logEvent("massage_zone_selected") {
             param("zone", selectedZone.id)
-            param("zone_name", selectedZone.name)
         }
     }
 

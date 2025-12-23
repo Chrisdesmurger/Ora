@@ -2,6 +2,7 @@ package com.ora.wellbeing.domain.model
 
 /**
  * FIX(build-debug-android): Modèle pour les vidéos de contenu
+ * Migrated to use i18n-enabled enums (ContentCategory, DifficultyLevel)
  */
 data class Video(
     val id: String,
@@ -16,8 +17,4 @@ data class Video(
     val tags: List<String> = emptyList()
 )
 
-enum class DifficultyLevel(val displayName: String) {
-    BEGINNER("Débutant"),
-    INTERMEDIATE("Intermédiaire"),
-    ADVANCED("Avancé")
-}
+// ContentCategory and DifficultyLevel enums moved to separate files for i18n support

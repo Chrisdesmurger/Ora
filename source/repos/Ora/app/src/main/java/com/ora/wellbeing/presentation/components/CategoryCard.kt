@@ -12,9 +12,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.ora.wellbeing.R
 import com.ora.wellbeing.data.model.CategoryItem
 
 /**
@@ -103,7 +105,7 @@ fun CategoryCard(
                     color = Color.White.copy(alpha = 0.3f)
                 ) {
                     Text(
-                        text = "${category.itemCount} contenus",
+                        text = stringResource(R.string.library_content_count, category.itemCount),
                         style = MaterialTheme.typography.bodySmall.copy(
                             color = Color.White,
                             fontWeight = FontWeight.Medium

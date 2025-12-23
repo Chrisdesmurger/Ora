@@ -238,6 +238,37 @@
     <string name="error_updating_photo">Erreur lors de la mise à jour de la photo</string>
     <string name="error_offline">Vous êtes hors ligne</string>
 
+    <!-- ViewModel Errors (NEW - Issue #39 - Phase 2) -->
+    <string name="error_must_login_home">Vous devez être connecté pour voir l\'accueil</string>
+    <string name="error_must_login_programs">Vous devez être connecté pour voir les programmes</string>
+    <string name="error_must_login">Vous devez être connecté</string>
+    <string name="error_loading_home">Erreur lors du chargement de l\'accueil: %1$s</string>
+    <string name="error_loading_library">Erreur lors du chargement de la bibliothèque: %1$s</string>
+    <string name="error_loading_programs">Erreur lors du chargement des programmes: %1$s</string>
+    <string name="error_enrollment">Erreur lors de l\'inscription: %1$s</string>
+    <string name="error_leaving_program">Erreur lors de l\'abandon: %1$s</string>
+    <string name="error_program_not_found">Programme non trouvé</string>
+
+    <!-- Session Fallbacks (NEW - Issue #39 - Phase 2) -->
+    <string name="session_untitled">Séance sans titre</string>
+    <string name="session_discover">Découvrez cette séance</string>
+    <string name="duration_default">10 min</string>
+    <string name="duration_10_15_min">10-15 min</string>
+    <string name="program_active">Programme actif</string>
+    <string name="program_session_format">Session %1$d</string>
+    <string name="program_unknown">Programme inconnu</string>
+
+    <!-- Plan Tiers (NEW - Issue #39 - Phase 2) -->
+    <string name="plan_free">Gratuit</string>
+    <string name="plan_premium">Premium</string>
+    <string name="plan_lifetime">Lifetime</string>
+
+    <!-- Program Duration Formatting (NEW - Issue #39 - Phase 2) -->
+    <string name="duration_1_day">1 jour</string>
+    <string name="duration_days">%1$d jours</string>
+    <string name="duration_1_week">1 semaine</string>
+    <string name="duration_weeks">%1$d semaines</string>
+
     <!-- Common -->
     <string name="common_retry">Réessayer</string>
     <string name="common_back">Retour</string>
@@ -494,6 +525,15 @@
     <string name="profile_completed_challenges">défis\ncompletés</string>
     <string name="profile_favorite_workouts">Entraînements Favoris</string>
     <string name="profile_favorite_challenges">Défis Favoris</string>
+
+    <!-- Data Model Constants (Internal use - backend sync) -->
+    <string name="internal_category_meditation">Meditation</string>
+    <string name="internal_category_yoga">Yoga</string>
+    <string name="internal_category_breathing">Respiration</string>
+    <string name="internal_category_pilates">Pilates</string>
+    <string name="internal_category_wellness">Bien-etre</string>
+    <string name="internal_category_sleep">Sommeil</string>
+    <string name="internal_category_challenges">Defis</string>
 
     <!-- Daily Journal Entry Screen -->
     <string name="journal_entry_title">Journal du %1$s</string>

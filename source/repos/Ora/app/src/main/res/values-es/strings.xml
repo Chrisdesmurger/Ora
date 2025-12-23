@@ -235,6 +235,37 @@
     <string name="error_updating_photo">Error al actualizar la foto</string>
     <string name="error_offline">Estás sin conexión</string>
 
+    <!-- ViewModel Errors (NEW - Issue #39 - Phase 2) -->
+    <string name="error_must_login_home">Debes iniciar sesión para ver el inicio</string>
+    <string name="error_must_login_programs">Debes iniciar sesión para ver los programas</string>
+    <string name="error_must_login">Debes iniciar sesión</string>
+    <string name="error_loading_home">Error al cargar el inicio: %1$s</string>
+    <string name="error_loading_library">Error al cargar la biblioteca: %1$s</string>
+    <string name="error_loading_programs">Error al cargar los programas: %1$s</string>
+    <string name="error_enrollment">Error al inscribirse: %1$s</string>
+    <string name="error_leaving_program">Error al abandonar el programa: %1$s</string>
+    <string name="error_program_not_found">Programa no encontrado</string>
+
+    <!-- Session Fallbacks (NEW - Issue #39 - Phase 2) -->
+    <string name="session_untitled">Sesión sin título</string>
+    <string name="session_discover">Descubre esta sesión</string>
+    <string name="duration_default">10 min</string>
+    <string name="duration_10_15_min">10-15 min</string>
+    <string name="program_active">Programa activo</string>
+    <string name="program_session_format">Sesión %1$d</string>
+    <string name="program_unknown">Programa desconocido</string>
+
+    <!-- Plan Tiers (NEW - Issue #39 - Phase 2) -->
+    <string name="plan_free">Gratuito</string>
+    <string name="plan_premium">Premium</string>
+    <string name="plan_lifetime">Lifetime</string>
+
+    <!-- Program Duration Formatting (NEW - Issue #39 - Phase 2) -->
+    <string name="duration_1_day">1 día</string>
+    <string name="duration_days">%1$d días</string>
+    <string name="duration_1_week">1 semana</string>
+    <string name="duration_weeks">%1$d semanas</string>
+
     <!-- Common -->
     <string name="retry">Reintentar</string>
     <string name="back">Atrás</string>
@@ -507,6 +538,15 @@
     <string name="onboarding_feature_programs_title">Programas guiados</string>
     <string name="onboarding_feature_programs_desc">Rutas estructuradas para alcanzar tus objetivos</string>
     <string name="onboarding_start_journey">Comenzar mi viaje</string>
+
+    <!-- Data Model Constants (Internal use - backend sync) -->
+    <string name="internal_category_meditation">Meditacion</string>
+    <string name="internal_category_yoga">Yoga</string>
+    <string name="internal_category_breathing">Respiracion</string>
+    <string name="internal_category_pilates">Pilates</string>
+    <string name="internal_category_wellness">Bienestar</string>
+    <string name="internal_category_sleep">Sueno</string>
+    <string name="internal_category_challenges">Desafios</string>
 
     <!-- Errors -->
     <string name="error_must_be_authenticated">Debes iniciar sesión</string>

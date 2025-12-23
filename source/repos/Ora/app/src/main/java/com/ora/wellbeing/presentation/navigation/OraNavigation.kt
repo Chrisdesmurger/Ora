@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -367,6 +368,9 @@ fun OraNavigation(
     }
 }
 
+/**
+ * FIX (Issue #39 - Phase 1d): Use stringResource for labels
+ */
 @Composable
 private fun OraBottomNavigationBar(
     navController: NavHostController,
@@ -382,10 +386,11 @@ private fun OraBottomNavigationBar(
                 icon = {
                     Icon(
                         imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
-                        contentDescription = item.label,
-                        modifier = Modifier.size(22.dp)
+                        contentDescription = stringResource(item.labelRes),
+                        modifier = Modifier.size(28.dp)
                     )
                 },
+                label = null,
                 selected = selected,
                 onClick = {
                     navController.navigate(item.route) {

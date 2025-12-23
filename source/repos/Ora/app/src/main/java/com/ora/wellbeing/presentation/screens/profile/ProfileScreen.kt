@@ -17,12 +17,14 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ora.wellbeing.R
 import com.ora.wellbeing.presentation.theme.*
 import com.ora.wellbeing.presentation.components.UserAvatar
 
@@ -160,14 +162,14 @@ private fun ProfileHeader(
             // Left: "Hi, Name"
             Column {
                 Text(
-                    text = "Hi,",
+                    text = stringResource(R.string.profile_hi),
                     style = MaterialTheme.typography.bodyLarge.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 18.sp
                     )
                 )
                 Text(
-                    text = userProfile?.firstName?.ifBlank { userProfile.name } ?: "Invité",
+                    text = userProfile?.firstName?.ifBlank { userProfile.name } ?: stringResource(R.string.greeting_guest),
                     style = MaterialTheme.typography.displaySmall.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -191,7 +193,7 @@ private fun ProfileHeader(
                 }
 
                 UserAvatar(
-                    firstName = userProfile?.firstName?.ifBlank { userProfile.name.ifBlank { "Invité" } } ?: "Invité",
+                    firstName = userProfile?.firstName?.ifBlank { userProfile.name.ifBlank { stringResource(R.string.greeting_guest) } } ?: stringResource(R.string.greeting_guest),
                     photoUrl = userProfile?.photoUrl,
                     size = 80.dp,
                     fontSize = 36.sp
@@ -226,7 +228,7 @@ private fun CompletedCalendarSection(
             )
             Column {
                 Text(
-                    text = "Current month",
+                    text = stringResource(R.string.profile_current_month),
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = TitleOrangeDark,
@@ -324,7 +326,7 @@ private fun CompletedCalendarSection(
                         )
                     )
                     Text(
-                        text = "${monthStat.completionPercent}%",
+                        text = stringResource(R.string.program_progress_percentage, monthStat.completionPercent),
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFF18D5C),
@@ -352,7 +354,7 @@ private fun MyStatisticsSection(
     Column(modifier = modifier) {
         // Title outside card
         Text(
-            text = "My",
+            text = stringResource(R.string.profile_my),
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Bold,
                 color = TitleOrangeDark,
@@ -360,7 +362,7 @@ private fun MyStatisticsSection(
             )
         )
         Text(
-            text = "Statistics",
+            text = stringResource(R.string.profile_statistics),
             style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.Bold,
                 color = TitleOrangeDark,
@@ -385,19 +387,19 @@ private fun MyStatisticsSection(
             ) {
                 StatisticItemLarge(
                     value = completedWorkouts,
-                    label = "completed\nworkouts",
+                    label = stringResource(R.string.profile_completed_workouts),
                     color = Color(0xFFF18D5C)
                 )
 
                 StatisticItemLarge(
                     value = challengesInProgress,
-                    label = "challenges\nin progress",
+                    label = stringResource(R.string.profile_challenges_in_progress),
                     color = Color(0xFFFDB5A0)
                 )
 
                 StatisticItemLarge(
                     value = completedChallenges,
-                    label = "completed\nchallenges",
+                    label = stringResource(R.string.profile_completed_challenges),
                     color = Color(0xFF7BA089)
                 )
             }
@@ -449,7 +451,7 @@ private fun ChallengeProgressSection(challenge: ActiveChallenge) {
     Column(modifier = Modifier.fillMaxWidth()) {
         // Title outside card
         Text(
-            text = "Challenge",
+            text = stringResource(R.string.profile_challenge),
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Bold,
                 color = TitleOrangeDark,
@@ -457,7 +459,7 @@ private fun ChallengeProgressSection(challenge: ActiveChallenge) {
             )
         )
         Text(
-            text = "in progress",
+            text = stringResource(R.string.profile_in_progress),
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Bold,
                 color = TitleOrangeDark,
@@ -496,7 +498,7 @@ private fun ChallengeProgressSection(challenge: ActiveChallenge) {
                     )
 
                     Text(
-                        text = "${challenge.progressPercent}%",
+                        text = stringResource(R.string.program_progress_percentage, challenge.progressPercent),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFF18D5C),
@@ -537,7 +539,7 @@ private fun FavoritesSection(
         // Favorite Workouts
         FavoriteCard(
             count = favoriteWorkoutsCount,
-            label = "Favorite Workouts",
+            label = stringResource(R.string.profile_favorite_workouts),
             icon = Icons.Default.FavoriteBorder,
             backgroundColor = Color(0xFFFFF9F0),
             modifier = Modifier.weight(1f)
@@ -546,7 +548,7 @@ private fun FavoritesSection(
         // Favorite Challenges
         FavoriteCard(
             count = favoriteChallengesCount,
-            label = "Favorite Challenges",
+            label = stringResource(R.string.profile_favorite_challenges),
             icon = Icons.Default.Star,
             backgroundColor = Color(0xFFFFF5F0),
             modifier = Modifier.weight(1f)

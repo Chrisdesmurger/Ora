@@ -1,8 +1,10 @@
 package com.ora.wellbeing.presentation.screens.programs
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.ora.wellbeing.R
 import com.ora.wellbeing.data.model.Program
 import com.ora.wellbeing.data.model.UserProgram
 import com.ora.wellbeing.domain.repository.ProgramRepository
@@ -18,10 +20,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProgramsViewModel @Inject constructor(
+    application: Application,
     private val programRepository: ProgramRepository,
     private val userProgramRepository: UserProgramRepository,
     private val auth: FirebaseAuth
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(ProgramsUiState())
     val uiState: StateFlow<ProgramsUiState> = _uiState.asStateFlow()
@@ -43,7 +46,7 @@ class ProgramsViewModel @Inject constructor(
             Timber.e("observeProgramData: No authenticated user")
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
-                error = "Vous devez être connecté pour voir les programmes"
+                error = getApplication<Application>().getString(R.string.error_must_login_programs)
             )
             return
         }
@@ -108,7 +111,7 @@ class ProgramsViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = "Erreur lors du chargement des programmes: ${e.message}"
+                    error = getApplication<Application>().getString(R.string.error_loading_programs, e.message ?: "")
                 )
                 Timber.e(e, "Error observing program data")
             }
@@ -118,7 +121,9 @@ class ProgramsViewModel @Inject constructor(
     private fun joinProgram(programId: String) {
         val uid = auth.currentUser?.uid ?: run {
             Timber.e("joinProgram: No authenticated user")
-            _uiState.value = _uiState.value.copy(error = "Vous devez être connecté")
+            _uiState.value = _uiState.value.copy(
+                error = getApplication<Application>().getString(R.string.error_must_login_programs)
+            )
             return
         }
 
@@ -136,21 +141,21 @@ class ProgramsViewModel @Inject constructor(
                             },
                             onFailure = { error ->
                                 _uiState.value = _uiState.value.copy(
-                                    error = "Erreur lors de l'inscription: ${error.message}"
+                                    error = getApplication<Application>().getString(R.string.error_enrollment, error.message ?: "")
                                 )
                                 Timber.e(error, "Error enrolling in program")
                             }
                         )
                     } else {
                         _uiState.value = _uiState.value.copy(
-                            error = "Programme non trouvé"
+                            error = getApplication<Application>().getString(R.string.error_program_not_found)
                         )
                         Timber.e("joinProgram: Program $programId not found")
                     }
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = "Erreur lors de l'inscription: ${e.message}"
+                    error = getApplication<Application>().getString(R.string.error_enrollment, e.message ?: "")
                 )
                 Timber.e(e, "Error joining program")
             }
@@ -173,14 +178,14 @@ class ProgramsViewModel @Inject constructor(
                     },
                     onFailure = { error ->
                         _uiState.value = _uiState.value.copy(
-                            error = "Erreur lors de l'abandon: ${error.message}"
+                            error = getApplication<Application>().getString(R.string.error_leaving_program, error.message ?: "")
                         )
                         Timber.e(error, "Error leaving program")
                     }
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = "Erreur lors de l'abandon: ${e.message}"
+                    error = getApplication<Application>().getString(R.string.error_leaving_program, e.message ?: "")
                 )
                 Timber.e(e, "Error leaving program")
             }
@@ -193,7 +198,7 @@ class ProgramsViewModel @Inject constructor(
     private fun UserProgram.toActiveProgram(program: Program?): ProgramsUiState.ActiveProgram {
         return ProgramsUiState.ActiveProgram(
             id = programId,
-            title = program?.title ?: "Programme inconnu",
+            title = program?.title ?: getApplication<Application>().getString(R.string.program_unknown),
             description = program?.description ?: "",
             currentDay = currentDay,
             totalDays = totalDays,
@@ -209,6 +214,12 @@ class ProgramsViewModel @Inject constructor(
      * Converts Program (data model) to Program (UI model)
      */
     private fun Program.toUiProgram(isEnrolled: Boolean): ProgramsUiState.Program {
+        val priceText = if (isPremiumOnly) {
+            getApplication<Application>().getString(R.string.plan_premium)
+        } else {
+            getApplication<Application>().getString(R.string.plan_free)
+        }
+
         return ProgramsUiState.Program(
             id = id,
             title = title,
@@ -220,7 +231,7 @@ class ProgramsViewModel @Inject constructor(
             rating = rating,
             thumbnailUrl = thumbnailUrl ?: "",
             instructor = instructor ?: "",
-            price = if (isPremiumOnly) "Premium" else "Gratuit",
+            price = priceText,
             isEnrolled = isEnrolled,
             estimatedTimePerDay = "10-15 min" // Could be dynamic based on program data
         )

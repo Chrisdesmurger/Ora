@@ -235,6 +235,37 @@
     <string name="error_updating_photo">Error updating photo</string>
     <string name="error_offline">You are offline</string>
 
+    <!-- ViewModel Errors (NEW - Issue #39 - Phase 2) -->
+    <string name="error_must_login_home">You must be logged in to view home</string>
+    <string name="error_must_login_programs">You must be logged in to view programs</string>
+    <string name="error_must_login">You must be logged in</string>
+    <string name="error_loading_home">Error loading home: %1$s</string>
+    <string name="error_loading_library">Error loading library: %1$s</string>
+    <string name="error_loading_programs">Error loading programs: %1$s</string>
+    <string name="error_enrollment">Error enrolling: %1$s</string>
+    <string name="error_leaving_program">Error leaving program: %1$s</string>
+    <string name="error_program_not_found">Program not found</string>
+
+    <!-- Session Fallbacks (NEW - Issue #39 - Phase 2) -->
+    <string name="session_untitled">Untitled session</string>
+    <string name="session_discover">Discover this session</string>
+    <string name="duration_default">10 min</string>
+    <string name="duration_10_15_min">10-15 min</string>
+    <string name="program_active">Active program</string>
+    <string name="program_session_format">Session %1$d</string>
+    <string name="program_unknown">Unknown program</string>
+
+    <!-- Plan Tiers (NEW - Issue #39 - Phase 2) -->
+    <string name="plan_free">Free</string>
+    <string name="plan_premium">Premium</string>
+    <string name="plan_lifetime">Lifetime</string>
+
+    <!-- Program Duration Formatting (NEW - Issue #39 - Phase 2) -->
+    <string name="duration_1_day">1 day</string>
+    <string name="duration_days">%1$d days</string>
+    <string name="duration_1_week">1 week</string>
+    <string name="duration_weeks">%1$d weeks</string>
+
     <!-- Common -->
     <string name="retry">Retry</string>
     <string name="back">Back</string>
@@ -507,6 +538,15 @@
     <string name="onboarding_feature_programs_title">Guided programs</string>
     <string name="onboarding_feature_programs_desc">Structured paths to reach your goals</string>
     <string name="onboarding_start_journey">Start my journey</string>
+
+    <!-- Data Model Constants (Internal use - backend sync) -->
+    <string name="internal_category_meditation">Meditation</string>
+    <string name="internal_category_yoga">Yoga</string>
+    <string name="internal_category_breathing">Breathing</string>
+    <string name="internal_category_pilates">Pilates</string>
+    <string name="internal_category_wellness">Wellness</string>
+    <string name="internal_category_sleep">Sleep</string>
+    <string name="internal_category_challenges">Challenges</string>
 
     <!-- Errors -->
     <string name="error_must_be_authenticated">You must be logged in</string>

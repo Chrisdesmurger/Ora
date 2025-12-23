@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -140,7 +141,11 @@ private fun WelcomeSection(
             modifier = Modifier.weight(1f)
         ) {
             Text(
-                text = if (userName.isNotBlank()) "Bonjour $userName" else "Bonjour",
+                text = if (userName.isNotBlank()) {
+                    stringResource(R.string.greeting_user, userName)
+                } else {
+                    stringResource(R.string.greeting_guest)
+                },
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -149,7 +154,7 @@ private fun WelcomeSection(
             if (streakDays > 0) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "$streakDays jours de suite!",
+                    text = stringResource(R.string.streak_days, streakDays),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -159,7 +164,7 @@ private fun WelcomeSection(
         // Logo Ora a droite
         Image(
             painter = painterResource(id = R.drawable.ic_launcher_ora),
-            contentDescription = "Logo Ora",
+            contentDescription = stringResource(R.string.app_name),
             modifier = Modifier
                 .size(56.dp)
                 .clip(CircleShape),
@@ -175,7 +180,7 @@ private fun QuickSessionsSection(
     Column {
         // FIX(build-debug-android): Titre de section restaure
         Text(
-            text = "Sessions rapides",
+            text = stringResource(R.string.home_quick_sessions_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = TitleOrangeDark
@@ -210,11 +215,11 @@ private fun QuickSessionCard(
 ) {
     // Mapping session type to image resource and display name
     // Issue #37: Added AUTO_MASSAGE mapping
-    val (imageRes, sessionName) = when (sessionType) {
-        QuickSessionType.BREATHING -> Pair(R.drawable.quick_session_respiration, "Respiration")
-        QuickSessionType.YOGA_FLASH -> Pair(R.drawable.quick_session_yoga, "Yoga")
-        QuickSessionType.MINI_MEDITATION -> Pair(R.drawable.quick_session_meditation, "Meditation")
-        QuickSessionType.AUTO_MASSAGE -> Pair(R.drawable.quick_session_auto_massage, "Auto-massage")
+    val (imageRes, sessionNameResId) = when (sessionType) {
+        QuickSessionType.BREATHING -> Pair(R.drawable.quick_session_respiration, R.string.category_breathing)
+        QuickSessionType.YOGA_FLASH -> Pair(R.drawable.quick_session_yoga, R.string.category_yoga)
+        QuickSessionType.MINI_MEDITATION -> Pair(R.drawable.quick_session_meditation, R.string.category_meditation)
+        QuickSessionType.AUTO_MASSAGE -> Pair(R.drawable.quick_session_auto_massage, R.string.daily_need_anti_stress)
     }
 
     Card(
@@ -234,7 +239,7 @@ private fun QuickSessionCard(
             // Background image
             Image(
                 painter = painterResource(id = imageRes),
-                contentDescription = sessionName,
+                contentDescription = stringResource(sessionNameResId),
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
@@ -257,7 +262,7 @@ private fun QuickSessionCard(
 
             // Session title centered with white text at 85% opacity
             Text(
-                text = sessionName,
+                text = stringResource(sessionNameResId),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
@@ -282,7 +287,7 @@ private fun RecommendationsSection(
 
     Column {
         Text(
-            text = "Decouverte du jour",
+            text = stringResource(R.string.home_recommendations_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = TitleOrangeDark
@@ -336,7 +341,7 @@ private fun PersonalizedRecommendationsSection(
             Spacer(modifier = Modifier.width(8.dp))
 
             Text(
-                text = "Pense pour toi",
+                text = stringResource(R.string.home_personalized_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = TitleOrangeDark
@@ -346,7 +351,7 @@ private fun PersonalizedRecommendationsSection(
         Spacer(modifier = Modifier.height(4.dp))
 
         Text(
-            text = "Base sur tes objectifs et preferences",
+            text = stringResource(R.string.home_personalized_description),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -396,7 +401,7 @@ private fun PersonalizedEmptyState() {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Pense pour toi",
+                text = stringResource(R.string.home_personalized_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -405,7 +410,7 @@ private fun PersonalizedEmptyState() {
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "Complete ton profil pour recevoir des recommandations personnalisees",
+                text = stringResource(R.string.home_personalized_empty_message),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -432,7 +437,7 @@ private fun DailyNeedSection(
     Column {
         // Section header
         Text(
-            text = "Ton besoin du jour",
+            text = stringResource(R.string.home_daily_need_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = TitleOrangeDark
@@ -441,7 +446,7 @@ private fun DailyNeedSection(
         Spacer(modifier = Modifier.height(4.dp))
 
         Text(
-            text = "Choisis selon ton etat",
+            text = stringResource(R.string.home_daily_need_description),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -475,13 +480,13 @@ private fun DailyNeedCategoryCard(
     contentCount: Int,
     onClick: () -> Unit
 ) {
-    // Sélection de l'image de fond selon la catégorie
-    val backgroundImage = when (category.id) {
-        "anti-stress" -> R.drawable.daily_need_anti_stress
-        "energie-matinale" -> R.drawable.daily_need_energie_matinale
-        "relaxation" -> R.drawable.daily_need_relaxation
-        "pratique-du-soir" -> R.drawable.daily_need_pratique_du_soir
-        else -> R.drawable.daily_need_anti_stress
+    // Mapping category to image resource and display name (same pattern as QuickSessionCard)
+    val (backgroundImage, categoryNameResId) = when (category.id) {
+        "anti-stress" -> Pair(R.drawable.daily_need_anti_stress, R.string.daily_need_anti_stress)
+        "energie-matinale" -> Pair(R.drawable.daily_need_energie_matinale, R.string.daily_need_morning_energy)
+        "relaxation" -> Pair(R.drawable.daily_need_relaxation, R.string.daily_need_relaxation)
+        "pratique-du-soir" -> Pair(R.drawable.daily_need_pratique_du_soir, R.string.daily_need_evening_practice)
+        else -> Pair(R.drawable.daily_need_anti_stress, R.string.daily_need_anti_stress)
     }
 
     Card(
@@ -498,7 +503,7 @@ private fun DailyNeedCategoryCard(
             // Image de fond
             Image(
                 painter = painterResource(id = backgroundImage),
-                contentDescription = category.nameFr,
+                contentDescription = stringResource(categoryNameResId),
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
@@ -525,7 +530,7 @@ private fun DailyNeedCategoryCard(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = category.nameFr,
+                    text = stringResource(categoryNameResId),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = Color.White.copy(alpha = 0.85f),
@@ -623,7 +628,7 @@ private fun PersonalizedRecommendationCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.PlayArrow,
-                    contentDescription = "Play",
+                    contentDescription = stringResource(R.string.video_play),
                     tint = Color.Black,
                     modifier = Modifier.padding(12.dp)
                 )
@@ -712,7 +717,7 @@ private fun DailyRecommendationCard(
             // Play button in center
             Icon(
                 imageVector = Icons.Default.PlayArrow,
-                contentDescription = "Lire",
+                contentDescription = stringResource(R.string.video_play),
                 modifier = Modifier
                     .align(Alignment.Center)
                     .size(64.dp)
@@ -837,7 +842,7 @@ private fun ActiveProgramsSection(
     Column {
         // FIX(build-debug-android): Titre de section restaure
         Text(
-            text = "Programmes en cours",
+            text = stringResource(R.string.home_active_programs_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = TitleOrangeDark
@@ -886,7 +891,7 @@ private fun ActiveProgramCard(
 
             // FIX(build-debug-android): Progression textuelle restauree
             Text(
-                text = "Jour ${program.currentDay} sur ${program.totalDays}",
+                text = stringResource(R.string.program_day_progress, program.currentDay, program.totalDays),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -905,7 +910,7 @@ private fun ActiveProgramCard(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "${program.progressPercentage}%",
+                text = stringResource(R.string.program_progress_percentage, program.progressPercentage),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.align(Alignment.End)
@@ -932,7 +937,7 @@ private fun QuickStatsSection(
         ) {
             // FIX(build-debug-android): Titre de section restaure
             Text(
-                text = "Cette semaine",
+                text = stringResource(R.string.home_weekly_stats_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = TitleOrangeDark
@@ -945,18 +950,18 @@ private fun QuickStatsSection(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 StatItem(
-                    value = "${totalMinutes}min",
-                    label = "Temps total"
+                    value = stringResource(R.string.stats_time_minutes, totalMinutes),
+                    label = stringResource(R.string.home_stats_total_time)
                 )
 
                 StatItem(
                     value = sessionsCompleted.toString(),
-                    label = "Sessions"
+                    label = stringResource(R.string.home_stats_sessions)
                 )
 
                 StatItem(
                     value = favoriteCategory,
-                    label = "Favori"
+                    label = stringResource(R.string.home_stats_favorite)
                 )
             }
         }

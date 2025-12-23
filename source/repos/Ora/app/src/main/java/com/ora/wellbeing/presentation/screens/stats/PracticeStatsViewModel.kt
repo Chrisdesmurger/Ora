@@ -1,13 +1,16 @@
 package com.ora.wellbeing.presentation.screens.stats
 
+import android.content.Context
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ora.wellbeing.R
 import com.ora.wellbeing.data.repository.PracticeStatsRepository
 import com.ora.wellbeing.data.sync.SyncManager
 import com.ora.wellbeing.domain.model.PracticeStats
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +29,8 @@ import javax.inject.Inject
 class PracticeStatsViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val practiceStatsRepository: PracticeStatsRepository,
-    private val syncManager: SyncManager
+    private val syncManager: SyncManager,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PracticeStatsUiState())
@@ -133,10 +137,10 @@ class PracticeStatsViewModel @Inject constructor(
     // FIX(stats): Build PracticeDetails from real Firestore data
     private fun buildPracticeDetails(practiceId: String, stats: PracticeStats): PracticeDetails {
         val practiceName = when (practiceId) {
-            "yoga" -> "Yoga"
-            "pilates" -> "Pilates"
-            "meditation" -> "Méditation"
-            "breathing" -> "Respiration"
+            "yoga" -> context.getString(R.string.category_yoga)
+            "pilates" -> context.getString(R.string.category_pilates)
+            "meditation" -> context.getString(R.string.category_meditation)
+            "breathing" -> context.getString(R.string.category_breathing)
             else -> practiceId.replaceFirstChar { it.uppercase() }
         }
 
@@ -154,10 +158,10 @@ class PracticeStatsViewModel @Inject constructor(
     // FIX(stats): Build empty PracticeDetails when no data exists
     private fun buildEmptyPracticeDetails(practiceId: String): PracticeDetails {
         val practiceName = when (practiceId) {
-            "yoga" -> "Yoga"
-            "pilates" -> "Pilates"
-            "meditation" -> "Méditation"
-            "breathing" -> "Respiration"
+            "yoga" -> context.getString(R.string.category_yoga)
+            "pilates" -> context.getString(R.string.category_pilates)
+            "meditation" -> context.getString(R.string.category_meditation)
+            "breathing" -> context.getString(R.string.category_breathing)
             else -> practiceId.replaceFirstChar { it.uppercase() }
         }
 

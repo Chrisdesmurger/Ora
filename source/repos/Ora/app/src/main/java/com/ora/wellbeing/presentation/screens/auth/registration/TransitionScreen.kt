@@ -11,9 +11,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.ora.wellbeing.R
 import com.ora.wellbeing.presentation.components.AuthScreenTemplate
 import com.ora.wellbeing.presentation.components.PrimaryButton
 import timber.log.Timber
@@ -45,7 +47,7 @@ fun TransitionScreen(
 
         // Titre avec emoji
         Text(
-            text = "Ton espace ORA se crée avec toi 🤍",
+            text = stringResource(R.string.onboarding_transition_title),
             style = MaterialTheme.typography.displaySmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
@@ -56,7 +58,7 @@ fun TransitionScreen(
 
         // Texte explicatif
         Text(
-            text = "2 minutes pour apprendre à te connaître...",
+            text = stringResource(R.string.onboarding_transition_subtitle),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
             textAlign = TextAlign.Center
@@ -66,7 +68,7 @@ fun TransitionScreen(
 
         // Bouton CTA
         PrimaryButton(
-            text = "Personnaliser mon expérience",
+            text = stringResource(R.string.onboarding_transition_button),
             onClick = {
                 Timber.d("TransitionScreen: User clicked 'Personnaliser mon expérience'")
                 onNavigateToQuestionnaireIntro()

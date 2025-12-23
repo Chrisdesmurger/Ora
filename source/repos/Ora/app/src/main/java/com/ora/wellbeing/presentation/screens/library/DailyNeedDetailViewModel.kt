@@ -2,6 +2,7 @@ package com.ora.wellbeing.presentation.screens.library
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ora.wellbeing.core.localization.LocalizationProvider
 import com.ora.wellbeing.data.model.ContentItem
 import com.ora.wellbeing.data.model.DailyNeedCategory
 import com.ora.wellbeing.domain.repository.ContentRepository
@@ -18,7 +19,8 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class DailyNeedDetailViewModel @Inject constructor(
-    private val contentRepository: ContentRepository
+    private val contentRepository: ContentRepository,
+    private val localizationProvider: LocalizationProvider
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DailyNeedDetailUiState())
@@ -57,12 +59,15 @@ class DailyNeedDetailViewModel @Inject constructor(
                             content.needTags.any { tag -> tag in category.filterTags }
                         }
 
-                        Timber.d("DailyNeed: Category=${category.nameFr}, FilterTags=${category.filterTags}, Total=${allContent.size}, Filtered=${filteredContent.size}")
+                        val currentLocale = localizationProvider.getCurrentLocale()
+                        val localizedName = category.getLocalizedName(currentLocale)
+
+                        Timber.d("DailyNeed: Category=$localizedName, FilterTags=${category.filterTags}, Total=${allContent.size}, Filtered=${filteredContent.size}")
 
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                categoryName = category.nameFr,
+                                categoryName = localizedName,
                                 filteredContent = filteredContent,
                                 error = null
                             )

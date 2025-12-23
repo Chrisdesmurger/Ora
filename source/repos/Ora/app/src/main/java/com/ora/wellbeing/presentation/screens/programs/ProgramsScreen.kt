@@ -11,12 +11,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ora.wellbeing.R
 import com.ora.wellbeing.presentation.theme.*
 
 @Composable
@@ -95,7 +97,7 @@ fun ProgramsScreen(
 private fun ProgramsHeader() {
     Column {
         Text(
-            text = "Programmes & Défis",
+            text = stringResource(R.string.programs_title),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface
@@ -104,7 +106,7 @@ private fun ProgramsHeader() {
         Spacer(modifier = Modifier.height(4.dp))
 
         Text(
-            text = "Suivez des programmes structurés pour développer vos habitudes de bien-être",
+            text = stringResource(R.string.programs_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -118,7 +120,7 @@ private fun ActiveProgramsSection(
 ) {
     Column {
         Text(
-            text = "Vos programmes en cours",
+            text = stringResource(R.string.programs_active_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = TitleOrangeDark,
@@ -177,7 +179,7 @@ private fun ActiveProgramCard(
                 }
 
                 Text(
-                    text = "${program.progressPercentage}%",
+                    text = stringResource(R.string.program_progress_percentage, program.progressPercentage),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -202,7 +204,7 @@ private fun ActiveProgramCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Jour ${program.currentDay}/${program.totalDays}",
+                    text = stringResource(R.string.program_day_progress, program.currentDay, program.totalDays),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -221,7 +223,7 @@ private fun ActiveProgramCard(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Continuer", fontWeight = FontWeight.Medium)
+                    Text(stringResource(R.string.programs_continue), fontWeight = FontWeight.Medium)
                 }
             }
         }
@@ -237,7 +239,7 @@ private fun RecommendedProgramsSection(
 
     Column {
         Text(
-            text = "Recommandés pour vous",
+            text = stringResource(R.string.programs_recommended_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = TitleOrangeDark,
@@ -267,7 +269,7 @@ private fun PopularChallengesSection(
 
     Column {
         Text(
-            text = "Défis populaires",
+            text = stringResource(R.string.programs_popular_challenges),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = TitleOrangeDark,
@@ -362,7 +364,7 @@ private fun ProgramCard(
                     shape = MaterialTheme.shapes.small
                 ) {
                     Text(
-                        text = "${program.duration} jours",
+                        text = stringResource(R.string.programs_duration, program.duration),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.tertiary,
@@ -420,7 +422,7 @@ private fun ProgramCard(
                     Spacer(modifier = Modifier.width(4.dp))
 
                     Text(
-                        text = "${program.participantCount} participants",
+                        text = stringResource(R.string.programs_participants, program.participantCount),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -469,7 +471,7 @@ private fun ChallengeCard(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "${challenge.duration} jours",
+                text = stringResource(R.string.programs_duration, challenge.duration),
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.Medium,
                 color = CategoryMeditationLavender

@@ -11,9 +11,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.ora.wellbeing.R
 import kotlinx.coroutines.delay
 
 /**
@@ -90,7 +92,7 @@ fun OnboardingCelebrationScreen(
                 enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.slideInVertically()
             ) {
                 Text(
-                    text = "Bienvenue dans Ora !",
+                    text = stringResource(R.string.onboarding_celebration_title),
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
@@ -109,7 +111,7 @@ fun OnboardingCelebrationScreen(
                 )
             ) {
                 Text(
-                    text = "Merci d'avoir complété le questionnaire !\nVotre parcours personnalisé est prêt.",
+                    text = stringResource(R.string.onboarding_celebration_subtitle),
                     style = MaterialTheme.typography.bodyLarge,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
@@ -133,18 +135,18 @@ fun OnboardingCelebrationScreen(
                 ) {
                     FeatureCard(
                         emoji = "✨",
-                        title = "Contenu personnalisé",
-                        description = "Recommandations adaptées à vos objectifs"
+                        title = stringResource(R.string.onboarding_feature_personalized_title),
+                        description = stringResource(R.string.onboarding_feature_personalized_desc)
                     )
                     FeatureCard(
                         emoji = "📊",
-                        title = "Suivi de progression",
-                        description = "Visualisez votre évolution jour après jour"
+                        title = stringResource(R.string.onboarding_feature_tracking_title),
+                        description = stringResource(R.string.onboarding_feature_tracking_desc)
                     )
                     FeatureCard(
                         emoji = "🏆",
-                        title = "Programmes guidés",
-                        description = "Des parcours structurés pour atteindre vos objectifs"
+                        title = stringResource(R.string.onboarding_feature_programs_title),
+                        description = stringResource(R.string.onboarding_feature_programs_desc)
                     )
                 }
             }
@@ -171,7 +173,7 @@ fun OnboardingCelebrationScreen(
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Text(
-                        text = "Commencer mon parcours",
+                        text = stringResource(R.string.onboarding_start_journey),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )

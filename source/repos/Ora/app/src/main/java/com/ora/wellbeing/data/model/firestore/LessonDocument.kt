@@ -13,6 +13,11 @@ import com.google.firebase.firestore.IgnoreExtraProperties
  * This model represents lessons uploaded via OraWebApp admin portal.
  * Lessons can be video or audio content, with multiple quality renditions.
  *
+ * **i18n Support** (Issue #39 - Phase 2):
+ * - French (fr): title_fr, description_fr, category_fr
+ * - English (en): title_en, description_en, category_en
+ * - Spanish (es): title_es, description_es, category_es
+ *
  * @see com.ora.wellbeing.data.mapper.LessonMapper for conversion to ContentItem
  */
 @IgnoreExtraProperties
@@ -24,11 +29,13 @@ class LessonDocument() {
 
     /**
      * Lesson title (e.g., "Morning Meditation", "Gentle Yoga Flow")
+     * Default/fallback title (usually French)
      */
     var title: String = ""
 
     /**
      * Detailed description of the lesson content (optional)
+     * Default/fallback description (usually French)
      */
     var description: String? = null
 
@@ -36,6 +43,64 @@ class LessonDocument() {
      * Lesson type: "video" or "audio"
      */
     var type: String = "video"
+
+    // ============================================================================
+    // i18n Fields (Issue #39 - Phase 2)
+    // ============================================================================
+
+    /**
+     * French title
+     * NEW (Issue #39): Added for i18n support
+     */
+    var title_fr: String? = null
+
+    /**
+     * English title
+     * NEW (Issue #39): Added for i18n support
+     */
+    var title_en: String? = null
+
+    /**
+     * Spanish title
+     * NEW (Issue #39): Added for i18n support
+     */
+    var title_es: String? = null
+
+    /**
+     * French description
+     * NEW (Issue #39): Added for i18n support
+     */
+    var description_fr: String? = null
+
+    /**
+     * English description
+     * NEW (Issue #39): Added for i18n support
+     */
+    var description_en: String? = null
+
+    /**
+     * Spanish description
+     * NEW (Issue #39): Added for i18n support
+     */
+    var description_es: String? = null
+
+    /**
+     * French category (e.g., "Méditation", "Yoga", "Respiration")
+     * NEW (Issue #39): Added for i18n support
+     */
+    var category_fr: String? = null
+
+    /**
+     * English category (e.g., "Meditation", "Yoga", "Breathing")
+     * NEW (Issue #39): Added for i18n support
+     */
+    var category_en: String? = null
+
+    /**
+     * Spanish category (e.g., "Meditación", "Yoga", "Respiración")
+     * NEW (Issue #39): Added for i18n support
+     */
+    var category_es: String? = null
 
     // ============================================================================
     // Program Association

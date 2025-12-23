@@ -12,12 +12,7 @@ data class VideoContent(
     val isFeatured: Boolean = false
 )
 
-enum class ContentCategory(val displayName: String) {
-    YOGA("Yoga"),
-    PILATES("Pilates"),
-    MEDITATION("Méditation"),
-    BREATHING("Respiration")
-}
+// ContentCategory enum moved to separate file for i18n support
 
 data class ContentFilter(
     val category: ContentCategory? = null,

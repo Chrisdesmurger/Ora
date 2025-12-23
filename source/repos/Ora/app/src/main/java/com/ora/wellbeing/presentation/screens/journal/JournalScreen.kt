@@ -12,11 +12,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ora.wellbeing.R
 import com.ora.wellbeing.presentation.theme.*
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -81,7 +84,7 @@ fun JournalScreen(
                 if (uiState.recentEntries.isNotEmpty()) {
                     item {
                         Text(
-                            text = "Entrées récentes",
+                            text = stringResource(R.string.journal_recent_entries),
                             style = MaterialTheme.typography.titleLarge,
                             color = TitleGreenSage,
                             modifier = Modifier.padding(vertical = 8.dp)
@@ -122,7 +125,7 @@ private fun JournalHeader(
     ) {
         Column(modifier = Modifier.weight(1f, fill = false)) {
             Text(
-                text = "Journal de gratitudes",
+                text = stringResource(R.string.journal_title),
                 style = MaterialTheme.typography.headlineSmall,
                 color = TitleGreenSage
             )
@@ -132,7 +135,7 @@ private fun JournalHeader(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "🔥 Série de $streak jour${if (streak > 1) "s" else ""}",
+                        text = stringResource(R.string.journal_streak_current, streak),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -195,14 +198,14 @@ private fun TodayEntrySection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Aujourd'hui",
+                    text = stringResource(R.string.journal_today),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
                 if (todayEntry != null) {
                     TextButton(onClick = onEditTodayEntry) {
-                        Text("Modifier", color = MaterialTheme.colorScheme.primary)
+                        Text(stringResource(R.string.common_edit), color = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
@@ -213,7 +216,7 @@ private fun TodayEntrySection(
                 // Pas d'entrée aujourd'hui
                 Column {
                     Text(
-                        text = "Prenez un moment pour noter vos gratitudes du jour ✨",
+                        text = stringResource(R.string.journal_gratitude_prompt),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -233,7 +236,7 @@ private fun TodayEntrySection(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Commencer")
+                        Text(stringResource(R.string.common_start))
                     }
                 }
             } else {
@@ -271,7 +274,7 @@ private fun TodayEntrySection(
                     if (todayEntry.mood.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Humeur: ${todayEntry.mood}",
+                            text = stringResource(R.string.journal_mood_label, todayEntry.mood),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -359,13 +362,13 @@ private fun GratitudeReminderCard(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Moment de gratitude",
+                    text = stringResource(R.string.journal_gratitude_reminder_title),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Text(
-                    text = "Notez 3 choses pour lesquelles vous êtes reconnaissant(e)",
+                    text = stringResource(R.string.journal_gratitude_reminder_message),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -427,8 +430,10 @@ private fun JournalEntryCard(
             }
 
             if (entry.gratitudes.size > 2) {
+                val otherCount = entry.gratitudes.size - 2
+                val pluralSuffix = if (entry.gratitudes.size > 3) "s" else ""
                 Text(
-                    text = "et ${entry.gratitudes.size - 2} autre${if (entry.gratitudes.size > 3) "s" else ""}...",
+                    text = stringResource(R.string.journal_and_more, otherCount, pluralSuffix),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -454,7 +459,7 @@ private fun GratitudeStatsCard(
             modifier = Modifier.padding(20.dp)
         ) {
             Text(
-                text = "Vos statistiques",
+                text = stringResource(R.string.journal_stats_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -466,19 +471,19 @@ private fun GratitudeStatsCard(
             ) {
                 StatItem(
                     value = totalEntries.toString(),
-                    label = "Total d'entrées",
+                    label = stringResource(R.string.journal_total_entries),
                     icon = Icons.Default.BookmarkBorder
                 )
 
                 StatItem(
                     value = streak.toString(),
-                    label = "Série actuelle",
+                    label = stringResource(R.string.journal_current_streak),
                     icon = Icons.Default.Whatshot
                 )
 
                 StatItem(
                     value = thisMonthCount.toString(),
-                    label = "Ce mois-ci",
+                    label = stringResource(R.string.journal_this_month),
                     icon = Icons.Default.CalendarMonth
                 )
             }
