@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.core.os.ConfigurationCompat
 import javax.inject.Inject
 
 /**
@@ -261,21 +262,23 @@ class ProfileViewModel @Inject constructor(
     }
 
     /**
-     * Get current month name in French
+     * Get current month name in current locale (FR/EN/ES)
      */
     private fun getCurrentMonthName(): String {
         val calendar = Calendar.getInstance()
-        val monthFormat = SimpleDateFormat("MMMM", Locale.FRENCH)
+        val locale = ConfigurationCompat.getLocales(getApplication<Application>().resources.configuration)[0] ?: Locale.getDefault()
+        val monthFormat = SimpleDateFormat("MMMM", locale)
         return monthFormat.format(calendar.time).replaceFirstChar { it.uppercase() }
     }
 
     /**
-     * Get previous month name (monthsBack = 1 for last month, 2 for two months ago)
+     * Get previous month name in current locale (monthsBack = 1 for last month, 2 for two months ago)
      */
     private fun getPreviousMonthName(monthsBack: Int): String {
         val calendar = Calendar.getInstance()
         calendar.add(Calendar.MONTH, -monthsBack)
-        val monthFormat = SimpleDateFormat("MMMM", Locale.FRENCH)
+        val locale = ConfigurationCompat.getLocales(getApplication<Application>().resources.configuration)[0] ?: Locale.getDefault()
+        val monthFormat = SimpleDateFormat("MMMM", locale)
         return monthFormat.format(calendar.time).replaceFirstChar { it.uppercase() }
     }
 
