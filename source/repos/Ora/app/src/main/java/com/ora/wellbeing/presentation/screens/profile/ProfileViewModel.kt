@@ -1,10 +1,12 @@
 package com.ora.wellbeing.presentation.screens.profile
 
+import android.app.Application
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.Color
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.ora.wellbeing.R
 import com.ora.wellbeing.data.repository.PracticeStatsRepository
 import com.ora.wellbeing.data.repository.UserProfileRepository
 import com.ora.wellbeing.data.repository.UserStatsRepository
@@ -30,12 +32,13 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
+    application: Application,
     private val syncManager: SyncManager,
     private val userProfileRepository: UserProfileRepository,
     private val practiceStatsRepository: PracticeStatsRepository,
     private val userStatsRepository: UserStatsRepository,
     private val userProgramRepository: UserProgramRepository
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
@@ -90,16 +93,18 @@ class ProfileViewModel @Inject constructor(
                         } else null,
                         userProfile = domainProfile?.let { dp ->
                             UserProfile(
-                                name = dp.displayName().ifBlank { "Invité" },
+                                name = dp.displayName().ifBlank {
+                                    getApplication<Application>().getString(R.string.greeting_guest)
+                                },
                                 firstName = dp.firstName ?: "",
-                                motto = dp.motto ?: "Je prends soin de moi chaque jour",
+                                motto = dp.motto ?: getApplication<Application>().getString(R.string.profile_motto_default),
                                 photoUrl = dp.photoUrl,
                                 isPremium = dp.isPremium,
                                 planTier = when(dp.planTier.uppercase()) {
-                                    "FREE" -> "Gratuit"
-                                    "PREMIUM" -> "Premium"
-                                    "LIFETIME" -> "Lifetime"
-                                    else -> "Gratuit"
+                                    "FREE" -> getApplication<Application>().getString(R.string.plan_free)
+                                    "PREMIUM" -> getApplication<Application>().getString(R.string.plan_premium)
+                                    "LIFETIME" -> getApplication<Application>().getString(R.string.plan_lifetime)
+                                    else -> getApplication<Application>().getString(R.string.plan_free)
                                 }
                             )
                         },
@@ -125,7 +130,7 @@ class ProfileViewModel @Inject constructor(
                 Timber.e(e, "Error in observeAllData")
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = "Erreur lors du chargement du profil"
+                    error = getApplication<Application>().getString(R.string.error_loading_profile)
                 )
             }
         }
@@ -158,7 +163,7 @@ class ProfileViewModel @Inject constructor(
                 lastSessionResult.onSuccess { session ->
                     val activityText = session?.let {
                         "${it.contentTitle} - ${it.durationMinutes} min"
-                    } ?: "Aucune activité récente"
+                    } ?: getApplication<Application>().getString(R.string.profile_no_activity)
 
                     _uiState.value = _uiState.value.copy(
                         lastActivity = activityText
@@ -189,7 +194,7 @@ class ProfileViewModel @Inject constructor(
                     val firstActiveChallenge = activePrograms.firstOrNull()?.let { program ->
                         ActiveChallenge(
                             id = program.programId,
-                            name = program.programTitle ?: "Challenge",
+                            name = program.programTitle ?: getApplication<Application>().getString(R.string.profile_challenge),
                             progressPercent = program.calculateProgress(),
                             currentDay = program.currentDay,
                             totalDays = program.totalDays
@@ -281,7 +286,7 @@ class ProfileViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = "Erreur lors du chargement du profil"
+                    error = getApplication<Application>().getString(R.string.error_loading_profile)
                 )
                 Timber.e(e, "Error loading profile data")
             }
@@ -299,7 +304,7 @@ class ProfileViewModel @Inject constructor(
 
             if (result.isFailure) {
                 _uiState.value = _uiState.value.copy(
-                    error = "Erreur lors de la mise à jour du motto"
+                    error = getApplication<Application>().getString(R.string.error_updating_motto)
                 )
             }
         }
@@ -312,7 +317,7 @@ class ProfileViewModel @Inject constructor(
 
             if (result.isFailure) {
                 _uiState.value = _uiState.value.copy(
-                    error = "Erreur lors de la mise à jour de la photo"
+                    error = getApplication<Application>().getString(R.string.error_updating_photo)
                 )
             }
         }
@@ -332,28 +337,28 @@ class ProfileViewModel @Inject constructor(
         return listOf(
             PracticeTime(
                 id = "yoga",
-                name = "Yoga",
+                name = getApplication<Application>().getString(R.string.category_yoga),
                 time = statsMap["yoga"]?.formatMonthTime() ?: "0min ce mois-ci",
                 color = orangeColor,
                 icon = Icons.Default.SelfImprovement
             ),
             PracticeTime(
                 id = "pilates",
-                name = "Pilates",
+                name = getApplication<Application>().getString(R.string.category_pilates),
                 time = statsMap["pilates"]?.formatMonthTime() ?: "0min ce mois-ci",
                 color = orangeLightColor,
                 icon = Icons.Default.FitnessCenter
             ),
             PracticeTime(
                 id = "meditation",
-                name = "Méditation",
+                name = getApplication<Application>().getString(R.string.category_meditation),
                 time = statsMap["meditation"]?.formatMonthTime() ?: "0min ce mois-ci",
                 color = greenColor,
                 icon = Icons.Default.Spa
             ),
             PracticeTime(
                 id = "breathing",
-                name = "Respiration",
+                name = getApplication<Application>().getString(R.string.category_breathing),
                 time = statsMap["breathing"]?.formatMonthTime() ?: "0min ce mois-ci",
                 color = greenLightColor,
                 icon = Icons.Default.Air

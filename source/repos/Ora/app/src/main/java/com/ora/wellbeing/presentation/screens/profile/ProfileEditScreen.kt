@@ -42,11 +42,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ora.wellbeing.R
 import com.ora.wellbeing.presentation.screens.profile.components.DropdownOption
 import com.ora.wellbeing.presentation.screens.profile.components.ProfileDropdown
 import com.ora.wellbeing.presentation.screens.profile.components.ProfilePhotoEditor
@@ -105,7 +107,7 @@ fun ProfileEditScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Modifier le profil") },
+                title = { Text(stringResource(R.string.profile_edit_title)) },
                 navigationIcon = {
                     IconButton(
                         onClick = {
@@ -135,7 +137,7 @@ fun ProfileEditScreen(
                         } else {
                             Icon(
                                 imageVector = Icons.Default.Check,
-                                contentDescription = "Enregistrer"
+                                contentDescription = stringResource(R.string.common_save)
                             )
                         }
                     }
@@ -159,7 +161,7 @@ fun ProfileEditScreen(
             ) {
                 CircularProgressIndicator()
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Chargement du profil...")
+                Text(stringResource(R.string.profile_edit_loading))
             }
         } else {
             // Form
@@ -184,7 +186,7 @@ fun ProfileEditScreen(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 // Personal Information Section
-                SectionHeader("Informations personnelles")
+                SectionHeader(stringResource(R.string.profile_edit_section_personal))
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -194,8 +196,8 @@ fun ProfileEditScreen(
                     onValueChange = {
                         viewModel.onEvent(ProfileEditUiEvent.UpdateFirstName(it))
                     },
-                    label = "Prénom *",
-                    placeholder = "Votre prénom",
+                    label = stringResource(R.string.profile_edit_first_name_required),
+                    placeholder = stringResource(R.string.profile_edit_first_name_placeholder),
                     errorMessage = uiState.validationErrors[ProfileField.FIRST_NAME],
                     maxCharacters = 50,
                     imeAction = ImeAction.Next,
@@ -213,8 +215,8 @@ fun ProfileEditScreen(
                     onValueChange = {
                         viewModel.onEvent(ProfileEditUiEvent.UpdateLastName(it))
                     },
-                    label = "Nom *",
-                    placeholder = "Votre nom",
+                    label = stringResource(R.string.profile_edit_last_name_required),
+                    placeholder = stringResource(R.string.profile_edit_last_name_placeholder),
                     errorMessage = uiState.validationErrors[ProfileField.LAST_NAME],
                     maxCharacters = 50,
                     imeAction = ImeAction.Next,
@@ -230,7 +232,7 @@ fun ProfileEditScreen(
                 ProfileTextField(
                     value = uiState.profile?.email ?: "",
                     onValueChange = {},
-                    label = "Email",
+                    label = stringResource(R.string.profile_edit_email),
                     enabled = false,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -243,8 +245,8 @@ fun ProfileEditScreen(
                     onValueChange = {
                         viewModel.onEvent(ProfileEditUiEvent.UpdateBio(it))
                     },
-                    label = "Devise",
-                    placeholder = "Votre devise personnelle...",
+                    label = stringResource(R.string.profile_edit_bio),
+                    placeholder = stringResource(R.string.profile_edit_bio_placeholder),
                     errorMessage = uiState.validationErrors[ProfileField.BIO],
                     maxCharacters = 200,
                     singleLine = false,
@@ -264,13 +266,13 @@ fun ProfileEditScreen(
                     onValueChange = {
                         viewModel.onEvent(ProfileEditUiEvent.UpdateGender(it))
                     },
-                    label = "Genre",
-                    placeholder = "Sélectionner",
+                    label = stringResource(R.string.profile_edit_gender),
+                    placeholder = stringResource(R.string.profile_edit_gender_placeholder),
                     options = listOf(
-                        DropdownOption(null, "Préfère ne pas dire"),
-                        DropdownOption("female", "Femme"),
-                        DropdownOption("male", "Homme"),
-                        DropdownOption("other", "Autre")
+                        DropdownOption(null, stringResource(R.string.profile_edit_gender_prefer_not_say)),
+                        DropdownOption("female", stringResource(R.string.profile_edit_gender_female)),
+                        DropdownOption("male", stringResource(R.string.profile_edit_gender_male)),
+                        DropdownOption("other", stringResource(R.string.profile_edit_gender_other))
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -278,28 +280,14 @@ fun ProfileEditScreen(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 // Preferences Section
-                SectionHeader("Préférences")
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Language Toggle (FR/EN)
-                SettingRow(
-                    title = "Langue",
-                    description = if (uiState.language == "fr") "Français" else "English",
-                    isEnabled = uiState.language == "fr",
-                    onToggle = { enabled ->
-                        viewModel.onEvent(
-                            ProfileEditUiEvent.ChangeLanguage(if (enabled) "fr" else "en")
-                        )
-                    }
-                )
+                SectionHeader(stringResource(R.string.profile_edit_section_preferences))
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Notifications Toggle
                 SettingRow(
-                    title = "Notifications",
-                    description = "Recevoir des rappels quotidiens",
+                    title = stringResource(R.string.profile_edit_notifications),
+                    description = stringResource(R.string.profile_edit_notifications_desc),
                     isEnabled = uiState.notificationsEnabled,
                     onToggle = {
                         viewModel.onEvent(ProfileEditUiEvent.ToggleNotifications(it))
@@ -310,8 +298,8 @@ fun ProfileEditScreen(
 
                 // Evening Reminder Toggle
                 SettingRow(
-                    title = "Rappel du soir",
-                    description = "Rappel pour le journal de gratitude",
+                    title = stringResource(R.string.profile_edit_evening_reminder),
+                    description = stringResource(R.string.profile_edit_evening_reminder_desc),
                     isEnabled = uiState.eveningReminderEnabled,
                     onToggle = {
                         viewModel.onEvent(ProfileEditUiEvent.ToggleEveningReminder(it))
@@ -321,7 +309,7 @@ fun ProfileEditScreen(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 // Account Section
-                SectionHeader("Compte")
+                SectionHeader(stringResource(R.string.profile_edit_section_account))
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -335,7 +323,7 @@ fun ProfileEditScreen(
                     )
                 ) {
                     Text(
-                        text = "Se déconnecter",
+                        text = stringResource(R.string.profile_edit_sign_out),
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium
                     )
@@ -345,7 +333,7 @@ fun ProfileEditScreen(
 
                 // Required fields note
                 Text(
-                    text = "* Champs obligatoires",
+                    text = stringResource(R.string.profile_edit_required_fields),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -408,20 +396,20 @@ private fun UnsavedChangesDialog(
 ) {
     AlertDialog(
         onDismissRequest = onCancel,
-        title = { Text("Modifications non enregistrées") },
-        text = { Text("Voulez-vous enregistrer vos modifications avant de quitter ?") },
+        title = { Text(stringResource(R.string.profile_edit_unsaved_title)) },
+        text = { Text(stringResource(R.string.profile_edit_unsaved_message)) },
         confirmButton = {
             TextButton(onClick = onSave) {
-                Text("Enregistrer")
+                Text(stringResource(R.string.profile_edit_unsaved_save))
             }
         },
         dismissButton = {
             Row {
                 TextButton(onClick = onDiscard) {
-                    Text("Ignorer")
+                    Text(stringResource(R.string.profile_edit_unsaved_discard))
                 }
                 TextButton(onClick = onCancel) {
-                    Text("Annuler")
+                    Text(stringResource(R.string.profile_edit_unsaved_cancel))
                 }
             }
         }

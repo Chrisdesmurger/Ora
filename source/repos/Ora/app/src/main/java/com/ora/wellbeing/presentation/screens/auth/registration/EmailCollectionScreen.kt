@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -28,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ora.wellbeing.R
 import com.ora.wellbeing.presentation.components.AuthScreenTemplate
 import com.ora.wellbeing.presentation.components.PrimaryButton
 import timber.log.Timber
@@ -75,7 +77,7 @@ fun EmailCollectionScreen(
 
             // Titre
             Text(
-                text = "Avant de commencer ton voyage…",
+                text = stringResource(R.string.onboarding_email_title),
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
@@ -88,8 +90,8 @@ fun EmailCollectionScreen(
             OutlinedTextField(
                 value = uiState.value.email,
                 onValueChange = { viewModel.onEvent(EmailCollectionUiEvent.EmailChanged(it)) },
-                label = { Text("Email") },
-                placeholder = { Text("ton@email.com") },
+                label = { Text(stringResource(R.string.auth_email_label)) },
+                placeholder = { Text(stringResource(R.string.auth_email_hint)) },
                 singleLine = true,
                 enabled = !uiState.value.isLoading,
                 isError = uiState.value.emailError != null,
@@ -118,8 +120,8 @@ fun EmailCollectionScreen(
             OutlinedTextField(
                 value = uiState.value.password,
                 onValueChange = { viewModel.onEvent(EmailCollectionUiEvent.PasswordChanged(it)) },
-                label = { Text("Mot de passe") },
-                placeholder = { Text("Minimum 6 caractères") },
+                label = { Text(stringResource(R.string.auth_password_label)) },
+                placeholder = { Text(stringResource(R.string.auth_password_hint)) },
                 singleLine = true,
                 enabled = !uiState.value.isLoading,
                 isError = uiState.value.passwordError != null,
@@ -157,9 +159,9 @@ fun EmailCollectionScreen(
                             else
                                 Icons.Default.VisibilityOff,
                             contentDescription = if (uiState.value.isPasswordVisible)
-                                "Masquer le mot de passe"
+                                stringResource(R.string.auth_hide_password)
                             else
-                                "Afficher le mot de passe",
+                                stringResource(R.string.auth_show_password),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -172,7 +174,7 @@ fun EmailCollectionScreen(
 
             // Bouton Continuer
             PrimaryButton(
-                text = "Continuer",
+                text = stringResource(R.string.common_continue),
                 onClick = {
                     Timber.d("EmailCollectionScreen: User clicked 'Continuer'")
                     viewModel.onEvent(EmailCollectionUiEvent.CreateAccount)
@@ -193,7 +195,7 @@ fun EmailCollectionScreen(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
                 )
                 Text(
-                    text = "OU",
+                    text = stringResource(R.string.common_or),
                     modifier = Modifier.padding(horizontal = 16.dp),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
@@ -222,7 +224,7 @@ fun EmailCollectionScreen(
                     .height(56.dp)
             ) {
                 Text(
-                    text = "Continuer avec Google",
+                    text = stringResource(R.string.auth_continue_with_google),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -232,7 +234,7 @@ fun EmailCollectionScreen(
 
             // Texte informatif
             Text(
-                text = "En créant un compte, tu acceptes nos conditions d'utilisation et notre politique de confidentialité.",
+                text = stringResource(R.string.auth_terms_disclaimer),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                 textAlign = TextAlign.Center

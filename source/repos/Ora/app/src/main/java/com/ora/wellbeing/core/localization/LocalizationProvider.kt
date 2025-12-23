@@ -181,11 +181,11 @@ class LocalizationProvider @Inject constructor(
         private const val PREFS_NAME = "localization_prefs"
         private const val KEY_LOCALE = "app_locale"
 
-        const val DEFAULT_LOCALE = "en" // English is default
-        const val LOCALE_FRENCH = "fr"
+        const val DEFAULT_LOCALE = "fr" // French is default (original app language)
+        const val LOCALE_ENGLISH = "en"
         const val LOCALE_SPANISH = "es"
 
-        val SUPPORTED_LOCALES = setOf(DEFAULT_LOCALE, LOCALE_FRENCH, LOCALE_SPANISH)
+        val SUPPORTED_LOCALES = setOf(DEFAULT_LOCALE, LOCALE_ENGLISH, LOCALE_SPANISH)
     }
 }
 

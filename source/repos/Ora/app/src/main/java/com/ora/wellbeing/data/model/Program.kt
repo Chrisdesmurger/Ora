@@ -11,6 +11,11 @@ import com.google.firebase.Timestamp
  *
  * IMPORTANT: Uses regular class (not data class) for Firestore compatibility
  * Timestamps are handled natively by Firestore SDK with @ServerTimestamp
+ *
+ * **i18n Support** (Issue #39 - Phase 2):
+ * - French (fr): titleFr, descriptionFr, categoryFr, levelFr
+ * - English (en): titleEn, descriptionEn, categoryEn, levelEn
+ * - Spanish (es): titleEs, descriptionEs, categoryEs, levelEs
  */
 @IgnoreExtraProperties
 class Program() {
@@ -28,6 +33,82 @@ class Program() {
     var isPremiumOnly: Boolean = false
     var sessions: List<Map<String, Any>> = emptyList()
     var isActive: Boolean = true
+
+    // ============================================================================
+    // i18n Fields (Issue #39 - Phase 2)
+    // ============================================================================
+
+    /**
+     * French title
+     * NEW (Issue #39): Added for i18n support
+     */
+    var titleFr: String? = null
+
+    /**
+     * English title
+     * NEW (Issue #39): Added for i18n support
+     */
+    var titleEn: String? = null
+
+    /**
+     * Spanish title
+     * NEW (Issue #39): Added for i18n support
+     */
+    var titleEs: String? = null
+
+    /**
+     * French description
+     * NEW (Issue #39): Added for i18n support
+     */
+    var descriptionFr: String? = null
+
+    /**
+     * English description
+     * NEW (Issue #39): Added for i18n support
+     */
+    var descriptionEn: String? = null
+
+    /**
+     * Spanish description
+     * NEW (Issue #39): Added for i18n support
+     */
+    var descriptionEs: String? = null
+
+    /**
+     * French category
+     * NEW (Issue #39): Added for i18n support
+     */
+    var categoryFr: String? = null
+
+    /**
+     * English category
+     * NEW (Issue #39): Added for i18n support
+     */
+    var categoryEn: String? = null
+
+    /**
+     * Spanish category
+     * NEW (Issue #39): Added for i18n support
+     */
+    var categoryEs: String? = null
+
+    /**
+     * French level/difficulty
+     * NEW (Issue #39): Added for i18n support
+     */
+    var levelFr: String? = null
+
+    /**
+     * English level/difficulty
+     * NEW (Issue #39): Added for i18n support
+     */
+    var levelEn: String? = null
+
+    /**
+     * Spanish level/difficulty
+     * NEW (Issue #39): Added for i18n support
+     */
+    var levelEs: String? = null
 
     // Firestore Timestamp - automatically populated with @ServerTimestamp on create/update
     @ServerTimestamp
@@ -127,4 +208,76 @@ class Program() {
      */
     @Exclude
     fun isPopular(): Boolean = participantCount >= 100
+
+    // ============================================================================
+    // i18n Helper Methods (Issue #39 - Phase 2)
+    // ============================================================================
+
+    /**
+     * Get localized title based on locale
+     *
+     * Fallback chain: locale → French → default
+     *
+     * @param locale Locale code ("fr", "en", "es")
+     * @return Localized title
+     */
+    @Exclude
+    fun getLocalizedTitle(locale: String = "fr"): String {
+        return when (locale) {
+            "en" -> titleEn?.takeIf { it.isNotBlank() } ?: title
+            "es" -> titleEs?.takeIf { it.isNotBlank() } ?: titleFr ?: title
+            else -> titleFr?.takeIf { it.isNotBlank() } ?: title
+        }
+    }
+
+    /**
+     * Get localized description based on locale
+     *
+     * Fallback chain: locale → French → default
+     *
+     * @param locale Locale code ("fr", "en", "es")
+     * @return Localized description
+     */
+    @Exclude
+    fun getLocalizedDescription(locale: String = "fr"): String {
+        return when (locale) {
+            "en" -> descriptionEn?.takeIf { it.isNotBlank() } ?: description
+            "es" -> descriptionEs?.takeIf { it.isNotBlank() } ?: descriptionFr ?: description
+            else -> descriptionFr?.takeIf { it.isNotBlank() } ?: description
+        }
+    }
+
+    /**
+     * Get localized category based on locale
+     *
+     * Fallback chain: locale → French → default
+     *
+     * @param locale Locale code ("fr", "en", "es")
+     * @return Localized category
+     */
+    @Exclude
+    fun getLocalizedCategory(locale: String = "fr"): String {
+        return when (locale) {
+            "en" -> categoryEn?.takeIf { it.isNotBlank() } ?: category
+            "es" -> categoryEs?.takeIf { it.isNotBlank() } ?: categoryFr ?: category
+            else -> categoryFr?.takeIf { it.isNotBlank() } ?: category
+        }
+    }
+
+    /**
+     * Get localized level/difficulty based on locale
+     *
+     * Fallback chain: locale → French → default
+     *
+     * @param locale Locale code ("fr", "en", "es")
+     * @return Localized level
+     */
+    @Exclude
+    fun getLocalizedLevel(locale: String = "fr"): String {
+        return when (locale) {
+            "en" -> levelEn?.takeIf { it.isNotBlank() } ?: level
+            "es" -> levelEs?.takeIf { it.isNotBlank() } ?: levelFr ?: level
+            else -> levelFr?.takeIf { it.isNotBlank() } ?: level
+        }
+    }
 }

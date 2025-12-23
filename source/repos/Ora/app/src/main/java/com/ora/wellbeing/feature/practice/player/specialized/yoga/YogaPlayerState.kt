@@ -1,5 +1,7 @@
 package com.ora.wellbeing.feature.practice.player.specialized.yoga
 
+import androidx.annotation.StringRes
+import com.ora.wellbeing.R
 import com.ora.wellbeing.core.domain.practice.Practice
 import com.ora.wellbeing.feature.practice.player.PlayerState
 import com.ora.wellbeing.feature.practice.ui.Chapter
@@ -29,10 +31,10 @@ data class YogaPlayerState(
 /**
  * Côté actuel pour les postures asymétriques
  */
-enum class YogaSide(val displayName: String) {
-    NONE(""),
-    LEFT("Côté Gauche"),
-    RIGHT("Côté Droit")
+enum class YogaSide(@StringRes val nameRes: Int) {
+    NONE(R.string.yoga_side_none),
+    LEFT(R.string.yoga_side_left),
+    RIGHT(R.string.yoga_side_right)
 }
 
 /**

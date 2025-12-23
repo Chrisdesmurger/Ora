@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -24,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ora.wellbeing.R
 
 /**
  * Ecran d'authentification avec Email/Password et Google Sign-In
@@ -85,7 +87,7 @@ fun AuthScreen(
 
                 // Tagline avec couleur principale
                 Text(
-                    text = "Body · Mind · Soul",
+                    text = stringResource(R.string.app_tagline),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary,
                     textAlign = TextAlign.Center
@@ -95,7 +97,7 @@ fun AuthScreen(
 
                 // Sous-titre apaisant
                 Text(
-                    text = "Votre compagnon bien-etre",
+                    text = stringResource(R.string.auth_subtitle),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center
@@ -116,7 +118,11 @@ fun AuthScreen(
                     ) {
                         // Titre du formulaire
                         Text(
-                            text = if (uiState.isSignUpMode) "Creer un compte" else "Se connecter",
+                            text = if (uiState.isSignUpMode) {
+                                stringResource(R.string.auth_create_account)
+                            } else {
+                                stringResource(R.string.auth_sign_in)
+                            },
                             style = MaterialTheme.typography.headlineMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -127,8 +133,8 @@ fun AuthScreen(
                         OutlinedTextField(
                             value = uiState.email,
                             onValueChange = { viewModel.onEvent(AuthUiEvent.EmailChanged(it)) },
-                            label = { Text("Email") },
-                            placeholder = { Text("vous@exemple.com") },
+                            label = { Text(stringResource(R.string.auth_email_label)) },
+                            placeholder = { Text(stringResource(R.string.auth_email_hint)) },
                             singleLine = true,
                             enabled = !uiState.isLoading,
                             colors = OutlinedTextFieldDefaults.colors(
@@ -153,8 +159,8 @@ fun AuthScreen(
                         OutlinedTextField(
                             value = uiState.password,
                             onValueChange = { viewModel.onEvent(AuthUiEvent.PasswordChanged(it)) },
-                            label = { Text("Mot de passe") },
-                            placeholder = { Text("Minimum 6 caracteres") },
+                            label = { Text(stringResource(R.string.auth_password_label)) },
+                            placeholder = { Text(stringResource(R.string.auth_password_hint)) },
                             singleLine = true,
                             enabled = !uiState.isLoading,
                             colors = OutlinedTextFieldDefaults.colors(
@@ -190,10 +196,11 @@ fun AuthScreen(
                                             Icons.Default.Visibility
                                         else
                                             Icons.Default.VisibilityOff,
-                                        contentDescription = if (uiState.isPasswordVisible)
-                                            "Masquer le mot de passe"
-                                        else
-                                            "Afficher le mot de passe",
+                                        contentDescription = if (uiState.isPasswordVisible) {
+                                            stringResource(R.string.auth_hide_password)
+                                        } else {
+                                            stringResource(R.string.auth_show_password)
+                                        },
                                         tint = MaterialTheme.colorScheme.primary
                                     )
                                 }
@@ -229,7 +236,11 @@ fun AuthScreen(
                                 )
                             } else {
                                 Text(
-                                    text = if (uiState.isSignUpMode) "Creer mon compte" else "Se connecter",
+                                    text = if (uiState.isSignUpMode) {
+                                        stringResource(R.string.auth_create_my_account)
+                                    } else {
+                                        stringResource(R.string.auth_sign_in)
+                                    },
                                     style = MaterialTheme.typography.titleMedium
                                 )
                             }
@@ -243,10 +254,11 @@ fun AuthScreen(
                             enabled = !uiState.isLoading
                         ) {
                             Text(
-                                text = if (uiState.isSignUpMode)
-                                    "Deja un compte ? Se connecter"
-                                else
-                                    "Pas encore de compte ? S'inscrire",
+                                text = if (uiState.isSignUpMode) {
+                                    stringResource(R.string.auth_already_have_account)
+                                } else {
+                                    stringResource(R.string.auth_no_account_yet)
+                                },
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
                         }
@@ -265,7 +277,7 @@ fun AuthScreen(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
                     )
                     Text(
-                        text = "OU",
+                        text = stringResource(R.string.common_or),
                         modifier = Modifier.padding(horizontal = 16.dp),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
@@ -291,7 +303,7 @@ fun AuthScreen(
                         .height(56.dp)
                 ) {
                     Text(
-                        text = "Continuer avec Google",
+                        text = stringResource(R.string.auth_continue_with_google),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -302,7 +314,7 @@ fun AuthScreen(
                 // Message d'information - Couleur tertiaire douce
                 AnimatedVisibility(visible = uiState.isSignUpMode) {
                     Text(
-                        text = "En creant un compte, vous acceptez nos conditions d'utilisation et notre politique de confidentialite.",
+                        text = stringResource(R.string.auth_terms_disclaimer),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         textAlign = TextAlign.Center,

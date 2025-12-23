@@ -21,6 +21,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -28,6 +29,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
+import com.ora.wellbeing.R
 import com.ora.wellbeing.feature.practice.player.specialized.PlayerColors
 import com.ora.wellbeing.feature.practice.ui.CustomSeekBar
 
@@ -60,7 +62,7 @@ fun YogaPlayerScreen(
         when {
             uiState.isLoading -> YogaLoadingState()
             uiState.error != null -> YogaErrorState(
-                error = uiState.error ?: "Erreur inconnue",
+                error = uiState.error ?: "",
                 onRetry = { viewModel.onEvent(YogaPlayerEvent.Retry) },
                 onBack = onBack
             )
@@ -86,7 +88,7 @@ private fun YogaLoadingState() {
         ) {
             CircularProgressIndicator(color = PlayerColors.Yoga.accent)
             Text(
-                text = "Préparation de votre séance...",
+                text = stringResource(R.string.yoga_preparing),
                 style = MaterialTheme.typography.bodyLarge,
                 color = PlayerColors.Yoga.onBackground
             )
@@ -122,8 +124,8 @@ private fun YogaErrorState(
                 textAlign = TextAlign.Center
             )
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(onClick = onBack) { Text("Retour") }
-                Button(onClick = onRetry) { Text("Réessayer") }
+                OutlinedButton(onClick = onBack) { Text(stringResource(R.string.player_back)) }
+                Button(onClick = onRetry) { Text(stringResource(R.string.player_retry)) }
             }
         }
     }
@@ -152,7 +154,7 @@ private fun YogaPlayerContent(
                     )
                     if (uiState.currentSide != YogaSide.NONE) {
                         Text(
-                            text = uiState.currentSide.displayName,
+                            text = stringResource(uiState.currentSide.nameRes),
                             style = MaterialTheme.typography.bodySmall,
                             color = PlayerColors.Yoga.accent,
                             fontWeight = FontWeight.Bold
@@ -162,7 +164,7 @@ private fun YogaPlayerContent(
             },
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.Default.ArrowBack, "Retour")
+                    Icon(Icons.Default.ArrowBack, stringResource(R.string.player_back))
                 }
             },
             actions = {
@@ -170,14 +172,14 @@ private fun YogaPlayerContent(
                 IconButton(onClick = { onEvent(YogaPlayerEvent.ToggleMirrorMode) }) {
                     Icon(
                         imageVector = Icons.Default.Flip,
-                        contentDescription = "Mode miroir",
+                        contentDescription = stringResource(R.string.yoga_mirror_mode),
                         tint = if (uiState.isMirrorMode) PlayerColors.Yoga.accent else Color.Gray
                     )
                 }
                 IconButton(onClick = { onEvent(YogaPlayerEvent.ToggleFullscreen) }) {
                     Icon(
                         if (uiState.isFullscreen) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
-                        "Plein écran"
+                        stringResource(R.string.yoga_fullscreen)
                     )
                 }
             },
@@ -231,7 +233,7 @@ private fun YogaPlayerContent(
                             tint = Color.White
                         )
                         Text(
-                            text = "Miroir",
+                            text = stringResource(R.string.yoga_mirror_label),
                             style = MaterialTheme.typography.labelSmall,
                             color = Color.White
                         )
@@ -336,7 +338,7 @@ private fun CurrentChapterBadge(
                     color = PlayerColors.Yoga.accentDark
                 )
                 Text(
-                    text = "Posture ${chapterIndex + 1}/$totalChapters",
+                    text = stringResource(R.string.yoga_pose_number, chapterIndex + 1, totalChapters),
                     style = MaterialTheme.typography.bodySmall,
                     color = PlayerColors.Yoga.onBackground.copy(alpha = 0.7f)
                 )
@@ -367,7 +369,7 @@ private fun NextPosePreviewCard(preview: PosePreview) {
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Prochaine posture",
+                    text = stringResource(R.string.yoga_next_pose),
                     style = MaterialTheme.typography.labelSmall,
                     color = PlayerColors.Yoga.onBackground.copy(alpha = 0.6f)
                 )
@@ -462,10 +464,10 @@ private fun YogaMainControls(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onPreviousChapter) {
-                Icon(Icons.Default.SkipPrevious, "Posture précédente", modifier = Modifier.size(28.dp))
+                Icon(Icons.Default.SkipPrevious, stringResource(R.string.yoga_previous_pose), modifier = Modifier.size(28.dp))
             }
             IconButton(onClick = onSeekBack) {
-                Icon(Icons.Default.Replay10, "Reculer 10s", modifier = Modifier.size(32.dp))
+                Icon(Icons.Default.Replay10, stringResource(R.string.yoga_rewind_10s), modifier = Modifier.size(32.dp))
             }
             FloatingActionButton(
                 onClick = onPlayPause,
@@ -474,15 +476,15 @@ private fun YogaMainControls(
             ) {
                 Icon(
                     if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) "Pause" else "Lecture",
+                    contentDescription = stringResource(if (isPlaying) R.string.player_pause else R.string.player_play),
                     modifier = Modifier.size(32.dp)
                 )
             }
             IconButton(onClick = onSeekForward) {
-                Icon(Icons.Default.Forward10, "Avancer 10s", modifier = Modifier.size(32.dp))
+                Icon(Icons.Default.Forward10, stringResource(R.string.yoga_forward_10s), modifier = Modifier.size(32.dp))
             }
             IconButton(onClick = onNextChapter) {
-                Icon(Icons.Default.SkipNext, "Posture suivante", modifier = Modifier.size(28.dp))
+                Icon(Icons.Default.SkipNext, stringResource(R.string.yoga_next_pose_button), modifier = Modifier.size(28.dp))
             }
         }
 
@@ -496,7 +498,7 @@ private fun YogaMainControls(
             ) {
                 Icon(Icons.Default.SwapHoriz, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Changer de côté")
+                Text(stringResource(R.string.yoga_switch_side))
             }
         }
     }

@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -14,6 +15,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ora.wellbeing.R
 import com.ora.wellbeing.presentation.theme.OraTheme
 
 /**
@@ -59,7 +61,7 @@ fun BottomStatsBar(
             // Colonne 1: Jours d'affilée
             StatColumn(
                 value = streakDays.toString(),
-                label = "jours\nd'affilée",
+                label = stringResource(R.string.profile_streak_label),
                 modifier = Modifier.weight(1f)
             )
 
@@ -69,7 +71,7 @@ fun BottomStatsBar(
             // Colonne 2: Temps total
             StatColumn(
                 value = totalTime,
-                label = "en tout",
+                label = stringResource(R.string.profile_total_time_label),
                 modifier = Modifier.weight(1f)
             )
 
@@ -131,7 +133,7 @@ private fun LastActivityColumn(
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(
-            text = "Dernière activité:",
+            text = stringResource(R.string.profile_last_activity),
             fontSize = 13.sp,
             fontWeight = FontWeight.Normal,
             color = Color(0xFF1C1B1F),
@@ -185,7 +187,7 @@ fun BottomStatsBarWithIcons(
             StatWithIcon(
                 icon = OraIcons.Streak,
                 value = streakDays.toString(),
-                label = "jours\nd'affilée",
+                label = stringResource(R.string.profile_streak_label),
                 modifier = Modifier.weight(1f)
             )
 
@@ -195,7 +197,7 @@ fun BottomStatsBarWithIcons(
             StatWithIcon(
                 icon = OraIcons.TotalTime,
                 value = totalTime,
-                label = "en tout",
+                label = stringResource(R.string.profile_total_time_label),
                 modifier = Modifier.weight(1f)
             )
 
@@ -217,7 +219,7 @@ fun BottomStatsBarWithIcons(
                         tint = Color(0xFF1C1B1F)
                     )
                     Text(
-                        text = "Dernière activité:",
+                        text = stringResource(R.string.profile_last_activity),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Normal,
                         color = Color(0xFF1C1B1F)

@@ -23,10 +23,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.ora.wellbeing.R
 import com.ora.wellbeing.feature.practice.player.specialized.PlayerColors
 import com.ora.wellbeing.feature.practice.ui.CustomSeekBar
 
@@ -84,7 +86,7 @@ fun MeditationPlayerScreen(
         when {
             uiState.isLoading -> MeditationLoadingState(accentColor)
             uiState.error != null -> MeditationErrorState(
-                error = uiState.error ?: "Erreur inconnue",
+                error = uiState.error ?: "",
                 onRetry = { viewModel.onEvent(MeditationPlayerEvent.Retry) },
                 onBack = onBack
             )
@@ -112,7 +114,7 @@ private fun MeditationLoadingState(accentColor: Color) {
         ) {
             CircularProgressIndicator(color = accentColor)
             Text(
-                text = "Préparation de votre méditation...",
+                text = stringResource(R.string.meditation_preparing),
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color.White.copy(alpha = 0.8f)
             )
@@ -148,8 +150,8 @@ private fun MeditationErrorState(
                 textAlign = TextAlign.Center
             )
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(onClick = onBack) { Text("Retour") }
-                Button(onClick = onRetry) { Text("Réessayer") }
+                OutlinedButton(onClick = onBack) { Text(stringResource(R.string.player_back)) }
+                Button(onClick = onRetry) { Text(stringResource(R.string.player_retry)) }
             }
         }
     }
@@ -180,13 +182,13 @@ private fun MeditationPlayerContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.Default.ArrowBack, "Retour", tint = textColor)
+                Icon(Icons.Default.ArrowBack, stringResource(R.string.player_back), tint = textColor)
             }
 
             IconButton(onClick = { onEvent(MeditationPlayerEvent.ToggleNightMode) }) {
                 Icon(
                     if (uiState.isNightMode) Icons.Default.LightMode else Icons.Default.DarkMode,
-                    "Mode nuit",
+                    stringResource(R.string.meditation_night_mode),
                     tint = accentColor
                 )
             }
@@ -211,7 +213,7 @@ private fun MeditationPlayerContent(
         // Indicateur de phase
         if (uiState.breathingPhase != BreathingPhase.IDLE) {
             Text(
-                text = uiState.breathingPhase.displayName,
+                text = stringResource(uiState.breathingPhase.nameRes),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Light,
                 color = accentColor,
@@ -248,7 +250,7 @@ private fun MeditationPlayerContent(
         ) {
             Icon(
                 if (uiState.playerState.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                contentDescription = if (uiState.playerState.isPlaying) "Pause" else "Lecture",
+                contentDescription = stringResource(if (uiState.playerState.isPlaying) R.string.player_pause else R.string.player_play),
                 modifier = Modifier.size(36.dp)
             )
         }
@@ -380,7 +382,7 @@ private fun PhaseIndicator(
 
         if (phaseName.isNotEmpty()) {
             Text(
-                text = "Phase ${currentPhase + 1}/$totalPhases - $phaseName",
+                text = stringResource(R.string.meditation_phase_indicator, currentPhase + 1, totalPhases, phaseName),
                 style = MaterialTheme.typography.bodySmall,
                 color = textColor.copy(alpha = 0.7f)
             )
@@ -398,7 +400,7 @@ private fun AmbientSoundSelector(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            text = "Sons ambiants",
+            text = stringResource(R.string.meditation_ambient_sounds),
             style = MaterialTheme.typography.labelMedium,
             color = textColor.copy(alpha = 0.7f)
         )
@@ -426,7 +428,7 @@ private fun AmbientSoundSelector(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = sound.name,
+                            text = stringResource(sound.nameRes),
                             style = MaterialTheme.typography.labelSmall,
                             color = if (isActive) Color.White else textColor
                         )

@@ -1,7 +1,9 @@
 package com.ora.wellbeing.presentation.screens.library
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.ora.wellbeing.R
 import com.ora.wellbeing.data.model.ContentItem
 import com.ora.wellbeing.domain.repository.ContentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,8 +17,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
+    application: Application,
     private val contentRepository: ContentRepository
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(LibraryUiState())
     val uiState: StateFlow<LibraryUiState> = _uiState.asStateFlow()
@@ -86,7 +89,7 @@ class LibraryViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = "Erreur lors du chargement de la bibliothèque: ${e.message}"
+                    error = getApplication<Application>().getString(R.string.error_loading_library, e.message ?: "")
                 )
                 Timber.e(e, "Error observing content data")
             }

@@ -7,11 +7,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ora.wellbeing.R
 import com.ora.wellbeing.presentation.components.AuthScreenTemplate
 import com.ora.wellbeing.presentation.components.PrimaryButton
 import timber.log.Timber
@@ -42,7 +44,7 @@ fun QuestionnaireIntroScreen(
 
         // Titre avec emoji
         Text(
-            text = "Faisons connaissance 🌿",
+            text = stringResource(R.string.onboarding_questionnaire_intro_title),
             style = MaterialTheme.typography.displaySmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
@@ -53,7 +55,7 @@ fun QuestionnaireIntroScreen(
 
         // Message chaleureux
         Text(
-            text = "Réponds avec ton cœur. Il n'y a pas de bonne ou de mauvaise réponse.",
+            text = stringResource(R.string.onboarding_questionnaire_intro_subtitle),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
             textAlign = TextAlign.Center
@@ -63,7 +65,7 @@ fun QuestionnaireIntroScreen(
 
         // Bouton CTA
         PrimaryButton(
-            text = "Commencer",
+            text = stringResource(R.string.common_start),
             onClick = {
                 Timber.d("QuestionnaireIntroScreen: User clicked 'Commencer'")
                 viewModel.onEvent(QuestionnaireIntroUiEvent.BeginQuestionnaire)

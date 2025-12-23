@@ -1,5 +1,6 @@
 package com.ora.wellbeing.feature.practice.player.specialized.massage
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,6 +21,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -27,6 +29,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.ui.PlayerView
+import com.ora.wellbeing.R
 import com.ora.wellbeing.feature.practice.player.specialized.PlayerColors
 import com.ora.wellbeing.feature.practice.ui.CustomSeekBar
 
@@ -59,7 +62,7 @@ fun MassagePlayerScreen(
         when {
             uiState.isLoading -> MassageLoadingState()
             uiState.error != null -> MassageErrorState(
-                error = uiState.error ?: "Erreur inconnue",
+                error = uiState.error ?: "",
                 onRetry = { viewModel.onEvent(MassagePlayerEvent.Retry) },
                 onBack = onBack
             )
@@ -84,7 +87,7 @@ private fun MassageLoadingState() {
         ) {
             CircularProgressIndicator(color = PlayerColors.Massage.accent)
             Text(
-                text = "Préparation de votre séance...",
+                text = stringResource(R.string.massage_preparing),
                 style = MaterialTheme.typography.bodyLarge,
                 color = PlayerColors.Massage.onBackground
             )
@@ -120,8 +123,8 @@ private fun MassageErrorState(
                 textAlign = TextAlign.Center
             )
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(onClick = onBack) { Text("Retour") }
-                Button(onClick = onRetry) { Text("Réessayer") }
+                OutlinedButton(onClick = onBack) { Text(stringResource(R.string.player_back)) }
+                Button(onClick = onRetry) { Text(stringResource(R.string.player_retry)) }
             }
         }
     }
@@ -150,14 +153,14 @@ private fun MassagePlayerContent(
             },
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.Default.ArrowBack, "Retour")
+                    Icon(Icons.Default.ArrowBack, stringResource(R.string.player_back))
                 }
             },
             actions = {
                 IconButton(onClick = { onEvent(MassagePlayerEvent.ToggleBodyMap) }) {
                     Icon(
                         Icons.Default.Person,
-                        "Carte corporelle",
+                        stringResource(R.string.massage_body_map),
                         tint = if (uiState.showBodyMap) PlayerColors.Massage.accent else Color.Gray
                     )
                 }
@@ -229,7 +232,7 @@ private fun MassagePlayerContent(
             ) {
                 // Timer de zone
                 ZoneTimerCard(
-                    zoneName = zone.name,
+                    zoneNameRes = zone.nameRes,
                     zoneIcon = zone.icon,
                     timeRemaining = uiState.zoneTimer,
                     repetitionsRemaining = uiState.zoneRepetitions,
@@ -244,7 +247,9 @@ private fun MassagePlayerContent(
                 )
 
                 // Instructions
-                InstructionCard(instruction = uiState.currentInstruction)
+                if (uiState.currentInstructionRes != 0) {
+                    InstructionCard(instructionRes = uiState.currentInstructionRes)
+                }
             }
         }
 
@@ -334,7 +339,7 @@ private fun BodyMapView(
                         ) {
                             Text(zone.icon)
                             Text(
-                                text = zone.name,
+                                text = stringResource(zone.nameRes),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal
                             )
@@ -356,7 +361,7 @@ private fun BodyMapView(
 
 @Composable
 private fun ZoneTimerCard(
-    zoneName: String,
+    @StringRes zoneNameRes: Int,
     zoneIcon: String,
     timeRemaining: Long,
     repetitionsRemaining: Int,
@@ -383,12 +388,12 @@ private fun ZoneTimerCard(
                 Text(zoneIcon, fontSize = 28.sp)
                 Column {
                     Text(
-                        text = zoneName,
+                        text = stringResource(zoneNameRes),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Répétition ${targetRepetitions - repetitionsRemaining + 1}/$targetRepetitions",
+                        text = stringResource(R.string.massage_repetition, targetRepetitions - repetitionsRemaining + 1, targetRepetitions),
                         style = MaterialTheme.typography.bodySmall,
                         color = PlayerColors.Massage.onBackground.copy(alpha = 0.7f)
                     )
@@ -424,12 +429,12 @@ private fun PressureIndicator(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Pression",
+                text = stringResource(R.string.massage_pressure),
                 style = MaterialTheme.typography.labelMedium,
                 color = PlayerColors.Massage.onBackground.copy(alpha = 0.7f)
             )
             Text(
-                text = "Recommandée : ${recommendedLevel.displayName}",
+                text = stringResource(R.string.massage_pressure_recommended, stringResource(recommendedLevel.nameRes)),
                 style = MaterialTheme.typography.labelSmall,
                 color = PlayerColors.Massage.accent
             )
@@ -459,7 +464,7 @@ private fun PressureIndicator(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = level.displayName,
+                            text = stringResource(level.nameRes),
                             style = MaterialTheme.typography.labelMedium,
                             color = if (isSelected) Color.White else PlayerColors.Massage.onBackground
                         )
@@ -471,7 +476,7 @@ private fun PressureIndicator(
 }
 
 @Composable
-private fun InstructionCard(instruction: String) {
+private fun InstructionCard(@StringRes instructionRes: Int) {
     Surface(
         shape = RoundedCornerShape(12.dp),
         color = PlayerColors.Massage.surface,
@@ -490,7 +495,7 @@ private fun InstructionCard(instruction: String) {
                 tint = PlayerColors.Massage.accent
             )
             Text(
-                text = instruction,
+                text = stringResource(instructionRes),
                 style = MaterialTheme.typography.bodyMedium,
                 color = PlayerColors.Massage.onBackground
             )
@@ -512,7 +517,7 @@ private fun ZoneChecklist(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = "Zones terminées : $completedCount/${zones.size}",
+            text = stringResource(R.string.massage_zones_completed, completedCount, zones.size),
             style = MaterialTheme.typography.labelMedium,
             color = PlayerColors.Massage.onBackground.copy(alpha = 0.7f)
         )
@@ -553,7 +558,7 @@ private fun ZoneChecklist(
                             else -> {}
                         }
                         Text(
-                            text = zone.name,
+                            text = stringResource(zone.nameRes),
                             style = MaterialTheme.typography.labelMedium,
                             color = when (zone.state) {
                                 ZoneState.ACTIVE -> Color.White
@@ -584,10 +589,10 @@ private fun MassageMainControls(
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onPrevious) {
-            Icon(Icons.Default.SkipPrevious, "Zone précédente", modifier = Modifier.size(28.dp))
+            Icon(Icons.Default.SkipPrevious, stringResource(R.string.massage_zone_previous), modifier = Modifier.size(28.dp))
         }
         IconButton(onClick = onRepeat) {
-            Icon(Icons.Default.Replay, "Répéter", modifier = Modifier.size(24.dp))
+            Icon(Icons.Default.Replay, stringResource(R.string.massage_zone_repeat), modifier = Modifier.size(24.dp))
         }
         FloatingActionButton(
             onClick = onPlayPause,
@@ -596,15 +601,15 @@ private fun MassageMainControls(
         ) {
             Icon(
                 if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                contentDescription = if (isPlaying) "Pause" else "Lecture",
+                contentDescription = stringResource(if (isPlaying) R.string.player_pause else R.string.player_play),
                 modifier = Modifier.size(32.dp)
             )
         }
         IconButton(onClick = onComplete) {
-            Icon(Icons.Default.Check, "Terminer zone", modifier = Modifier.size(24.dp))
+            Icon(Icons.Default.Check, stringResource(R.string.massage_zone_complete), modifier = Modifier.size(24.dp))
         }
         IconButton(onClick = onNext) {
-            Icon(Icons.Default.SkipNext, "Zone suivante", modifier = Modifier.size(28.dp))
+            Icon(Icons.Default.SkipNext, stringResource(R.string.massage_zone_next), modifier = Modifier.size(28.dp))
         }
     }
 }

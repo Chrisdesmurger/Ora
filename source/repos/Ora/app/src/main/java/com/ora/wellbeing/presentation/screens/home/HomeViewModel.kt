@@ -1,8 +1,10 @@
 package com.ora.wellbeing.presentation.screens.home
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.ora.wellbeing.R
 import com.ora.wellbeing.data.model.ContentItem
 import com.ora.wellbeing.data.model.UserProgram
 import com.ora.wellbeing.data.model.DailyNeedCategory
@@ -26,6 +28,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
+    application: Application,
     private val userProfileRepository: FirestoreUserProfileRepository,
     private val userStatsRepository: FirestoreUserStatsRepository,
     private val contentRepository: ContentRepository,
@@ -34,7 +37,7 @@ class HomeViewModel @Inject constructor(
     private val recommendationRepository: RecommendationRepository,
     private val onboardingRepository: OnboardingRepository,
     private val auth: FirebaseAuth
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -54,7 +57,7 @@ class HomeViewModel @Inject constructor(
             Timber.e("observeHomeData: No authenticated user")
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
-                error = "Vous devez etre connecte pour voir l'accueil"
+                error = getApplication<Application>().getString(R.string.error_must_login_home)
             )
             return
         }
@@ -88,7 +91,7 @@ class HomeViewModel @Inject constructor(
                     val stats = data.stats
 
                     // Get user's favorite category from stats (default to "Meditation")
-                    val favoriteCategory = "Meditation" // TODO: Add category tracking to domain UserStats
+                    val favoriteCategory = getApplication<Application>().getString(R.string.category_meditation) // TODO: Add category tracking to domain UserStats
 
                     // Build personalized recommendations (fallback if no AI recommendations)
                     val fallbackRecommendations = buildRecommendations(
@@ -138,9 +141,10 @@ class HomeViewModel @Inject constructor(
                     Timber.d("observeHomeData: Updated UI state (user=${profile?.firstName}, ${fallbackRecommendations.size} daily, ${personalizedRecommendations.size} personalized, ${activeProgramsUi.size} active programs)")
                 }
             } catch (e: Exception) {
+                val errorMsg = getApplication<Application>().getString(R.string.error_loading_home, e.message ?: "")
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = "Erreur lors du chargement de l'accueil: ${e.message}"
+                    error = errorMsg
                 )
                 Timber.e(e, "Error observing home data")
             }
@@ -265,13 +269,14 @@ class HomeViewModel @Inject constructor(
         } catch (e: Exception) {
             Timber.e(e, "Error converting ContentItem: id=$id, title=$title")
             // Retourner une recommendation par defaut en cas d'erreur
+            val app = getApplication<Application>()
             HomeUiState.ContentRecommendation(
                 id = id.takeIf { it.isNotBlank() } ?: "unknown",
-                title = title.takeIf { it.isNotBlank() } ?: "Seance sans titre",
-                category = category.takeIf { it.isNotBlank() } ?: "Meditation",
-                duration = duration.takeIf { it.isNotBlank() } ?: "10 min",
+                title = title.takeIf { it.isNotBlank() } ?: app.getString(R.string.session_untitled),
+                category = category.takeIf { it.isNotBlank() } ?: app.getString(R.string.category_meditation),
+                duration = duration.takeIf { it.isNotBlank() } ?: app.getString(R.string.duration_default),
                 thumbnailUrl = thumbnailUrl ?: "",
-                description = description.takeIf { it.isNotBlank() } ?: "Decouvrez cette seance",
+                description = description.takeIf { it.isNotBlank() } ?: app.getString(R.string.session_discover),
                 isPremiumOnly = isPremiumOnly
             )
         }
@@ -281,14 +286,15 @@ class HomeViewModel @Inject constructor(
      * Converts UserProgram (data model) to ActiveProgram (UI model)
      */
     private fun UserProgram.toActiveProgram(): HomeUiState.ActiveProgram {
+        val app = getApplication<Application>()
         return HomeUiState.ActiveProgram(
             id = programId,
-            title = "Programme actif", // Could be enhanced by joining with Program data
+            title = app.getString(R.string.program_active), // Could be enhanced by joining with Program data
             currentDay = currentDay,
             totalDays = totalDays,
             progressPercentage = calculateProgress(), // Use calculateProgress() method
-            nextSessionTitle = "Session $currentDay",
-            nextSessionDuration = "10 min"
+            nextSessionTitle = app.getString(R.string.program_session_format, currentDay),
+            nextSessionDuration = app.getString(R.string.duration_default)
         )
     }
 

@@ -12,11 +12,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ora.wellbeing.R
 import com.ora.wellbeing.presentation.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -88,14 +90,14 @@ private fun LibraryHeader(
             ) {
                 Icon(
                     imageVector = Icons.Default.Search,
-                    contentDescription = "Rechercher",
+                    contentDescription = "Search",
                     tint = Color(0xFF6B4E3D) // Marron pour cohérence
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Text(
-                    text = "Rechercher du contenu...",
+                    text = stringResource(R.string.library_search_placeholder),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color(0xFF6B4E3D).copy(alpha = 0.6f)
                 )
@@ -112,7 +114,7 @@ private fun LibraryHeader(
         ) {
             Icon(
                 imageVector = Icons.Default.FilterList,
-                contentDescription = "Filtres"
+                contentDescription = "Filters"
             )
         }
     }
@@ -159,7 +161,7 @@ private fun LibraryContent(
         if (uiState.popularContent.isNotEmpty()) {
             item {
                 ContentSection(
-                    title = "Populaire",
+                    title = stringResource(R.string.library_sort_popular),
                     content = uiState.popularContent,
                     onContentClick = onContentClick
                 )
@@ -170,7 +172,7 @@ private fun LibraryContent(
         if (uiState.newContent.isNotEmpty()) {
             item {
                 ContentSection(
-                    title = "Nouveautés",
+                    title = stringResource(R.string.library_sort_recent),
                     content = uiState.newContent,
                     onContentClick = onContentClick,
                     showNewBadge = true
@@ -181,12 +183,13 @@ private fun LibraryContent(
         // Contenu filtré
         if (uiState.filteredContent.isNotEmpty()) {
             item {
+                val title = when {
+                    uiState.selectedCategory != null -> stringResource(R.string.library_content_count, uiState.selectedCategory ?: "")
+                    uiState.selectedDuration != null -> stringResource(R.string.library_content_count, uiState.selectedDuration ?: "")
+                    else -> stringResource(R.string.library_practices_title)
+                }
                 ContentSection(
-                    title = when {
-                        uiState.selectedCategory != null -> "Contenu ${uiState.selectedCategory}"
-                        uiState.selectedDuration != null -> "Sessions ${uiState.selectedDuration}"
-                        else -> "Tout le contenu"
-                    },
+                    title = title,
                     content = uiState.filteredContent,
                     onContentClick = onContentClick,
                     isGrid = true
@@ -215,7 +218,7 @@ private fun CategoriesSection(
 ) {
     Column {
         Text(
-            text = "Catégories",
+            text = stringResource(R.string.library_filter_category),
             style = MaterialTheme.typography.titleMedium,
             color = TitleOrangeDark,
             modifier = Modifier.padding(bottom = 12.dp)
@@ -228,7 +231,7 @@ private fun CategoriesSection(
             item {
                 FilterChip(
                     onClick = { onCategoryClick("") },
-                    label = { Text("Tout") },
+                    label = { Text(stringResource(R.string.library_filter_all)) },
                     selected = selectedCategory == null || selectedCategory.isEmpty(),
                     colors = FilterChipDefaults.filterChipColors(
                         containerColor = MaterialTheme.colorScheme.surface,
@@ -272,7 +275,7 @@ private fun DurationFiltersSection(
 
     Column {
         Text(
-            text = "Durée",
+            text = stringResource(R.string.library_filter_duration),
             style = MaterialTheme.typography.titleMedium,
             color = TitleOrangeDark,
             modifier = Modifier.padding(bottom = 12.dp)
@@ -285,7 +288,7 @@ private fun DurationFiltersSection(
             item {
                 FilterChip(
                     onClick = { onDurationClick("") },
-                    label = { Text("Toutes") },
+                    label = { Text(stringResource(R.string.library_filter_all_durations)) },
                     selected = selectedDuration == null || selectedDuration.isEmpty(),
                     colors = FilterChipDefaults.filterChipColors(
                         containerColor = MaterialTheme.colorScheme.surface,
@@ -404,7 +407,7 @@ private fun ContentCard(
                         modifier = Modifier.align(Alignment.Start)
                     ) {
                         Text(
-                            text = "NOUVEAU",
+                            text = stringResource(R.string.library_badge_new),
                             style = MaterialTheme.typography.labelSmall,
                             color = Color.White,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -457,7 +460,7 @@ private fun ContentCard(
 
                 if (content.instructor.isNotEmpty()) {
                     Text(
-                        text = "avec ${content.instructor}",
+                        text = stringResource(R.string.practice_with_instructor, content.instructor),
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF6B4E3D).copy(alpha = 0.6f)
                     )

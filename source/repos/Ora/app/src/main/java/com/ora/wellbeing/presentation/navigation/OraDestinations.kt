@@ -1,5 +1,6 @@
 package com.ora.wellbeing.presentation.navigation
 
+import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
@@ -7,6 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.ora.wellbeing.R
 
 /**
  * Destinations de navigation de l'application Ora
@@ -246,10 +248,16 @@ sealed class OraDestinations(
 
 /**
  * Element de navigation pour la bottom bar
+ *
+ * @param route Route de navigation
+ * @param labelRes String resource ID for the label (Issue #39 - Phase 1d)
+ * @param selectedIcon Icon when selected
+ * @param unselectedIcon Icon when unselected
+ * @param hasNotification Whether to show notification badge
  */
 data class BottomNavigationItem(
     val route: String,
-    val label: String,
+    @StringRes val labelRes: Int,
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector,
     val hasNotification: Boolean = false
@@ -257,36 +265,37 @@ data class BottomNavigationItem(
 
 /**
  * Items de la bottom navigation
+ * FIX (Issue #39 - Phase 1d): Use string resources for labels
  */
 val bottomNavigationItems = listOf(
     BottomNavigationItem(
         route = OraDestinations.Home.route,
-        label = "Accueil",
+        labelRes = R.string.nav_home,
         selectedIcon = Icons.Filled.Home,
         unselectedIcon = Icons.Outlined.Home
     ),
     BottomNavigationItem(
         route = OraDestinations.Library.route,
-        label = "Bibliotheque",
+        labelRes = R.string.nav_library,
         selectedIcon = Icons.Filled.LibraryBooks,
         unselectedIcon = Icons.Outlined.LibraryBooks
     ),
     BottomNavigationItem(
         route = OraDestinations.Journal.route,
-        label = "Journal",
+        labelRes = R.string.nav_journal,
         selectedIcon = Icons.Filled.Book,
         unselectedIcon = Icons.Outlined.Book,
         hasNotification = false // Will be determined dynamically
     ),
     BottomNavigationItem(
         route = OraDestinations.Programs.route,
-        label = "Programmes",
+        labelRes = R.string.nav_programs,
         selectedIcon = Icons.Filled.CalendarToday,
         unselectedIcon = Icons.Outlined.CalendarToday
     ),
     BottomNavigationItem(
         route = OraDestinations.Profile.route,
-        label = "Profil",
+        labelRes = R.string.nav_profile,
         selectedIcon = Icons.Filled.Person,
         unselectedIcon = Icons.Outlined.Person
     )
@@ -296,12 +305,14 @@ val bottomNavigationItems = listOf(
  * Types de sessions rapides
  * Issue #37: Added AUTO_MASSAGE type
  * Maps to library categories for navigation with filtering
+ *
+ * FIX (Issue #39 - Phase 1d): Use string resources for display names
  */
-enum class QuickSessionType(val displayName: String, val categoryId: String) {
-    BREATHING("Respiration Calme", "Respiration"),
-    YOGA_FLASH("Flash Yoga", "Yoga"),
-    MINI_MEDITATION("Mini Meditation", "Meditation"),
-    AUTO_MASSAGE("Auto-massage", "Auto-massage");
+enum class QuickSessionType(@StringRes val displayNameRes: Int, val categoryId: String) {
+    BREATHING(R.string.session_breathing, "Respiration"),
+    YOGA_FLASH(R.string.session_flash_yoga, "Yoga"),
+    MINI_MEDITATION(R.string.session_meditation, "Meditation"),
+    AUTO_MASSAGE(R.string.session_self_massage, "Auto-massage");
 
     companion object {
         fun fromString(value: String): QuickSessionType? {
