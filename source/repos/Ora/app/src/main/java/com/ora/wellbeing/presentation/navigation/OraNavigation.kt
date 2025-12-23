@@ -387,12 +387,10 @@ private fun OraBottomNavigationBar(
                     Icon(
                         imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
                         contentDescription = stringResource(item.labelRes),
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(28.dp)
                     )
                 },
-                label = {
-                    Text(text = stringResource(item.labelRes))
-                },
+                label = null,
                 selected = selected,
                 onClick = {
                     navController.navigate(item.route) {
