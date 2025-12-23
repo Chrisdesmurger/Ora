@@ -275,17 +275,17 @@ val bottomNavigationItems = listOf(
         unselectedIcon = Icons.Outlined.Home
     ),
     BottomNavigationItem(
-        route = OraDestinations.Library.route,
-        labelRes = R.string.nav_library,
-        selectedIcon = Icons.Filled.LibraryBooks,
-        unselectedIcon = Icons.Outlined.LibraryBooks
-    ),
-    BottomNavigationItem(
         route = OraDestinations.Journal.route,
         labelRes = R.string.nav_journal,
         selectedIcon = Icons.Filled.Book,
         unselectedIcon = Icons.Outlined.Book,
         hasNotification = false // Will be determined dynamically
+    ),
+    BottomNavigationItem(
+        route = OraDestinations.Library.route,
+        labelRes = R.string.nav_library,
+        selectedIcon = Icons.Filled.Search,
+        unselectedIcon = Icons.Outlined.Search
     ),
     BottomNavigationItem(
         route = OraDestinations.Programs.route,
