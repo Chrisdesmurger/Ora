@@ -28,16 +28,17 @@ object LessonMapper {
      *
      * @param id Firestore document ID
      * @param doc LessonDocument from Firestore (snake_case)
+     * @param userLocale User's locale (e.g., "fr", "en", "es") - defaults to system locale
      * @return ContentItem for Android app (camelCase)
      */
-    fun fromFirestore(id: String, doc: LessonDocument): ContentItem {
-        Timber.d("Mapping lesson from Firestore: id=$id, title=${doc.title}, status=${doc.status}")
+    fun fromFirestore(id: String, doc: LessonDocument, userLocale: String = java.util.Locale.getDefault().language): ContentItem {
+        Timber.d("Mapping lesson from Firestore: id=$id, title=${doc.title}, status=${doc.status}, locale=$userLocale")
 
         return ContentItem().apply {
             this.id = id
-            this.title = doc.title
-            this.description = doc.description ?: ""
-            this.category = mapLessonTypeToCategory(doc.type, doc.tags)
+            this.title = getLocalizedTitle(doc, userLocale)
+            this.description = getLocalizedDescription(doc, userLocale)
+            this.category = getLocalizedCategory(doc, userLocale)
             this.duration = formatDuration(doc.duration_sec)
             this.durationMinutes = (doc.duration_sec ?: 0) / 60
             this.instructor = extractInstructorFromTags(doc.tags)
@@ -314,5 +315,61 @@ object LessonMapper {
         // Most lessons are video by default
         // Audio-only lessons should have explicit tags
         return "video"
+    }
+
+    // ============================================================================
+    // i18n Helper Functions (Issue #39 - Phase 2)
+    // ============================================================================
+
+    /**
+     * Gets localized title based on user's locale
+     * Priority: locale-specific field > fallback title
+     *
+     * @param doc LessonDocument from Firestore
+     * @param locale User's locale (fr, en, es)
+     * @return Localized title
+     */
+    private fun getLocalizedTitle(doc: LessonDocument, locale: String): String {
+        return when (locale.lowercase()) {
+            "fr" -> doc.title_fr ?: doc.title
+            "en" -> doc.title_en ?: doc.title
+            "es" -> doc.title_es ?: doc.title
+            else -> doc.title  // Fallback to default title
+        }
+    }
+
+    /**
+     * Gets localized description based on user's locale
+     *
+     * @param doc LessonDocument from Firestore
+     * @param locale User's locale (fr, en, es)
+     * @return Localized description
+     */
+    private fun getLocalizedDescription(doc: LessonDocument, locale: String): String {
+        val localized = when (locale.lowercase()) {
+            "fr" -> doc.description_fr
+            "en" -> doc.description_en
+            "es" -> doc.description_es
+            else -> null
+        }
+        return localized ?: doc.description ?: ""
+    }
+
+    /**
+     * Gets localized category based on user's locale
+     * Falls back to mapping from tags if no localized category exists
+     *
+     * @param doc LessonDocument from Firestore
+     * @param locale User's locale (fr, en, es)
+     * @return Localized category
+     */
+    private fun getLocalizedCategory(doc: LessonDocument, locale: String): String {
+        val localized = when (locale.lowercase()) {
+            "fr" -> doc.category_fr
+            "en" -> doc.category_en
+            "es" -> doc.category_es
+            else -> null
+        }
+        return localized ?: mapLessonTypeToCategory(doc.type, doc.tags)
     }
 }
