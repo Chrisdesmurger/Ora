@@ -25,18 +25,19 @@ object ProgramMapper {
      *
      * @param id Firestore document ID
      * @param doc ProgramDocument from Firestore (snake_case)
+     * @param userLocale User's locale (e.g., "fr", "en", "es") - defaults to system locale
      * @return Program for Android app (camelCase)
      */
-    fun fromFirestore(id: String, doc: ProgramDocument): Program {
-        Timber.d("Mapping program from Firestore: id=$id, title=${doc.title}, status=${doc.status}")
+    fun fromFirestore(id: String, doc: ProgramDocument, userLocale: String = java.util.Locale.getDefault().language): Program {
+        Timber.d("Mapping program from Firestore: id=$id, title=${doc.title}, status=${doc.status}, locale=$userLocale")
 
         return Program().apply {
             this.id = id
-            this.title = doc.title
-            this.description = doc.description
+            this.title = getLocalizedTitle(doc, userLocale)
+            this.description = getLocalizedDescription(doc, userLocale)
             this.category = mapCategoryToFrench(doc.category)
             this.duration = doc.duration_days
-            this.level = mapDifficultyToFrench(doc.difficulty)
+            this.level = getLocalizedDifficulty(doc, userLocale)
             this.participantCount = doc.participant_count
             this.rating = doc.rating
             this.thumbnailUrl = doc.cover_image_url
@@ -189,5 +190,61 @@ object ProgramMapper {
             durationDays % 7 == 0 -> "${durationDays / 7} semaines"
             else -> "$durationDays jours"
         }
+    }
+
+    // ============================================================================
+    // i18n Helper Functions (Issue #39 - Phase 2)
+    // ============================================================================
+
+    /**
+     * Gets localized title based on user's locale
+     * Priority: locale-specific field > fallback title
+     *
+     * @param doc ProgramDocument from Firestore
+     * @param locale User's locale (fr, en, es)
+     * @return Localized title
+     */
+    private fun getLocalizedTitle(doc: ProgramDocument, locale: String): String {
+        return when (locale.lowercase()) {
+            "fr" -> doc.title_fr ?: doc.title
+            "en" -> doc.title_en ?: doc.title
+            "es" -> doc.title_es ?: doc.title
+            else -> doc.title  // Fallback to default title
+        }
+    }
+
+    /**
+     * Gets localized description based on user's locale
+     *
+     * @param doc ProgramDocument from Firestore
+     * @param locale User's locale (fr, en, es)
+     * @return Localized description
+     */
+    private fun getLocalizedDescription(doc: ProgramDocument, locale: String): String {
+        val localized = when (locale.lowercase()) {
+            "fr" -> doc.description_fr
+            "en" -> doc.description_en
+            "es" -> doc.description_es
+            else -> null
+        }
+        return localized ?: doc.description
+    }
+
+    /**
+     * Gets localized difficulty level based on user's locale
+     * Falls back to French translation if no localized field exists
+     *
+     * @param doc ProgramDocument from Firestore
+     * @param locale User's locale (fr, en, es)
+     * @return Localized difficulty level
+     */
+    private fun getLocalizedDifficulty(doc: ProgramDocument, locale: String): String {
+        val localized = when (locale.lowercase()) {
+            "fr" -> doc.difficulty_fr
+            "en" -> doc.difficulty_en
+            "es" -> doc.difficulty_es
+            else -> null
+        }
+        return localized ?: mapDifficultyToFrench(doc.difficulty)
     }
 }
