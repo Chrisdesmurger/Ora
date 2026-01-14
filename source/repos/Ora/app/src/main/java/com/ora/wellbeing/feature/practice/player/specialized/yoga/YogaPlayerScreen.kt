@@ -70,7 +70,8 @@ fun YogaPlayerScreen(
                 uiState = uiState,
                 onEvent = viewModel::onEvent,
                 onBack = onBack,
-                onMinimize = onMinimize
+                onMinimize = onMinimize,
+                viewModel = viewModel
             )
         }
     }
@@ -137,7 +138,8 @@ private fun YogaPlayerContent(
     uiState: YogaPlayerState,
     onEvent: (YogaPlayerEvent) -> Unit,
     onBack: () -> Unit,
-    onMinimize: () -> Unit
+    onMinimize: () -> Unit,
+    viewModel: YogaPlayerViewModel
 ) {
     val practice = uiState.practice ?: return
 
@@ -192,12 +194,17 @@ private fun YogaPlayerContent(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(if (uiState.isFullscreen) 1f else 0.45f)
+                .aspectRatio(if (uiState.isFullscreen) 9f / 16f else 4f / 3f)
                 .clip(RoundedCornerShape(if (uiState.isFullscreen) 0.dp else 16.dp))
                 .background(Color.Black)
                 .graphicsLayer {
                     // Appliquer le mode miroir
                     scaleX = if (uiState.isMirrorMode) -1f else 1f
+                    // Zoom en mode plein écran (16:9 portrait)
+                    if (uiState.isFullscreen) {
+                        scaleX = scaleX * 1.2f
+                        scaleY = 1.2f
+                    }
                 }
         ) {
             val context = LocalContext.current
@@ -205,7 +212,23 @@ private fun YogaPlayerContent(
                 factory = { ctx ->
                     PlayerView(ctx).apply {
                         useController = false
-                        resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
+                        // Mode ZOOM pour remplir l'espace en plein écran, FIT pour mode normal
+                        resizeMode = if (uiState.isFullscreen) {
+                            androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                        } else {
+                            androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
+                        }
+                    }
+                },
+                update = { playerView ->
+                    // CRITICAL: Set the ExoPlayer instance
+                    playerView.player = viewModel.getExoPlayer()
+
+                    // Mettre à jour le resize mode selon l'état fullscreen
+                    playerView.resizeMode = if (uiState.isFullscreen) {
+                        androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                    } else {
+                        androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
                     }
                 },
                 modifier = Modifier.fillMaxSize()
@@ -255,7 +278,7 @@ private fun YogaPlayerContent(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(0.55f)
+                    .fillMaxHeight()
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {

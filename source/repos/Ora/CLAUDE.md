@@ -2,29 +2,30 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 🚨 CRITICAL - Multi-Agent Workflow System
+## 🚨 Multi-Agent Workflow System (Optional)
 
-**IMPORTANT**: All development tasks MUST use the multi-agent workflow system.
+**NOTE**: The multi-agent workflow system is available for complex, multi-component features but is **optional** for most development tasks.
 
-### How to Start Any Task
+### How to Use the Workflow (Optional)
 
-**ALWAYS** use the `manager-workflow` agent as the entry point for ANY development request:
+Use the `gateway-tech` agent as the entry point for structured development:
 
 ```
-Use the Task tool with subagent_type="manager-workflow"
+Use the Task tool with subagent_type="gateway-tech"
 ```
 
-**DO NOT** start coding directly. The manager will:
-1. Create a Github Issue
-2. Create a feature branch
-3. Orchestrate specialized agents (tech-android, build-debug-android, qa-android, etc.)
-4. Run builds and tests
-5. Create a Pull Request
-6. Generate documentation
+The gateway transforms your request into a structured task and passes it to `supervisor-tech`, which:
+1. Creates a Github Issue
+2. Creates a feature branch
+3. Orchestrates specialized agents (tech-android, build-debug-android, qa-android, etc.)
+4. Runs builds and tests
+5. Creates a Pull Request
+6. Generates documentation
 
 ### Available Specialized Agents
 
-- `manager-workflow` - **ENTRY POINT** - Supervises entire workflow
+- `gateway-tech` - **ENTRY POINT** - Converts requests to structured tasks
+- `supervisor-tech` - Plans and coordinates specialized agents
 - `tech-android` - Android development (Compose, Navigation, Room/Firestore, Media)
 - `build-debug-android` - Build diagnostics and error fixes
 - `tech-backend-firebase` - Firebase (Functions, Firestore, Storage, CRON)
@@ -41,6 +42,8 @@ Use the Task tool with subagent_type="manager-workflow"
 - **Reports**: `reports/<agent>/*.md` - Agent decisions and diffs
 
 See [docs/development/README_AUTOMATION.md](docs/development/README_AUTOMATION.md) for details.
+
+**For Simple Tasks**: You can work directly without the multi-agent system. The workflow is recommended for complex features that span multiple components or require architectural decisions.
 
 ## Project Overview
 
@@ -106,14 +109,26 @@ ViewModels / UI Layer
 - **Work Manager**: For background sync and notifications
 - **Offline Support**: Complete offline-first architecture
 
+## App Version Information
+- **Current Version**: 1.0.0
+- **Version Code**: 1
+- **Min SDK**: 26 (Android 8.0 Oreo)
+- **Target SDK**: 34 (Android 14)
+- **Compile SDK**: 34
+- **Package**: com.ora.wellbeing
+
 ## Application Structure
 
-### Main Features
-1. **🏠 Home (Accueil)**: Recommendations, quick sessions, active programs, weekly stats
-2. **📚 Library (Bibliothèque)**: Content catalog with filtering and search (offline available)
-3. **📖 Journal**: Daily gratitudes with streak tracking (offline-first)
+### Main Features & Screens
+1. **🏠 Home (Accueil)**: Dashboard with personalized recommendations, daily needs section ("Ton besoin du jour"), quick session cards with background images, and active programs
+2. **📚 Library (Bibliothèque)**: Two-level content navigation with category filtering, search, and offline availability
+3. **📖 Journal**: Daily gratitude entries with streak tracking (offline-first)
 4. **📅 Programs (Programmes)**: Structured challenges and learning paths
 5. **👤 Profile**: User stats, badges, goals, and settings
+6. **📊 Stats**: Detailed progress tracking and analytics
+7. **🔐 Auth**: Email/Password and Google Sign-In authentication
+8. **🚀 Onboarding**: First-time user experience with merged info screens and preference selection
+9. **🐛 Debug** (Debug builds only): Developer diagnostics and tools
 
 ### Navigation
 - Bottom navigation with 5 main tabs
@@ -125,16 +140,25 @@ ViewModels / UI Layer
 #### ✅ Completed
 - Project setup with all dependencies
 - Main navigation structure with bottom bar
-- All 5 main screens with ViewModels:
+- All 9 screens with ViewModels:
   - HomeScreen + HomeViewModel
   - LibraryScreen + LibraryViewModel
   - JournalScreen + JournalViewModel
   - ProgramsScreen + ProgramsViewModel
   - ProfileScreen + ProfileViewModel
+  - StatsScreen + StatsViewModel
+  - AuthScreen + OraAuthViewModel
+  - OnboardingScreen (with merged info screens)
+  - DebugScreen (debug builds only)
 - OraTheme with Material 3 design system (Ora brand colors)
 - Navigation destinations and routing
-- Mock data for all screens
 - MVVM pattern with UiState/UiEvent
+- **Internationalization (i18n)** - Complete FR/EN/ES support:
+  - All user-facing strings in string resources
+  - Three language files (values, values-en, values-es)
+  - Onboarding fully internationalized
+  - Home screen features internationalized
+  - Library content internationalized
 - **Firebase Authentication** (Email/Password + Google Sign-In via Credential Manager)
 - **Firestore Integration** with real-time sync:
   - UserProfile (users collection)
@@ -150,7 +174,7 @@ ViewModels / UI Layer
   - Network monitoring
   - Bidirectional sync (download + upload)
   - Complete unit tests for DAOs (11+ test suites)
-- **Lessons & Programs Synchronization** (NEW - 2025-11-03):
+- **Lessons & Programs Synchronization** (2025-11-03):
   - LessonDocument (Firestore model with snake_case fields)
   - ProgramDocument (Firestore model with snake_case fields)
   - LessonMapper (Firestore ↔ Android conversion with quality selection)
@@ -160,6 +184,20 @@ ViewModels / UI Layer
   - Database migration (v1 → v2) with new Content fields and Program table
   - 33 comprehensive unit tests (LessonMapperTest + ProgramMapperTest)
   - Zero crashes, all tests passing
+- **Home Screen Enhancements** (2026-01):
+  - Daily needs section ("Ton besoin du jour")
+  - Personalized recommendations ("Pensé pour toi")
+  - Quick session cards with background images and title overlay
+  - Auto-massage category with clickable navigation to filtered library
+- **Library Refactor** (2026-01):
+  - Two-level navigation system
+  - Category filtering and search
+  - Improved content discovery
+- **Practice Feature Module**:
+  - Ambient sound management
+  - Content download functionality
+  - ExoPlayer integration (in progress)
+  - Practice session UI components
 
 #### 🚧 In Progress / TODO
 - Integration of offline repositories into ViewModels
@@ -191,12 +229,24 @@ app/src/main/java/com/ora/wellbeing/
 │       ├── library/ (✅ LibraryScreen + LibraryViewModel)
 │       ├── journal/ (✅ JournalScreen + JournalViewModel)
 │       ├── programs/ (✅ ProgramsScreen + ProgramsViewModel)
-│       └── profile/ (✅ ProfileScreen + ProfileViewModel)
+│       ├── profile/ (✅ ProfileScreen + ProfileViewModel)
+│       ├── stats/ (✅ StatsScreen + StatsViewModel)
+│       ├── onboarding/ (✅ OnboardingScreen with merged info screens)
+│       └── debug/ (✅ DebugScreen - debug builds only)
 ├── core/
+│   ├── data/ (✅ Core data utilities)
+│   ├── domain/ (✅ Core domain models)
+│   ├── localization/ (✅ i18n utilities)
 │   └── util/
 │       ├── NetworkMonitor.kt (✅ Connectivity monitoring)
 │       └── Resource.kt (✅ State wrapper)
 ├── domain/ (🚧 Planned)
+├── feature/
+│   └── practice/
+│       ├── ambient/ (✅ Ambient sound management)
+│       ├── download/ (✅ Content download functionality)
+│       ├── player/ (✅ ExoPlayer integration)
+│       └── ui/ (✅ Practice session UI components)
 ├── data/
 │   ├── local/
 │   │   ├── database/
@@ -531,13 +581,24 @@ val lessons = snapshot.documents.mapNotNull { doc ->
 
 ## Build Commands
 
-### Gradle Commands (Windows)
-- **Build**: `./gradlew.bat build`
-- **Debug**: `./gradlew.bat assembleDebug`
-- **Install on Device**: `./gradlew.bat installDebug`
-- **Clean Build**: `./gradlew.bat clean assembleDebug installDebug`
-- **Test**: `./gradlew.bat test`
-- **Lint**: `./gradlew.bat lint`
+### Gradle Commands (Windows/PowerShell)
+- **Build**: `./gradlew build` or `./gradlew.bat build`
+- **Debug**: `./gradlew assembleDebug`
+- **Release**: `./gradlew assembleRelease`
+- **Install on Device**: `./gradlew installDebug`
+- **Clean Build**: `./gradlew clean assembleDebug installDebug`
+- **Test**: `./gradlew test`
+- **Unit Tests with Coverage**: `./gradlew testDebugUnitTestCoverage`
+- **Instrumented Tests**: `./gradlew connectedAndroidTest`
+- **Lint**: `./gradlew lint`
+- **Detekt (Code Quality)**: `./gradlew detekt`
+
+### Release Builds
+- **Minification**: Enabled (R8)
+- **Resource Shrinking**: Enabled
+- **ProGuard Rules**: `app/proguard-rules.pro`
+- **Signing**: Uses debug keystore (change for production)
+- **Build Command**: `./gradlew assembleRelease`
 
 ### ADB Commands (Device Management)
 - **List Devices**: `adb devices`
@@ -564,27 +625,56 @@ val lessons = snapshot.documents.mapNotNull { doc ->
 **Issue**: Firestore mapping errors (e.g., "Cannot deserialize field X")
 - **Solution**: Verify field names match Firestore schema exactly (use snake_case for backend models, camelCase for Android models)
 
+## Code Quality Tools
+
+### Detekt (Static Analysis)
+- **Run Analysis**: `./gradlew detekt`
+- **Configuration**: Uses default Detekt ruleset with Kotlin style checks
+- **Purpose**: Catches code smells, complexity issues, and style violations
+- **Reports**: Generated in `app/build/reports/detekt/`
+
+### Lint (Android)
+- **Run Lint**: `./gradlew lint`
+- **Reports**: Generated in `app/build/reports/lint-results.html`
+- **Purpose**: Android-specific code quality and resource issues
+
 ## Firebase Commands
 
 - **Deploy Firestore Rules**: `firebase deploy --only firestore:rules`
 - **Deploy All**: `firebase deploy`
 - **Login**: `firebase login`
 
-## Key Dependencies
+## Key Dependencies & Versions
 
-- Compose BOM: 2023.10.01
-- Hilt: 2.48.1
-- Navigation Compose: 2.7.6
-- **Firebase BOM: 33.7.0**
+### Core
+- **Kotlin**: 2.0.21
+- **Compose Compiler**: 1.6.11 (required for Kotlin 2.0+ compatibility)
+- **Compose BOM**: 2023.10.01
+- **Hilt**: 2.48.1
+- **Navigation Compose**: 2.7.6
+
+### Firebase
+- **Firebase BOM**: 33.7.0
   - Firebase Auth
-  - Firestore
+  - Firebase Firestore
   - Google Play Services Auth (for Credential Manager)
-- **Room: 2.6.1** (local database)
-- ExoPlayer: 1.2.0
-- Retrofit: 2.9.0
-- **Work Manager: 2.9.0** (background sync)
-- Timber: 5.0.1
-- Credentials: 1.5.0-beta01 (Google Sign-In)
+
+### Database & Storage
+- **Room**: 2.6.1 (local database with offline support)
+- **DataStore**: 1.0.0
+
+### Media & UI
+- **ExoPlayer**: 1.2.0 (video/audio playback)
+- **Coil**: 2.5.0 (image loading)
+
+### Utilities
+- **Work Manager**: 2.9.0 (background sync and notifications)
+- **Timber**: 5.0.1 (logging)
+- **Retrofit**: 2.9.0 (API integration)
+- **Credentials**: 1.5.0-beta01 (Google Sign-In)
+
+### Code Quality
+- **Detekt**: 1.23.4 (static analysis)
 
 ## Next Development Priorities
 
@@ -655,6 +745,98 @@ sealed class SyncState {
 
 ## Recent Changes
 
+### Yoga Video Player Fixes (2026-01-14)
+
+Fixed critical video playback issues in the yoga player:
+
+**Issues Resolved**:
+- ✅ Video loading failure for newly uploaded lessons without processed renditions
+- ✅ Black screen issue (audio playing but no video displayed)
+- ✅ Video player aspect ratio adjusted to 4:3 landscape (normal) and 16:9 portrait with zoom (fullscreen)
+
+**Changes Made**:
+
+1. **Video Loading Fix** - [LessonMapper.kt](app/src/main/java/com/ora/wellbeing/data/mapper/LessonMapper.kt)
+   - Added fallback to `storage_path_original` when `renditions` field is null
+   - Priority: `renditions` (processed) > `storage_path_original` (original file) > `null`
+   - Supports newly uploaded lessons before backend processing completes
+
+2. **Black Screen Fix** - [YogaPlayerViewModel.kt](app/src/main/java/com/ora/wellbeing/feature/practice/player/specialized/yoga/YogaPlayerViewModel.kt) & [YogaPlayerScreen.kt](app/src/main/java/com/ora/wellbeing/feature/practice/player/specialized/yoga/YogaPlayerScreen.kt)
+   - Added `getExoPlayer()` method to expose ExoPlayer instance
+   - Connected PlayerView to ExoPlayer in AndroidView `update{}` block
+   - Fixed: `playerView.player = viewModel.getExoPlayer()`
+
+3. **Aspect Ratio Improvements** - [YogaPlayerScreen.kt](app/src/main/java/com/ora/wellbeing/feature/practice/player/specialized/yoga/YogaPlayerScreen.kt)
+   - Changed from weight-based to aspect ratio sizing
+   - Normal mode: 4:3 landscape with `RESIZE_MODE_FIT`
+   - Fullscreen mode: 16:9 portrait with `RESIZE_MODE_ZOOM` and 1.2x scale
+
+**Technical Details**:
+- ExoPlayer properly decodes H.264 video with audio
+- PlayerView Surface now receives video frames correctly
+- MediaCodec warnings are non-critical and don't affect playback
+- Tested with "Introduction au Yoga - Leçon 1"
+
+**Documentation**:
+- [FIX_VIDEO_LOADING_SOLUTION.md](FIX_VIDEO_LOADING_SOLUTION.md) - Complete analysis of storage_path_original fallback
+- [FIX_BLACK_SCREEN_SOLUTION.md](FIX_BLACK_SCREEN_SOLUTION.md) - PlayerView connection solution
+
+**Key Commits**:
+- `fix(player): Add fallback to storage_path_original for video loading`
+- `fix(player): Connect ExoPlayer to PlayerView for video display`
+- `feat(player): Adjust yoga video aspect ratios (4:3 normal, 16:9 fullscreen)`
+
+### Internationalization (i18n) Implementation (2026-01-13)
+
+Completed comprehensive internationalization support for FR/EN/ES:
+
+**Features Added**:
+- ✅ Full FR/EN/ES language support with 3 separate resource files
+- ✅ All user-facing strings moved to string resources (no hardcoded strings)
+- ✅ Onboarding screens fully internationalized with merged info screens
+- ✅ Home screen "Ton besoin du jour" (daily needs) section with i18n
+- ✅ Auto-massage category with clickable navigation
+- ✅ Personalized recommendations "Pensé pour toi"
+- ✅ Library content overhaul with two-level navigation and i18n
+
+**Key Commits**:
+- `f910000` - feat(i18n): Complete internationalization cleanup + UX improvements (#42)
+- `50a6e8c` - feat(i18n): Complete onboarding internationalization with merged info screens (#41)
+- `fec6bb7` - fix(i18n): Fix onboarding multilingual field mapping to use camelCase
+- `7375738` - feat(i18n): Add complete i18n foundation for EN/FR/ES support (#39) (#40)
+
+**Impact**:
+- All screens now support 3 languages
+- Consistent string resource naming convention
+- Enhanced UX with localized content
+- Foundation for future language additions
+
+### Home Screen Enhancements (2026-01)
+
+Major improvements to home screen user experience:
+- ✅ Daily needs section ("Ton besoin du jour") with personalized suggestions
+- ✅ Quick session cards with background images and title overlay
+- ✅ Personalized recommendations section ("Pensé pour toi")
+- ✅ Auto-massage category with navigation to filtered library
+- ✅ Improved visual design and user engagement
+
+**Key Commits**:
+- `934aa17` - feat(home): Add "Ton besoin du jour" daily needs section (#33) (#34)
+- `0580ab9` - feat(home): Add Auto-massage category and clickable navigation (#37) (#38)
+- `b5c4962` - feat(home): Replace quick session cards with background images (#36)
+- `a242c8a` - feat(recommendations): Personalized Recommendations 'Pensé pour toi' (#32)
+
+### Library Refactor (2026-01)
+
+Complete redesign of content library:
+- ✅ Two-level navigation system (categories → content)
+- ✅ Improved filtering and search
+- ✅ Better content discovery
+- ✅ Enhanced visual presentation
+
+**Key Commits**:
+- `f59e309` - feat(library): Refonte complète de la bibliothèque de contenu (#28)
+
 ### Offline-First Lessons & Programs Synchronization (2025-11-03)
 
 Completed major synchronization feature for lessons and programs:
@@ -721,6 +903,6 @@ Added complete offline support:
 
 ---
 
-**Last Updated**: 2025-11-03
-**Next Review**: 2025-11-17
+**Last Updated**: 2026-01-13
+**Next Review**: 2026-02-13
 **Status**: PRODUCTION READY

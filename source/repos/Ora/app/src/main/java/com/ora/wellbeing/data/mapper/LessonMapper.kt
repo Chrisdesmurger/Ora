@@ -43,8 +43,9 @@ object LessonMapper {
             this.instructor = extractInstructorFromTags(doc.tags)
             this.thumbnailUrl = doc.thumbnail_url
             this.previewImageUrl = doc.preview_image_url
-            this.videoUrl = extractBestVideoUrl(doc.renditions)
-            this.audioUrl = extractBestAudioUrl(doc.audio_variants)
+            // FIX: Use storage_path_original as fallback if renditions not available
+            this.videoUrl = extractBestVideoUrl(doc.renditions, doc.storage_path_original, doc.type)
+            this.audioUrl = extractBestAudioUrl(doc.audio_variants, doc.storage_path_original, doc.type)
             this.isPremiumOnly = false // TODO: Determine from program settings
             this.isPopular = false // TODO: Calculate from usage stats
             this.isNew = isRecent(doc.created_at as? Timestamp)
@@ -66,72 +67,94 @@ object LessonMapper {
 
     /**
      * Extracts the best quality video path from renditions
-     * Priority: high > medium > low
+     * Priority: high > medium > low > storage_path_original
      *
      * Returns the Firebase Storage path, which will be converted to a signed download URL
      * by PracticeRepository when loading the practice for playback.
      *
+     * FIX: Added fallback to storage_path_original for lessons without processed renditions
+     *
      * @param renditions Map of video quality variants
-     * @return Storage path string or null if no renditions available
+     * @param storagePathOriginal Original file path (fallback)
+     * @param type Lesson type ("video" or "audio")
+     * @return Storage path string or null if no video available
      */
-    private fun extractBestVideoUrl(renditions: Map<String, Map<String, Any>>?): String? {
-        if (renditions == null) {
-            Timber.w("No video renditions available")
-            return null
+    private fun extractBestVideoUrl(
+        renditions: Map<String, Map<String, Any>>?,
+        storagePathOriginal: String?,
+        type: String
+    ): String? {
+        // Try renditions first (processed, optimized files)
+        if (renditions != null) {
+            val path = renditions["high"]?.get("path") as? String
+                ?: renditions["medium"]?.get("path") as? String
+                ?: renditions["low"]?.get("path") as? String
+
+            if (path != null) {
+                Timber.d("✅ Extracted video path from renditions: quality=${when {
+                    path == renditions["high"]?.get("path") -> "high"
+                    path == renditions["medium"]?.get("path") -> "medium"
+                    path == renditions["low"]?.get("path") -> "low"
+                    else -> "unknown"
+                }}, path=$path")
+                return path
+            }
         }
 
-        val path = renditions["high"]?.get("path") as? String
-            ?: renditions["medium"]?.get("path") as? String
-            ?: renditions["low"]?.get("path") as? String
-
-        if (path == null) {
-            Timber.w("No video path found in renditions")
-            return null
+        // Fallback: Use original file if it's a video lesson
+        if (type == "video" && !storagePathOriginal.isNullOrBlank()) {
+            Timber.d("⚠️ No renditions, using storage_path_original: $storagePathOriginal")
+            return storagePathOriginal
         }
 
-        Timber.d("Extracted video path: quality=${when {
-            path == renditions["high"]?.get("path") -> "high"
-            path == renditions["medium"]?.get("path") -> "medium"
-            path == renditions["low"]?.get("path") -> "low"
-            else -> "none"
-        }}, path=$path")
-
-        return path
+        Timber.w("❌ No video path available (renditions=null, original=${storagePathOriginal ?: "null"})")
+        return null
     }
 
     /**
      * Extracts the best quality audio path from audio variants
-     * Priority: high > medium > low
+     * Priority: high > medium > low > storage_path_original
      *
      * Returns the Firebase Storage path, which will be converted to a signed download URL
      * by PracticeRepository when loading the practice for playback.
      *
+     * FIX: Added fallback to storage_path_original for lessons without processed audio variants
+     *
      * @param audioVariants Map of audio quality variants
-     * @return Storage path string or null if no variants available
+     * @param storagePathOriginal Original file path (fallback)
+     * @param type Lesson type ("video" or "audio")
+     * @return Storage path string or null if no audio available
      */
-    private fun extractBestAudioUrl(audioVariants: Map<String, Map<String, Any>>?): String? {
-        if (audioVariants == null) {
-            Timber.w("No audio variants available")
-            return null
+    private fun extractBestAudioUrl(
+        audioVariants: Map<String, Map<String, Any>>?,
+        storagePathOriginal: String?,
+        type: String
+    ): String? {
+        // Try audio variants first (processed, optimized files)
+        if (audioVariants != null) {
+            val path = audioVariants["high"]?.get("path") as? String
+                ?: audioVariants["medium"]?.get("path") as? String
+                ?: audioVariants["low"]?.get("path") as? String
+
+            if (path != null) {
+                Timber.d("✅ Extracted audio path from variants: quality=${when {
+                    path == audioVariants["high"]?.get("path") -> "high"
+                    path == audioVariants["medium"]?.get("path") -> "medium"
+                    path == audioVariants["low"]?.get("path") -> "low"
+                    else -> "unknown"
+                }}, path=$path")
+                return path
+            }
         }
 
-        val path = audioVariants["high"]?.get("path") as? String
-            ?: audioVariants["medium"]?.get("path") as? String
-            ?: audioVariants["low"]?.get("path") as? String
-
-        if (path == null) {
-            Timber.w("No audio path found in variants")
-            return null
+        // Fallback: Use original file if it's an audio lesson
+        if (type == "audio" && !storagePathOriginal.isNullOrBlank()) {
+            Timber.d("⚠️ No audio variants, using storage_path_original: $storagePathOriginal")
+            return storagePathOriginal
         }
 
-        Timber.d("Extracted audio path: quality=${when {
-            path == audioVariants["high"]?.get("path") -> "high"
-            path == audioVariants["medium"]?.get("path") -> "medium"
-            path == audioVariants["low"]?.get("path") -> "low"
-            else -> "none"
-        }}, path=$path")
-
-        return path
+        Timber.d("ℹ️ No audio path available for type=$type (this is normal for video-only lessons)")
+        return null
     }
 
     /**

@@ -245,6 +245,13 @@ class YogaPlayerViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Expose le player ExoPlayer pour le connecter au PlayerView
+     */
+    fun getExoPlayer(): androidx.media3.exoplayer.ExoPlayer? {
+        return player?.getExoPlayer()
+    }
+
     override fun onCleared() {
         super.onCleared()
         stopSessionTimer()
