@@ -302,6 +302,24 @@ class LessonDocument() {
     var auto_publish_enabled: Boolean = false
 
     // ============================================================================
+    // Yoga-Specific Fields
+    // ============================================================================
+
+    /**
+     * List of yoga poses for this lesson (optional)
+     * Only used for yoga/pilates type lessons
+     *
+     * Each pose contains timing, title, stimulus, instructions, target zones, etc.
+     * Firestore stores this as an array of maps, which we convert to YogaPoseDocument list.
+     *
+     * @see YogaPoseDocument for the pose structure
+     * @see com.ora.wellbeing.data.mapper.YogaPoseMapper for conversion
+     */
+    @get:com.google.firebase.firestore.PropertyName("yoga_poses")
+    @set:com.google.firebase.firestore.PropertyName("yoga_poses")
+    var yogaPoses: List<Map<String, Any>>? = null
+
+    // ============================================================================
     // Helper Functions
     // ============================================================================
 

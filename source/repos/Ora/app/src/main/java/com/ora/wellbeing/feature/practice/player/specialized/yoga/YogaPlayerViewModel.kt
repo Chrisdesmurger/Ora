@@ -6,6 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.ktx.logEvent
 import com.ora.wellbeing.core.data.practice.PracticeRepository
+import com.ora.wellbeing.core.localization.LocalizationProvider
+import com.ora.wellbeing.data.mapper.YogaPoseMapper
+import com.ora.wellbeing.data.model.firestore.YogaPoseDocument
 import com.ora.wellbeing.feature.practice.player.PlayerConfig
 import com.ora.wellbeing.feature.practice.player.PracticePlayerEnhanced
 import com.ora.wellbeing.feature.practice.ui.Chapter
@@ -22,7 +25,8 @@ import javax.inject.Inject
 class YogaPlayerViewModel @Inject constructor(
     application: Application,
     private val practiceRepository: PracticeRepository,
-    private val analytics: FirebaseAnalytics
+    private val analytics: FirebaseAnalytics,
+    private val localizationProvider: LocalizationProvider
 ) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(YogaPlayerState())
@@ -58,18 +62,57 @@ class YogaPlayerViewModel @Inject constructor(
                     _uiState.update { it.copy(practice = practice) }
                     player?.prepare(practice.mediaUrl)
 
-                    // Générer les chapitres basés sur la durée
-                    val chapters = generateChaptersForPractice(practice.durationMin)
+                    // Get current language code
+                    val languageCode = YogaPoseMapper.getCurrentLanguageCode()
+
+                    // Try to load yoga poses from Firestore
+                    val yogaPoses = practiceRepository.getYogaPoses(practiceId)
+
+                    // Generate chapters: from Firestore poses or auto-generated
+                    val chapters = if (yogaPoses.isNotEmpty()) {
+                        Timber.d("Using ${yogaPoses.size} poses from Firestore")
+                        YogaPoseMapper.toChapters(yogaPoses, languageCode)
+                    } else {
+                        Timber.d("No poses in Firestore, auto-generating chapters")
+                        generateChaptersForPractice(practice.durationMin)
+                    }
+
+                    // Create pose description: from first Firestore pose or from practice metadata
+                    val poseDescription = if (yogaPoses.isNotEmpty()) {
+                        YogaPoseMapper.toPoseDescription(yogaPoses.first(), languageCode)
+                    } else {
+                        val locale = localizationProvider.getCurrentLocale()
+                        val localizedDescription = practice.getLocalizedDescription(locale)
+                        PoseDescription(
+                            stimulus = localizedDescription,
+                            instructions = emptyList(),
+                            targetZones = practice.tags.take(3),
+                            benefits = practice.benefits
+                        )
+                    }
+
+                    // Determine initial side from first pose
+                    val initialSide = if (yogaPoses.isNotEmpty()) {
+                        YogaPoseMapper.toYogaSide(yogaPoses.first().side)
+                    } else {
+                        YogaSide.NONE
+                    }
+
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            chapters = chapters
+                            chapters = chapters,
+                            yogaPoses = yogaPoses,
+                            poseDescription = poseDescription,
+                            currentSide = initialSide
                         )
                     }
 
                     analytics.logEvent("yoga_player_opened") {
                         param("practice_id", practice.id)
                         param("discipline", practice.discipline.name)
+                        param("poses_from_backend", yogaPoses.isNotEmpty().toString())
+                        param("poses_count", yogaPoses.size.toLong())
                     }
                 },
                 onFailure = { error ->
@@ -194,9 +237,33 @@ class YogaPlayerViewModel @Inject constructor(
 
     private fun updateCurrentChapter(currentPosition: Long) {
         val chapters = _uiState.value.chapters
+        val yogaPoses = _uiState.value.yogaPoses
         val currentIndex = chapters.indexOfLast { it.startTime <= currentPosition }
+
         if (currentIndex >= 0 && currentIndex != _uiState.value.currentChapterIndex) {
-            _uiState.update { it.copy(currentChapterIndex = currentIndex) }
+            val languageCode = YogaPoseMapper.getCurrentLanguageCode()
+
+            // Update pose description if we have poses from Firestore
+            val newPoseDescription = if (yogaPoses.isNotEmpty() && currentIndex < yogaPoses.size) {
+                YogaPoseMapper.toPoseDescription(yogaPoses[currentIndex], languageCode)
+            } else {
+                _uiState.value.poseDescription
+            }
+
+            // Update side indicator for bilateral poses
+            val newSide = if (yogaPoses.isNotEmpty() && currentIndex < yogaPoses.size) {
+                YogaPoseMapper.toYogaSide(yogaPoses[currentIndex].side)
+            } else {
+                _uiState.value.currentSide
+            }
+
+            _uiState.update {
+                it.copy(
+                    currentChapterIndex = currentIndex,
+                    poseDescription = newPoseDescription,
+                    currentSide = newSide
+                )
+            }
         }
     }
 

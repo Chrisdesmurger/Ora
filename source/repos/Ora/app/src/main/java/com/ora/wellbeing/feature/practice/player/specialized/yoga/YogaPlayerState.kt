@@ -3,6 +3,7 @@ package com.ora.wellbeing.feature.practice.player.specialized.yoga
 import androidx.annotation.StringRes
 import com.ora.wellbeing.R
 import com.ora.wellbeing.core.domain.practice.Practice
+import com.ora.wellbeing.data.model.firestore.YogaPoseDocument
 import com.ora.wellbeing.feature.practice.player.PlayerState
 import com.ora.wellbeing.feature.practice.ui.Chapter
 
@@ -25,7 +26,11 @@ data class YogaPlayerState(
     val chapters: List<Chapter> = emptyList(),   // Chapitres/postures
     val currentChapterIndex: Int = 0,            // Index du chapitre actuel
     val nextPosePreview: PosePreview? = null,    // Aperçu de la prochaine posture
-    val difficultyLevel: Int = 1                 // Niveau de difficulté en temps réel (1-3)
+    val difficultyLevel: Int = 1,                // Niveau de difficulté en temps réel (1-3)
+    val poseDescription: PoseDescription? = null, // Description de la pose actuelle
+
+    // Données des poses depuis Firestore (optionnel)
+    val yogaPoses: List<YogaPoseDocument> = emptyList() // Poses chargées depuis le backend
 )
 
 /**
