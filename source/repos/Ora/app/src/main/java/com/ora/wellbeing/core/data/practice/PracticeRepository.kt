@@ -1,5 +1,6 @@
 package com.ora.wellbeing.core.data.practice
 
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.ora.wellbeing.core.domain.practice.Discipline
 import com.ora.wellbeing.core.domain.practice.DownloadInfo
@@ -9,6 +10,9 @@ import com.ora.wellbeing.core.domain.practice.MediaType
 import com.ora.wellbeing.core.domain.practice.Practice
 import com.ora.wellbeing.data.local.dao.ContentDao
 import com.ora.wellbeing.data.model.ContentItem
+import com.ora.wellbeing.data.model.firestore.LessonDocument
+import com.ora.wellbeing.data.model.firestore.YogaPoseDocument
+import com.ora.wellbeing.data.mapper.YogaPoseMapper
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,7 +29,8 @@ import javax.inject.Singleton
 @Singleton
 class PracticeRepository @Inject constructor(
     private val contentDao: ContentDao,
-    private val firebaseStorage: FirebaseStorage
+    private val firebaseStorage: FirebaseStorage,
+    private val firestore: FirebaseFirestore
 ) {
 
     private val _downloadStates = MutableStateFlow<Map<String, DownloadInfo>>(emptyMap())
@@ -114,7 +119,15 @@ class PracticeRepository @Inject constructor(
                 // Get signed download URL from Firebase Storage
                 val mediaUrl = getSignedDownloadUrl(content.audioUrl, content.videoUrl)
 
-                val practice = content.toPractice(mediaUrl)
+                // Get multilingual descriptions from Firestore (for i18n)
+                val i18nDescriptions = getMultilingualDescriptions(id)
+
+                val practice = content.toPractice(
+                    signedMediaUrl = mediaUrl,
+                    descriptionFr = i18nDescriptions.fr,
+                    descriptionEn = i18nDescriptions.en,
+                    descriptionEs = i18nDescriptions.es
+                )
                 Result.success(practice)
             } else {
                 // Fallback: try mock data or create fallback
@@ -131,6 +144,74 @@ class PracticeRepository @Inject constructor(
         } catch (e: Exception) {
             Timber.e(e, "Error loading practice $id")
             Result.failure(e)
+        }
+    }
+
+    /**
+     * Data class for multilingual descriptions
+     */
+    private data class I18nDescriptions(
+        val fr: String? = null,
+        val en: String? = null,
+        val es: String? = null
+    )
+
+    /**
+     * Fetch multilingual descriptions from Firestore lessons collection
+     */
+    private suspend fun getMultilingualDescriptions(id: String): I18nDescriptions {
+        return try {
+            val doc = firestore.collection("lessons").document(id).get().await()
+            if (doc.exists()) {
+                I18nDescriptions(
+                    fr = doc.getString("description_fr"),
+                    en = doc.getString("description_en"),
+                    es = doc.getString("description_es")
+                )
+            } else {
+                Timber.d("Lesson document not found in Firestore for id: $id")
+                I18nDescriptions()
+            }
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to fetch multilingual descriptions for $id")
+            I18nDescriptions()
+        }
+    }
+
+    /**
+     * Fetch yoga poses for a lesson from Firestore
+     *
+     * @param lessonId The lesson document ID
+     * @return List of YogaPoseDocument, empty if not a yoga lesson or no poses defined
+     */
+    suspend fun getYogaPoses(lessonId: String): List<YogaPoseDocument> {
+        return try {
+            Timber.d("Fetching yoga poses for lesson: $lessonId")
+
+            val doc = firestore.collection("lessons").document(lessonId).get().await()
+
+            if (!doc.exists()) {
+                Timber.d("Lesson document not found: $lessonId")
+                return emptyList()
+            }
+
+            // Get raw yoga_poses array from Firestore
+            @Suppress("UNCHECKED_CAST")
+            val rawPoses = doc.get("yoga_poses") as? List<Map<String, Any>>
+
+            if (rawPoses.isNullOrEmpty()) {
+                Timber.d("No yoga poses found for lesson: $lessonId")
+                return emptyList()
+            }
+
+            // Convert raw maps to YogaPoseDocument objects
+            val poses = YogaPoseMapper.fromFirestoreList(rawPoses)
+            Timber.d("Loaded ${poses.size} yoga poses for lesson: $lessonId")
+
+            poses
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to fetch yoga poses for lesson: $lessonId")
+            emptyList()
         }
     }
 
@@ -302,8 +383,16 @@ class PracticeRepository @Inject constructor(
      * Converts Room Content entity to Practice domain model
      *
      * @param signedMediaUrl Signed download URL from Firebase Storage (obtained via getSignedDownloadUrl)
+     * @param descriptionFr French description from Firestore (i18n)
+     * @param descriptionEn English description from Firestore (i18n)
+     * @param descriptionEs Spanish description from Firestore (i18n)
      */
-    private fun com.ora.wellbeing.data.local.entities.Content.toPractice(signedMediaUrl: String): Practice {
+    private fun com.ora.wellbeing.data.local.entities.Content.toPractice(
+        signedMediaUrl: String,
+        descriptionFr: String? = null,
+        descriptionEn: String? = null,
+        descriptionEs: String? = null
+    ): Practice {
         // Determine media type based on ContentType
         val mediaType = when (type) {
             com.ora.wellbeing.data.local.entities.ContentType.YOGA -> MediaType.VIDEO
@@ -345,6 +434,9 @@ class PracticeRepository @Inject constructor(
             mediaUrl = signedMediaUrl, // Use signed download URL from Firebase Storage
             thumbnailUrl = thumbnailUrl ?: "",
             tags = tags,
+            descriptionFr = descriptionFr,
+            descriptionEn = descriptionEn,
+            descriptionEs = descriptionEs,
             similarIds = emptyList(), // TODO: Implement similar content recommendations
             downloadable = isOfflineAvailable,
             instructor = instructorName,
