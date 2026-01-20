@@ -68,8 +68,10 @@ class LibraryViewModel @Inject constructor(
                     // Apply all filters
                     val filteredContent = applyFilters(data.allContent, data.category, data.duration, data.query)
 
-                    // Extract unique categories from all content
-                    val categories = data.allContent.map { it.category }.distinct().sorted()
+                    // Extract unique categories from all content (excluding Respiration and Massage)
+                    val categories = data.allContent.map { it.category }.distinct()
+                        .filter { it !in excludedCategories }
+                        .sorted()
 
                     _uiState.value = LibraryUiState(
                         isLoading = false,
@@ -118,6 +120,9 @@ class LibraryViewModel @Inject constructor(
         Timber.d("Filters cleared")
     }
 
+    // Categories to exclude from library display
+    private val excludedCategories = listOf("Respiration", "Massage")
+
     /**
      * Apply all filters to content list
      */
@@ -127,7 +132,8 @@ class LibraryViewModel @Inject constructor(
         duration: String?,
         query: String
     ): List<ContentItem> {
-        var filtered = content
+        // First exclude unwanted categories
+        var filtered = content.filter { it.category !in excludedCategories }
 
         // Filter by category
         if (!category.isNullOrEmpty()) {
@@ -166,6 +172,7 @@ class LibraryViewModel @Inject constructor(
             durationMinutes = durationMinutes,
             instructor = instructor,
             thumbnailUrl = thumbnailUrl ?: "",
+            previewImageUrl = previewImageUrl,
             description = description,
             isPopular = isPopular,
             isNew = isNew,
@@ -213,6 +220,7 @@ data class LibraryUiState(
         val durationMinutes: Int,
         val instructor: String,
         val thumbnailUrl: String,
+        val previewImageUrl: String? = null,
         val description: String = "",
         val isPopular: Boolean = false,
         val isNew: Boolean = false,

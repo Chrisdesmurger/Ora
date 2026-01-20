@@ -31,18 +31,32 @@ object LessonMapper {
      * @return ContentItem for Android app (camelCase)
      */
     fun fromFirestore(id: String, doc: LessonDocument): ContentItem {
-        Timber.d("Mapping lesson from Firestore: id=$id, title=${doc.title}, status=${doc.status}")
 
         return ContentItem().apply {
             this.id = id
-            this.title = doc.title
-            this.description = doc.description ?: ""
-            this.category = mapLessonTypeToCategory(doc.type, doc.tags)
+            // Use i18n title with fallback chain: title_fr -> title_en -> title -> id
+            this.title = doc.title_fr?.takeIf { it.isNotBlank() }
+                ?: doc.title_en?.takeIf { it.isNotBlank() }
+                ?: doc.title.takeIf { it.isNotBlank() }
+                ?: id
+            // Use i18n description with fallback
+            this.description = doc.description_fr?.takeIf { it.isNotBlank() }
+                ?: doc.description_en?.takeIf { it.isNotBlank() }
+                ?: doc.description ?: ""
+            // Use i18n category with fallback
+            this.category = doc.category_fr?.takeIf { it.isNotBlank() }
+                ?: doc.category_en?.takeIf { it.isNotBlank() }
+                ?: mapLessonTypeToCategory(doc.type, doc.tags)
             this.duration = formatDuration(doc.duration_sec)
             this.durationMinutes = (doc.duration_sec ?: 0) / 60
             this.instructor = extractInstructorFromTags(doc.tags)
-            this.thumbnailUrl = doc.thumbnail_url
-            this.previewImageUrl = doc.preview_image_url
+            // Priority: preview_image_url (always valid URL) > thumbnail_url (may be relative path)
+            // Some lessons have thumbnail_url as relative path (media/lessons/.../thumb.jpg) that doesn't exist
+            // preview_image_url is always a complete URL when present
+            val previewUrl = doc.preview_image_url?.takeIf { it.isNotBlank() }
+            val thumbUrl = doc.thumbnail_url?.takeIf { it.isNotBlank() }
+            this.previewImageUrl = toFullUrl(previewUrl ?: thumbUrl)
+            this.thumbnailUrl = toFullUrl(previewUrl ?: thumbUrl)
             // FIX: Use storage_path_original as fallback if renditions not available
             this.videoUrl = extractBestVideoUrl(doc.renditions, doc.storage_path_original, doc.type)
             this.audioUrl = extractBestAudioUrl(doc.audio_variants, doc.storage_path_original, doc.type)
@@ -337,5 +351,28 @@ object LessonMapper {
         // Most lessons are video by default
         // Audio-only lessons should have explicit tags
         return "video"
+    }
+
+    /**
+     * Converts a storage path or URL to a full Firebase Storage URL
+     *
+     * Some lessons have relative paths (e.g., "media/lessons/.../thumb.jpg")
+     * while others have full URLs. This normalizes them all to full URLs.
+     *
+     * @param path Storage path or URL (nullable)
+     * @return Full URL or null if input is null/blank
+     */
+    private fun toFullUrl(path: String?): String? {
+        if (path.isNullOrBlank()) return null
+
+        // Already a full URL
+        if (path.startsWith("http://") || path.startsWith("https://")) {
+            return path
+        }
+
+        // Convert relative path to Firebase Storage URL
+        // Format: https://storage.googleapis.com/BUCKET/PATH
+        val bucket = "ora-wellbeing.firebasestorage.app"
+        return "https://storage.googleapis.com/$bucket/$path"
     }
 }
