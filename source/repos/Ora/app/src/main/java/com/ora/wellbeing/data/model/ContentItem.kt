@@ -2,6 +2,7 @@ package com.ora.wellbeing.data.model
 
 import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.IgnoreExtraProperties
+import com.google.firebase.firestore.PropertyName
 import com.google.firebase.firestore.ServerTimestamp
 import com.google.firebase.Timestamp
 
@@ -27,9 +28,20 @@ class ContentItem() {
     var durationMinutes: Int = 0
     var instructor: String = ""
     var description: String = ""
+    @get:PropertyName("thumbnail_url")
+    @set:PropertyName("thumbnail_url")
     var thumbnailUrl: String? = null
+
+    @get:PropertyName("preview_image_url")
+    @set:PropertyName("preview_image_url")
     var previewImageUrl: String? = null
+
+    @get:PropertyName("video_url")
+    @set:PropertyName("video_url")
     var videoUrl: String? = null
+
+    @get:PropertyName("audio_url")
+    @set:PropertyName("audio_url")
     var audioUrl: String? = null
     var isPremiumOnly: Boolean = false
     var isPopular: Boolean = false
