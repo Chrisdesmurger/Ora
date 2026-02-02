@@ -263,7 +263,9 @@
     <!-- FIX(user-dynamic): Loading et error states -->
     <string name="loading">Chargement...</string>
     <string name="loading_profile">Chargement du profil...</string>
+    <string name="error_title">Erreur</string>
     <string name="error_generic">Une erreur s\'est produite</string>
+    <string name="navigation_back">Retour</string>
     <string name="error_loading_profile">Erreur lors du chargement du profil</string>
     <string name="error_loading_data">Erreur lors du chargement des donnees</string>
     <string name="error_updating_goal">Erreur lors de la mise a jour de l\'objectif</string>
@@ -529,6 +531,11 @@
     <!-- Library Screen -->
     <string name="library_filter_all">Tout</string>
     <string name="library_filter_all_durations">Toutes</string>
+    <string name="library_subcategories">Sous-categories</string>
+    <string name="library_all_content">Tout voir</string>
+    <string name="library_no_content">Aucun contenu disponible</string>
+    <string name="library_no_content_filtered">Aucun contenu pour cette sous-categorie</string>
+    <string name="library_show_all">Voir tout</string>
 
     <!-- Journal Screen -->
     <string name="journal_title">Journal de gratitudes</string>
