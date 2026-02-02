@@ -33,6 +33,24 @@ import com.ora.wellbeing.data.model.ContentItem
 import com.ora.wellbeing.presentation.theme.TitleOrangeDark
 
 /**
+ * Get localized category name based on category ID
+ * Maps category IDs to string resources for i18n support
+ */
+@Composable
+private fun getLocalizedCategoryName(categoryId: String): String {
+    return when (categoryId.lowercase()) {
+        "meditation", "méditation" -> stringResource(R.string.category_meditation)
+        "yoga" -> stringResource(R.string.category_yoga)
+        "pilates" -> stringResource(R.string.category_pilates)
+        "bien-etre", "bien-être", "wellness" -> stringResource(R.string.category_wellness)
+        "respiration", "breathing" -> stringResource(R.string.category_breathing)
+        "sommeil", "sleep" -> stringResource(R.string.category_sleep)
+        "massage" -> stringResource(R.string.category_massage)
+        else -> categoryId // Fallback to raw ID if no mapping found
+    }
+}
+
+/**
  * ContentCategoryDetailScreen
  *
  * Detail screen for a single category (e.g., "Yoga", "Méditation")
@@ -65,7 +83,7 @@ fun ContentCategoryDetailScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = uiState.categoryName,
+                        text = getLocalizedCategoryName(uiState.categoryName),
                         style = MaterialTheme.typography.headlineMedium.copy(
                             fontWeight = FontWeight.Bold
                         ),

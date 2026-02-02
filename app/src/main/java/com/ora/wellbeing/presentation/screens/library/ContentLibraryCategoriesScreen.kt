@@ -9,9 +9,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.ora.wellbeing.R
 import com.ora.wellbeing.presentation.components.CategoryCard
 
 /**
@@ -36,7 +38,7 @@ fun ContentLibraryCategoriesScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Bibliothèque de contenu",
+                        text = stringResource(R.string.library_content_library_title),
                         style = MaterialTheme.typography.headlineMedium.copy(
                             fontWeight = FontWeight.Bold
                         )
@@ -68,13 +70,13 @@ fun ContentLibraryCategoriesScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "Erreur",
+                            text = stringResource(R.string.error_title),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.error
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = uiState.error ?: "Une erreur est survenue",
+                            text = uiState.error ?: stringResource(R.string.library_error_occurred),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -84,7 +86,7 @@ fun ContentLibraryCategoriesScreen(
                 uiState.categories.isEmpty() -> {
                     // Empty state
                     Text(
-                        text = "Aucune catégorie disponible",
+                        text = stringResource(R.string.library_no_categories),
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.align(Alignment.Center)
                     )

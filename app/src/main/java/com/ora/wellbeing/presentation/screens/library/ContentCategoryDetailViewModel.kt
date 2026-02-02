@@ -13,6 +13,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.Locale
 import javax.inject.Inject
 
 /**
@@ -159,7 +160,7 @@ class ContentCategoryDetailViewModel @Inject constructor(
                 .catch { exception ->
                     Timber.e(exception, "Error loading category content: $categoryId")
                     _uiState.value = ContentCategoryDetailUiState(
-                        error = exception.message ?: "Erreur de chargement"
+                        error = exception.message // Let the UI show localized fallback if null
                     )
                 }
                 .collect { allContent ->
@@ -215,7 +216,7 @@ class ContentCategoryDetailViewModel @Inject constructor(
             }
         }
 
-        // Add "Autres" section for content that doesn't match any subcategory
+        // Add "Autres/Others/Otros" section for content that doesn't match any subcategory
         val unassignedContent = allContent.filter { it.id !in assignedContentIds }
         if (unassignedContent.isNotEmpty()) {
             sections.add(
@@ -223,7 +224,7 @@ class ContentCategoryDetailViewModel @Inject constructor(
                     subcategory = SubcategoryItem(
                         id = "autres",
                         parentCategory = categoryId,
-                        name = "Autres"
+                        name = getLocalizedOthersName()
                     ),
                     content = unassignedContent
                 )
@@ -232,6 +233,18 @@ class ContentCategoryDetailViewModel @Inject constructor(
 
         _groupedContent.value = sections
         Timber.d("Grouped content into ${sections.size} sections")
+    }
+
+    /**
+     * Get localized name for "Others" section based on device locale
+     */
+    private fun getLocalizedOthersName(): String {
+        return when (Locale.getDefault().language) {
+            "fr" -> "Autres"
+            "en" -> "Others"
+            "es" -> "Otros"
+            else -> "Autres"
+        }
     }
 }
 

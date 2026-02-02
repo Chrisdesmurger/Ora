@@ -4,6 +4,7 @@ import com.google.firebase.Timestamp
 import com.ora.wellbeing.data.model.ContentItem
 import com.ora.wellbeing.data.model.firestore.LessonDocument
 import timber.log.Timber
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 /**
@@ -28,24 +29,23 @@ object LessonMapper {
      *
      * @param id Firestore document ID
      * @param doc LessonDocument from Firestore (snake_case)
+     * @param languageCode Current language code (fr, en, es) - defaults to device locale
      * @return ContentItem for Android app (camelCase)
      */
-    fun fromFirestore(id: String, doc: LessonDocument): ContentItem {
+    fun fromFirestore(
+        id: String,
+        doc: LessonDocument,
+        languageCode: String = getCurrentLanguageCode()
+    ): ContentItem {
 
         return ContentItem().apply {
             this.id = id
-            // Use i18n title with fallback chain: title_fr -> title_en -> title -> id
-            this.title = doc.title_fr?.takeIf { it.isNotBlank() }
-                ?: doc.title_en?.takeIf { it.isNotBlank() }
-                ?: doc.title.takeIf { it.isNotBlank() }
-                ?: id
-            // Use i18n description with fallback
-            this.description = doc.description_fr?.takeIf { it.isNotBlank() }
-                ?: doc.description_en?.takeIf { it.isNotBlank() }
-                ?: doc.description ?: ""
-            // Use i18n category with fallback
-            this.category = doc.category_fr?.takeIf { it.isNotBlank() }
-                ?: doc.category_en?.takeIf { it.isNotBlank() }
+            // Use i18n title based on device locale with fallback chain
+            this.title = getLocalizedTitle(doc, languageCode).ifBlank { id }
+            // Use i18n description based on device locale
+            this.description = getLocalizedDescription(doc, languageCode)
+            // Use i18n category based on device locale
+            this.category = getLocalizedCategory(doc, languageCode)
                 ?: mapLessonTypeToCategory(doc.type, doc.tags)
             this.duration = formatDuration(doc.duration_sec)
             this.durationMinutes = (doc.duration_sec ?: 0) / 60
@@ -374,5 +374,62 @@ object LessonMapper {
         // Format: https://storage.googleapis.com/BUCKET/PATH
         val bucket = "ora-wellbeing.firebasestorage.app"
         return "https://storage.googleapis.com/$bucket/$path"
+    }
+
+    // ============================================================================
+    // i18n Helpers
+    // ============================================================================
+
+    /**
+     * Get localized title based on device locale
+     * Fallback chain: locale -> FR -> default title
+     */
+    private fun getLocalizedTitle(doc: LessonDocument, languageCode: String): String {
+        return when (languageCode.lowercase()) {
+            "fr" -> doc.title_fr?.takeIf { it.isNotBlank() } ?: doc.title
+            "en" -> doc.title_en?.takeIf { it.isNotBlank() } ?: doc.title_fr ?: doc.title
+            "es" -> doc.title_es?.takeIf { it.isNotBlank() } ?: doc.title_fr ?: doc.title
+            else -> doc.title_fr?.takeIf { it.isNotBlank() } ?: doc.title
+        }.ifBlank { doc.title }
+    }
+
+    /**
+     * Get localized description based on device locale
+     * Fallback chain: locale -> FR -> default description
+     */
+    private fun getLocalizedDescription(doc: LessonDocument, languageCode: String): String {
+        val desc = when (languageCode.lowercase()) {
+            "fr" -> doc.description_fr ?: doc.description
+            "en" -> doc.description_en ?: doc.description_fr ?: doc.description
+            "es" -> doc.description_es ?: doc.description_fr ?: doc.description
+            else -> doc.description_fr ?: doc.description
+        }
+        return desc?.takeIf { it.isNotBlank() } ?: ""
+    }
+
+    /**
+     * Get localized category based on device locale
+     * Fallback chain: locale -> FR -> default category
+     */
+    private fun getLocalizedCategory(doc: LessonDocument, languageCode: String): String? {
+        return when (languageCode.lowercase()) {
+            "fr" -> doc.category_fr?.takeIf { it.isNotBlank() }
+            "en" -> doc.category_en?.takeIf { it.isNotBlank() } ?: doc.category_fr
+            "es" -> doc.category_es?.takeIf { it.isNotBlank() } ?: doc.category_fr
+            else -> doc.category_fr
+        }
+    }
+
+    /**
+     * Get current device language code
+     */
+    private fun getCurrentLanguageCode(): String {
+        val locale = Locale.getDefault().language
+        return when (locale) {
+            "fr" -> "fr"
+            "en" -> "en"
+            "es" -> "es"
+            else -> "fr" // Default to French
+        }
     }
 }

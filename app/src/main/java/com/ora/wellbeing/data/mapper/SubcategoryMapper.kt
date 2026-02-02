@@ -30,14 +30,15 @@ object SubcategoryMapper {
     ): SubcategoryItem {
         return SubcategoryItem(
             id = id.ifBlank { doc.id },
-            parentCategory = doc.parentCategory,
+            // Use 'category' field (new Firestore schema) with fallback to 'parentCategory'
+            parentCategory = doc.category.ifBlank { doc.parentCategory },
             name = getLocalizedName(doc, languageCode),
             description = getLocalizedDescription(doc, languageCode),
             iconUrl = doc.iconUrl,
             imageUrl = doc.imageUrl,
             color = SubcategoryItem.parseColor(doc.color),
             filterTags = doc.filterTags,
-            order = doc.order,
+            order = doc.displayOrder,
             itemCount = doc.itemCount
         )
     }
@@ -68,7 +69,9 @@ object SubcategoryMapper {
     fun fromFirestoreMap(map: Map<String, Any>): SubcategoryDocument {
         return SubcategoryDocument().apply {
             id = map["id"] as? String ?: ""
-            parentCategory = map["parent_category"] as? String ?: ""
+            // Support both "category" (new) and "parent_category" (legacy)
+            category = map["category"] as? String ?: ""
+            parentCategory = map["parent_category"] as? String ?: category
             name = map["name"] as? String ?: ""
             nameFr = map["name_fr"] as? String
             nameEn = map["name_en"] as? String
@@ -81,8 +84,9 @@ object SubcategoryMapper {
             imageUrl = map["image_url"] as? String
             color = map["color"] as? String
             filterTags = (map["filter_tags"] as? List<String>) ?: emptyList()
-            order = (map["order"] as? Number)?.toInt() ?: 0
-            isActive = map["is_active"] as? Boolean ?: true
+            order = (map["order"] as? Number)?.toInt() ?: (map["display_order"] as? Number)?.toInt() ?: 0
+            // Support both "status" (new) and "is_active" (legacy)
+            status = map["status"] as? String ?: if (map["is_active"] as? Boolean != false) "active" else "inactive"
             itemCount = (map["item_count"] as? Number)?.toInt() ?: 0
         }
     }
@@ -117,12 +121,15 @@ object SubcategoryMapper {
      * Get localized name with fallback chain: locale -> FR -> default
      */
     private fun getLocalizedName(doc: SubcategoryDocument, languageCode: String): String {
-        return when (languageCode.lowercase()) {
+        Timber.d("getLocalizedName: lang=$languageCode, nameFr=${doc.nameFr}, nameEn=${doc.nameEn}, nameEs=${doc.nameEs}, name=${doc.name}")
+        val result = when (languageCode.lowercase()) {
             "fr" -> doc.nameFr?.takeIf { it.isNotBlank() } ?: doc.name
-            "en" -> doc.nameEn?.takeIf { it.isNotBlank() } ?: doc.nameFr ?: doc.name
-            "es" -> doc.nameEs?.takeIf { it.isNotBlank() } ?: doc.nameFr ?: doc.name
+            "en" -> doc.nameEn?.takeIf { it.isNotBlank() } ?: doc.nameFr?.takeIf { it.isNotBlank() } ?: doc.name
+            "es" -> doc.nameEs?.takeIf { it.isNotBlank() } ?: doc.nameFr?.takeIf { it.isNotBlank() } ?: doc.name
             else -> doc.nameFr?.takeIf { it.isNotBlank() } ?: doc.name
         }.ifBlank { doc.name }
+        Timber.d("getLocalizedName result: $result")
+        return result
     }
 
     /**

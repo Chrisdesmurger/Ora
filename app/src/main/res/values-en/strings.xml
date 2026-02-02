@@ -177,6 +177,9 @@
     <string name="journal_save">Save</string>
 
     <!-- Library -->
+    <string name="library_content_library_title">Content Library</string>
+    <string name="library_no_categories">No categories available</string>
+    <string name="library_error_occurred">An error occurred</string>
     <string name="library_practices_title">Practices</string>
     <string name="library_meditation_section">Meditation</string>
     <string name="library_yoga_section">Yoga</string>
@@ -527,6 +530,18 @@
     <!-- Library Screen -->
     <string name="library_filter_all">All</string>
     <string name="library_filter_all_durations">All</string>
+    <string name="library_subcategories">Subcategories</string>
+    <string name="library_all_content">See all</string>
+    <string name="library_no_content">No content available</string>
+    <string name="library_no_content_filtered">No content for this subcategory</string>
+    <string name="library_show_all">Show all</string>
+
+    <!-- Actions -->
+    <string name="action_play">Play</string>
+
+    <!-- Error & Navigation -->
+    <string name="error_title">Error</string>
+    <string name="navigation_back">Back</string>
 
     <!-- Journal Screen -->
     <string name="journal_title">Gratitude Journal</string>

@@ -32,11 +32,22 @@ class SubcategoryDocument() {
     var id: String = ""
 
     /**
-     * Parent category ID (e.g., "Meditation", "Yoga", "Pilates", "Bien-etre")
+     * Parent category ID (e.g., "meditation", "yoga", "pilates", "bien-etre")
+     * Note: Firestore uses "category" field (lowercase)
+     */
+    var category: String = ""
+
+    /**
+     * @deprecated Use 'category' instead. Kept for backward compatibility.
      */
     @get:PropertyName("parent_category")
     @set:PropertyName("parent_category")
     var parentCategory: String = ""
+        get() = field.ifBlank { category }
+        set(value) {
+            field = value
+            if (category.isBlank()) category = value
+        }
 
     // ============================================================================
     // Display Information
@@ -139,15 +150,36 @@ class SubcategoryDocument() {
 
     /**
      * Display order (lower values appear first)
+     * Note: Firestore uses "display_order" field
      */
-    var order: Int = 0
+    @get:PropertyName("display_order")
+    @set:PropertyName("display_order")
+    var displayOrder: Int = 0
+
+    /**
+     * Legacy order field (for backward compatibility)
+     */
+    var order: Int
+        get() = displayOrder
+        set(value) { displayOrder = value }
+
+    /**
+     * Subcategory status (e.g., "active", "inactive", "draft")
+     * Firestore uses "status" field as string
+     */
+    var status: String = "active"
 
     /**
      * Whether this subcategory is active/visible
+     * Derived from status field
      */
     @get:PropertyName("is_active")
     @set:PropertyName("is_active")
-    var isActive: Boolean = true
+    var isActive: Boolean
+        get() = status == "active"
+        set(value) {
+            status = if (value) "active" else "inactive"
+        }
 
     /**
      * Number of content items in this subcategory (cached count)

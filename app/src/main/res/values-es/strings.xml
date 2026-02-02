@@ -178,11 +178,28 @@
     <string name="journal_save">Guardar</string>
 
     <!-- Library -->
+    <string name="library_content_library_title">Biblioteca de contenido</string>
+    <string name="library_no_categories">Sin categorías disponibles</string>
+    <string name="library_error_occurred">Se produjo un error</string>
     <string name="library_practices_title">Practicas</string>
     <string name="library_meditation_section">Meditacion</string>
     <string name="library_yoga_section">Yoga</string>
     <string name="library_pilates_section">Pilates</string>
     <string name="library_breathing_section">Respiracion</string>
+    <string name="library_subcategories">Subcategorias</string>
+    <string name="library_all_content">Ver todo</string>
+    <string name="library_no_content">Sin contenido disponible</string>
+    <string name="library_no_content_filtered">Sin contenido para esta subcategoria</string>
+    <string name="library_show_all">Mostrar todo</string>
+
+    <!-- Actions -->
+    <string name="action_play">Reproducir</string>
+
+    <!-- Navigation -->
+    <string name="navigation_back">Volver</string>
+
+    <!-- Errors -->
+    <string name="error_title">Error</string>
 
     <!-- Video -->
     <string name="video_new_badge">NUEVO</string>

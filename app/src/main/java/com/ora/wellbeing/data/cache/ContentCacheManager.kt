@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -158,15 +159,16 @@ class ContentCacheManager @Inject constructor(
             }
         }
 
-        // Add "Autres" section for unassigned content
+        // Add "Autres/Others/Otros" section for unassigned content (localized)
         val unassignedContent = allContent.filter { it.id !in assignedContentIds }
         if (unassignedContent.isNotEmpty()) {
+            val othersSectionName = getLocalizedOthersName()
             sections.add(
                 SubcategorySection(
                     subcategory = SubcategoryItem(
                         id = "autres",
                         parentCategory = categoryId,
-                        name = "Autres"
+                        name = othersSectionName
                     ),
                     content = unassignedContent
                 )
@@ -174,6 +176,18 @@ class ContentCacheManager @Inject constructor(
         }
 
         return sections
+    }
+
+    /**
+     * Get localized name for "Others" section based on device locale
+     */
+    private fun getLocalizedOthersName(): String {
+        return when (Locale.getDefault().language) {
+            "fr" -> "Autres"
+            "en" -> "Others"
+            "es" -> "Otros"
+            else -> "Autres"
+        }
     }
 
     // ========================================================================

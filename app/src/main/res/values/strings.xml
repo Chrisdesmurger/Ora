@@ -178,6 +178,9 @@
     <string name="journal_save">Sauvegarder</string>
 
     <!-- Library -->
+    <string name="library_content_library_title">Bibliothèque de contenu</string>
+    <string name="library_no_categories">Aucune catégorie disponible</string>
+    <string name="library_error_occurred">Une erreur est survenue</string>
     <string name="library_practices_title">Pratiques</string>
     <string name="library_meditation_section">Meditation</string>
     <string name="library_yoga_section">Yoga</string>
