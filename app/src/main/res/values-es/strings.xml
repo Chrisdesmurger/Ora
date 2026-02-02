@@ -1,0 +1,594 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Ora</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Inicio</string>
+    <string name="nav_search">Buscar</string>
+    <string name="nav_library">Biblioteca</string>
+    <string name="nav_journal">Diario</string>
+    <string name="nav_profile">Perfil</string>
+    <string name="nav_programs">Programas</string>
+
+    <!-- FIX(user-dynamic): Dynamic strings with placeholders -->
+    <string name="greeting_user">Hola %1$s!</string>
+    <string name="greeting_guest">Invitado</string>
+    <string name="streak_days">%1$d dias seguidos!</string>
+    <string name="plan_tier_label">Plan: %1$s</string>
+    <string name="premium_badge">PREMIUM</string>
+
+    <!-- Profile -->
+    <string name="profile_motto_default">Cuido de mi cada dia</string>
+    <string name="profile_last_activity">Ultima actividad:</string>
+    <string name="profile_practice_time_title">MI TIEMPO POR PRACTICA</string>
+    <string name="profile_gratitudes_title">GRATITUDES</string>
+    <string name="profile_goals_title">OBJETIVOS</string>
+    <string name="profile_gratitude_completed">Completado</string>
+    <string name="profile_gratitude_today">Hoy</string>
+    <string name="profile_streak_label">seguidos</string>
+    <string name="profile_total_time_label">en total</string>
+    <string name="profile_no_activity">Sin actividad reciente</string>
+
+    <!-- FIX(profile-edit): Profile Edit Screen -->
+    <string name="profile_edit_title">Editar perfil</string>
+    <string name="profile_edit_section_personal">Informacion personal</string>
+    <string name="profile_edit_section_preferences">Preferencias</string>
+    <string name="profile_edit_section_account">Cuenta</string>
+    <string name="profile_edit_first_name">Nombre</string>
+    <string name="profile_edit_first_name_required">Nombre *</string>
+    <string name="profile_edit_first_name_placeholder">Tu nombre</string>
+    <string name="profile_edit_last_name">Apellido</string>
+    <string name="profile_edit_last_name_required">Apellido *</string>
+    <string name="profile_edit_last_name_placeholder">Tu apellido</string>
+    <string name="profile_edit_email">Email</string>
+    <string name="profile_edit_bio">Lema</string>
+    <string name="profile_edit_bio_placeholder">Tu lema personal...</string>
+    <string name="profile_edit_gender">Genero</string>
+    <string name="profile_edit_gender_placeholder">Seleccionar</string>
+    <string name="profile_edit_gender_female">Mujer</string>
+    <string name="profile_edit_gender_male">Hombre</string>
+    <string name="profile_edit_gender_other">Otro</string>
+    <string name="profile_edit_gender_prefer_not_say">Prefiero no decir</string>
+    <string name="profile_edit_language">Idioma</string>
+    <string name="profile_edit_language_french">Francais</string>
+    <string name="profile_edit_language_english">English</string>
+    <string name="profile_edit_language_spanish">Espanol</string>
+    <string name="profile_edit_notifications">Notificaciones</string>
+    <string name="profile_edit_notifications_desc">Recibir recordatorios diarios</string>
+    <string name="profile_edit_evening_reminder">Recordatorio nocturno</string>
+    <string name="profile_edit_evening_reminder_desc">Recordatorio para el diario de gratitud</string>
+    <string name="profile_edit_photo_alt">Foto de perfil</string>
+    <string name="profile_edit_photo_placeholder">Foto de perfil predeterminada</string>
+    <string name="profile_edit_photo_edit">Cambiar foto</string>
+    <string name="profile_edit_required_fields">* Campos obligatorios</string>
+    <string name="profile_edit_loading">Cargando perfil...</string>
+    <string name="profile_edit_saving">Guardando...</string>
+    <string name="profile_edit_upload_progress">%1$d%%</string>
+    <string name="profile_edit_sign_out">Cerrar sesion</string>
+    <string name="profile_edit_email_preferences">Preferencias de email</string>
+    <string name="profile_edit_email_preferences_desc">Gestiona tus notificaciones por email</string>
+
+    <!-- FIX(profile-edit): Validation Errors -->
+    <string name="profile_edit_error_first_name_required">El nombre es obligatorio</string>
+    <string name="profile_edit_error_first_name_too_short">El nombre debe tener al menos 2 caracteres</string>
+    <string name="profile_edit_error_first_name_too_long">El nombre no puede exceder 50 caracteres</string>
+    <string name="profile_edit_error_first_name_invalid">El nombre solo puede contener letras, espacios y guiones</string>
+    <string name="profile_edit_error_last_name_required">El apellido es obligatorio</string>
+    <string name="profile_edit_error_last_name_too_short">El apellido debe tener al menos 2 caracteres</string>
+    <string name="profile_edit_error_last_name_too_long">El apellido no puede exceder 50 caracteres</string>
+    <string name="profile_edit_error_last_name_invalid">El apellido solo puede contener letras, espacios y guiones</string>
+    <string name="profile_edit_error_bio_too_long">El lema no puede exceder 200 caracteres</string>
+    <string name="profile_edit_error_validation_failed">Por favor corrija los errores antes de guardar</string>
+    <string name="profile_edit_error_not_authenticated">Usuario no conectado</string>
+    <string name="profile_edit_error_load_profile">No se puede cargar el perfil</string>
+    <string name="profile_edit_error_upload_photo">Error al subir la foto</string>
+    <string name="profile_edit_error_save_profile">Error al guardar</string>
+
+    <!-- FIX(profile-edit): Success Messages -->
+    <string name="profile_edit_success_saved">Perfil actualizado con exito</string>
+    <string name="profile_edit_success_photo_uploaded">Foto actualizada con exito</string>
+
+    <!-- FIX(profile-edit): Unsaved Changes Dialog -->
+    <string name="profile_edit_unsaved_title">Cambios no guardados</string>
+    <string name="profile_edit_unsaved_message">Desea guardar los cambios antes de salir?</string>
+    <string name="profile_edit_unsaved_save">Guardar</string>
+    <string name="profile_edit_unsaved_discard">Descartar</string>
+    <string name="profile_edit_unsaved_cancel">Cancelar</string>
+
+    <!-- Email Preferences (Issue #55) -->
+    <string name="email_prefs_title">Preferencias de email</string>
+    <string name="email_prefs_section_transactional">Emails transaccionales</string>
+    <string name="email_prefs_section_transactional_desc">Emails esenciales para tu cuenta</string>
+    <string name="email_prefs_section_engagement">Emails de compromiso</string>
+    <string name="email_prefs_section_engagement_desc">Sigue tu progreso y logros</string>
+    <string name="email_prefs_section_marketing">Emails de marketing</string>
+    <string name="email_prefs_section_marketing_desc">Nuevo contenido y recomendaciones</string>
+    <string name="email_prefs_section_digest">Resumen</string>
+    <string name="email_prefs_section_digest_desc">Resumen de tu actividad</string>
+    <string name="email_prefs_section_language">Idioma de los emails</string>
+    <string name="email_prefs_section_language_desc">Elige el idioma de tus emails</string>
+    <string name="email_prefs_welcome">Emails de bienvenida</string>
+    <string name="email_prefs_welcome_desc">Enviados despues del registro (siempre activos)</string>
+    <string name="email_prefs_engagement">Notificaciones de compromiso</string>
+    <string name="email_prefs_engagement_desc">Primera sesion, programa completado</string>
+    <string name="email_prefs_streak">Hitos de racha</string>
+    <string name="email_prefs_streak_desc">Celebra tus rachas de dias consecutivos</string>
+    <string name="email_prefs_marketing">Nuevo contenido</string>
+    <string name="email_prefs_marketing_desc">Nuevas sesiones y recomendaciones</string>
+    <string name="email_prefs_weekly_digest">Resumen semanal</string>
+    <string name="email_prefs_weekly_digest_desc">Resumen de tu semana cada domingo</string>
+    <string name="email_prefs_language_fr">Francais</string>
+    <string name="email_prefs_language_en">English</string>
+    <string name="email_prefs_language_es">Espanol</string>
+    <string name="email_prefs_always_enabled">Siempre activo</string>
+    <string name="email_prefs_syncing">Sincronizando...</string>
+    <string name="email_prefs_saved">Preferencias guardadas</string>
+    <string name="email_prefs_error_loading">Error al cargar las preferencias</string>
+    <string name="email_prefs_error_saving">Error al guardar</string>
+
+    <!-- FIX(user-dynamic): Formatted stats -->
+    <string name="stats_days_count">%1$d dias</string>
+    <string name="stats_time_hours_minutes">%1$dh%2$02d</string>
+    <string name="stats_time_minutes">%1$dmin</string>
+    <string name="stats_this_month">%1$s este mes</string>
+
+    <!-- Home Screen -->
+    <string name="home_suggestion_title">Tu sugerencia del dia</string>
+    <string name="home_get_started">Comenzar</string>
+    <string name="home_quick_sessions_title">Sesiones rapidas</string>
+    <string name="home_recommendations_title">Recomendaciones del dia</string>
+    <string name="home_active_programs_title">Programas activos</string>
+    <string name="home_weekly_stats_title">Esta semana</string>
+    <string name="home_stats_total_time">Tiempo total</string>
+    <string name="home_stats_sessions">Sesiones</string>
+    <string name="home_stats_favorite">Favorito</string>
+
+    <!-- FIX(user-dynamic): Program progress -->
+    <string name="program_day_progress">Dia %1$d de %2$d</string>
+    <string name="program_progress_percentage">%1$d%%</string>
+
+    <!-- Categories -->
+    <string name="category_yoga">Yoga</string>
+    <string name="category_pilates">Pilates</string>
+    <string name="category_meditation">Meditacion</string>
+    <string name="category_breathing">Respiracion</string>
+    <string name="category_sleep">Sueno</string>
+    <string name="category_massage">Masaje</string>
+    <string name="category_wellness">Bienestar</string>
+
+    <!-- Moods -->
+    <string name="mood_happy">Feliz</string>
+    <string name="mood_calm">Tranquilo</string>
+    <string name="mood_tired">Cansado</string>
+    <string name="mood_stressed">Estresado</string>
+    <string name="mood_energized">Energizado</string>
+    <string name="mood_peaceful">Paz</string>
+
+    <!-- Journal -->
+    <string name="journal_gratitudes_title">3 gratitudes del dia</string>
+    <string name="journal_feeling_placeholder">Escribe como te sientes hoy...</string>
+    <string name="journal_tracker_title">Mi seguidor de habitos</string>
+    <string name="journal_detail_title">Diario Diario</string>
+    <string name="journal_mood_question">Como te sientes hoy?</string>
+    <string name="journal_story_question">Que quieres contar hoy?</string>
+    <string name="journal_gratitude_question">Hoy, estoy agradecido(a) por...</string>
+    <string name="journal_accomplishments">Mis logros</string>
+    <string name="journal_improvements">Para mejorar</string>
+    <string name="journal_learning_question">Que aprendi hoy?</string>
+    <string name="journal_save">Guardar</string>
+
+    <!-- Library -->
+    <string name="library_practices_title">Practicas</string>
+    <string name="library_meditation_section">Meditacion</string>
+    <string name="library_yoga_section">Yoga</string>
+    <string name="library_pilates_section">Pilates</string>
+    <string name="library_breathing_section">Respiracion</string>
+
+    <!-- Video -->
+    <string name="video_new_badge">NUEVO</string>
+    <string name="video_play">Reproducir</string>
+
+    <!-- Practice Detail -->
+    <string name="practice_start_session">Comenzar la sesion</string>
+    <string name="practice_add_to_program">Agregar al programa</string>
+    <string name="practice_personal_notes">Notas personales</string>
+    <string name="practice_similar_sessions">Sesiones similares</string>
+    <string name="practice_duration_format">%1$d min</string>
+    <string name="practice_level_format">Nivel: %1$s</string>
+    <string name="practice_download_offline">Descargar para uso sin conexion</string>
+    <string name="practice_downloading">Descargando %1$d%%</string>
+    <string name="practice_downloaded">Descargado</string>
+    <string name="practice_with_instructor">Con %1$s</string>
+    <string name="practice_benefits_title">Beneficios</string>
+    <string name="practice_ambient_sound">Sonido ambiente</string>
+    <string name="practice_volume_format">Volumen: %1$d%%</string>
+    <string name="practice_crossfade">Transicion suave (crossfade)</string>
+    <string name="practice_choose_ambient">Elegir un ambiente</string>
+    <string name="practice_notes_dialog_title">Notas personales</string>
+    <string name="practice_notes_placeholder">Escribe tus notas aqui...</string>
+    <string name="practice_in_progress">En progreso...</string>
+
+    <!-- Player Screen -->
+    <string name="player_loading">Cargando reproductor...</string>
+    <string name="player_error">Error al cargar</string>
+    <string name="player_error_unknown">Error desconocido</string>
+    <string name="player_retry">Reintentar</string>
+    <string name="player_back">Volver</string>
+    <string name="player_minimize">Minimizar</string>
+    <string name="player_expand">Ampliar</string>
+    <string name="player_fullscreen">Pantalla completa</string>
+    <string name="player_exit_fullscreen">Salir de pantalla completa</string>
+    <string name="player_close">Cerrar reproductor</string>
+    <string name="player_play">Reproducir</string>
+    <string name="player_pause">Pausa</string>
+    <string name="player_seek_forward">Avanzar 15 segundos</string>
+    <string name="player_seek_backward">Retroceder 15 segundos</string>
+    <string name="player_speed">Velocidad de reproduccion</string>
+    <string name="player_speed_0_5x">0.5x</string>
+    <string name="player_speed_0_75x">0.75x</string>
+    <string name="player_speed_1x">1x (Normal)</string>
+    <string name="player_speed_1_25x">1.25x</string>
+    <string name="player_speed_1_5x">1.5x</string>
+    <string name="player_speed_2x">2x</string>
+    <string name="player_repeat_mode">Modo de repeticion</string>
+    <string name="player_repeat_off">Desactivado</string>
+    <string name="player_repeat_one">Una vez</string>
+    <string name="player_repeat_all">Infinito</string>
+    <string name="player_advanced_controls">Controles avanzados</string>
+    <string name="player_session_info">Informacion de sesion</string>
+    <string name="player_discipline">Disciplina</string>
+    <string name="player_level">Nivel</string>
+    <string name="player_planned_duration">Duracion planificada</string>
+    <string name="player_elapsed_time">Tiempo transcurrido</string>
+    <string name="player_network_error">Sin conexion de red</string>
+    <string name="player_buffering">Cargando...</string>
+    <string name="player_pip_mode">Modo Picture-in-Picture</string>
+    <string name="player_audio_focus_lost">Reproduccion interrumpida</string>
+    <string name="player_related_practices">Practicas similares</string>
+
+    <!-- Mini Player -->
+    <string name="mini_player_expand">Expandir reproductor</string>
+    <string name="mini_player_close">Cerrar</string>
+
+    <!-- Moods (original - kept for compatibility) -->
+    <string name="mood_good">Bien</string>
+    <string name="mood_neutral">Neutral</string>
+    <string name="mood_sad">Triste</string>
+
+    <!-- Notifications -->
+    <string name="notification_evening_title">Ora - Momento de reflexion</string>
+    <string name="notification_channel_name">Recordatorios nocturnos</string>
+    <string name="notification_channel_description">Notificaciones para recordatorios nocturnos</string>
+
+    <!-- FIX(user-dynamic): Loading and error states -->
+    <string name="loading">Cargando...</string>
+    <string name="loading_profile">Cargando perfil...</string>
+    <string name="error_generic">Se produjo un error</string>
+    <string name="error_loading_profile">Error al cargar el perfil</string>
+    <string name="error_loading_data">Error al cargar los datos</string>
+    <string name="error_updating_goal">Error al actualizar el objetivo</string>
+    <string name="error_updating_motto">Error al actualizar el lema</string>
+    <string name="error_updating_photo">Error al actualizar la foto</string>
+    <string name="error_offline">Estas sin conexion</string>
+
+    <!-- ViewModel Errors -->
+    <string name="error_must_login_home">Debes iniciar sesion para ver el inicio</string>
+    <string name="error_must_login_programs">Debes iniciar sesion para ver los programas</string>
+    <string name="error_must_login">Debes iniciar sesion</string>
+    <string name="error_loading_home">Error al cargar el inicio: %1$s</string>
+    <string name="error_loading_library">Error al cargar la biblioteca: %1$s</string>
+    <string name="error_loading_programs">Error al cargar los programas: %1$s</string>
+    <string name="error_enrollment">Error al inscribirse: %1$s</string>
+    <string name="error_leaving_program">Error al abandonar el programa: %1$s</string>
+    <string name="error_program_not_found">Programa no encontrado</string>
+
+    <!-- Session Fallbacks -->
+    <string name="session_untitled">Sesion sin titulo</string>
+    <string name="session_discover">Descubre esta sesion</string>
+    <string name="duration_default">10 min</string>
+    <string name="duration_10_15_min">10-15 min</string>
+    <string name="program_active">Programa activo</string>
+    <string name="program_session_format">Sesion %1$d</string>
+    <string name="program_unknown">Programa desconocido</string>
+
+    <!-- Plan Tiers -->
+    <string name="plan_free">Gratuito</string>
+    <string name="plan_premium">Premium</string>
+    <string name="plan_lifetime">Lifetime</string>
+
+    <!-- Program Duration Formatting -->
+    <string name="duration_1_day">1 dia</string>
+    <string name="duration_days">%1$d dias</string>
+    <string name="duration_1_week">1 semana</string>
+    <string name="duration_weeks">%1$d semanas</string>
+
+    <!-- Common -->
+    <string name="common_retry">Reintentar</string>
+    <string name="common_back">Volver</string>
+    <string name="common_save">Guardar</string>
+    <string name="common_cancel">Cancelar</string>
+    <string name="common_edit">Editar</string>
+    <string name="common_delete">Eliminar</string>
+    <string name="common_confirm">Confirmar</string>
+    <string name="common_continue">Continuar</string>
+    <string name="common_or">O</string>
+    <string name="common_start">Comenzar</string>
+    <string name="common_previous">Anterior</string>
+    <string name="common_next">Siguiente</string>
+    <string name="common_finish">Terminar</string>
+    <string name="common_ok">OK</string>
+    <string name="content_desc_previous">Anterior</string>
+    <string name="content_desc_next">Siguiente</string>
+    <string name="content_desc_complete">Completar</string>
+    <string name="content_desc_selected">Seleccionado</string>
+    <string name="content_desc_time">Tiempo</string>
+    <string name="common_days_unit">dias</string>
+    <string name="common_select_date">Seleccionar una fecha</string>
+    <string name="common_select">Seleccionar</string>
+
+    <!-- Onboarding -->
+    <string name="splash_tagline">Respira. Brilla.</string>
+    <string name="onboarding_welcome_title">Bienvenido a ORA</string>
+    <string name="onboarding_welcome_message">Aqui puedes desacelerar, liberar la presion, volver a centrarte... Estas en el lugar correcto.</string>
+    <string name="onboarding_welcome_cta">Crear mi espacio ORA</string>
+    <string name="onboarding_welcome_login">Ya tengo una cuenta</string>
+
+    <!-- Transition Screen -->
+    <string name="onboarding_transition_title">Tu espacio ORA se esta creando contigo</string>
+    <string name="onboarding_transition_subtitle">2 minutos para conocerte...</string>
+    <string name="onboarding_transition_button">Personalizar mi experiencia</string>
+
+    <!-- Email Collection Screen -->
+    <string name="onboarding_email_title">Antes de comenzar tu viaje...</string>
+    <string name="auth_email_label">Email</string>
+    <string name="auth_email_hint">tu@email.com</string>
+    <string name="auth_password_label">Contrasena</string>
+    <string name="auth_password_hint">Minimo 6 caracteres</string>
+    <string name="auth_hide_password">Ocultar contrasena</string>
+    <string name="auth_show_password">Mostrar contrasena</string>
+    <string name="auth_continue_with_google">Continuar con Google</string>
+    <string name="auth_terms_disclaimer">Al crear una cuenta, aceptas nuestros terminos de uso y politica de privacidad.</string>
+
+    <!-- Questionnaire Intro Screen -->
+    <string name="onboarding_questionnaire_intro_title">Conozcamonos</string>
+    <string name="onboarding_questionnaire_intro_subtitle">Responde con tu corazon. No hay respuestas correctas o incorrectas.</string>
+
+    <!-- Onboarding Screen -->
+    <string name="onboarding_question_progress">Pregunta %1$d de %2$d</string>
+    <string name="onboarding_question_required">* Esta pregunta es obligatoria</string>
+    <string name="onboarding_your_answer_placeholder">Tu respuesta</string>
+    <string name="onboarding_character_count">%1$d / %2$d caracteres</string>
+    <string name="onboarding_error_load_config">No se puede cargar el cuestionario</string>
+    <string name="onboarding_preparing">Preparando tu cuestionario...</string>
+
+    <!-- Accessibility -->
+    <string name="accessibility_decrement">Decrementar</string>
+    <string name="accessibility_increment">Incrementar</string>
+
+    <!-- Onboarding Celebration Screen -->
+    <string name="onboarding_celebration_title">Bienvenido a Ora!</string>
+    <string name="onboarding_celebration_subtitle">Gracias por completar el cuestionario!\nTu recorrido personalizado esta listo.</string>
+    <string name="onboarding_feature_personalized_title">Contenido personalizado</string>
+    <string name="onboarding_feature_personalized_desc">Recomendaciones adaptadas a tus objetivos</string>
+    <string name="onboarding_feature_tracking_title">Seguimiento de progreso</string>
+    <string name="onboarding_feature_tracking_desc">Visualiza tu evolucion dia a dia</string>
+    <string name="onboarding_feature_programs_title">Programas guiados</string>
+    <string name="onboarding_feature_programs_desc">Rutas estructuradas para alcanzar tus objetivos</string>
+    <string name="onboarding_start_journey">Comenzar mi viaje</string>
+
+    <!-- Onboarding ViewModel Errors -->
+    <string name="error_must_be_authenticated">Debes iniciar sesion</string>
+    <string name="error_config_not_loaded">Configuracion no cargada</string>
+    <string name="error_load_questionnaire">No se puede cargar el cuestionario: %1$s</string>
+    <string name="error_save_onboarding">Error al guardar: %1$s</string>
+    <string name="onboarding_error_load_config_with_reason">No se puede cargar el cuestionario: %1$s</string>
+
+    <!-- Auth -->
+    <string name="app_tagline">Cuerpo - Mente - Alma</string>
+    <string name="auth_subtitle">Tu companero de bienestar</string>
+    <string name="auth_create_account">Crear una cuenta</string>
+    <string name="auth_sign_in">Iniciar sesion</string>
+    <string name="auth_create_my_account">Crear mi cuenta</string>
+    <string name="auth_already_have_account">Ya tienes una cuenta? Iniciar sesion</string>
+    <string name="auth_no_account_yet">No tienes cuenta? Registrarse</string>
+
+    <!-- Home Screen - Additional -->
+    <string name="home_personalized_title">Pensado para ti</string>
+    <string name="home_personalized_description">Basado en tus objetivos y preferencias</string>
+    <string name="home_personalized_empty_message">Completa tu perfil para recibir recomendaciones personalizadas</string>
+    <string name="home_daily_need_title">Tu necesidad del dia</string>
+    <string name="home_daily_need_description">Elige segun tu estado</string>
+    <string name="home_subtitle">Sigue programas estructurados para desarrollar tus habitos de bienestar</string>
+    <string name="home_coming_soon">Proximamente</string>
+    <string name="home_continue_program">Continuar</string>
+
+    <!-- Library - Additional -->
+    <string name="library_search_placeholder">Buscar contenido...</string>
+    <string name="library_filter_category">Categorias</string>
+    <string name="library_filter_duration">Duracion</string>
+    <string name="library_filter_level">Nivel</string>
+    <string name="library_sort_popular">Popular</string>
+    <string name="library_sort_recent">Recientes</string>
+    <string name="library_badge_new">NUEVO</string>
+    <string name="library_content_count">%1$s contenidos</string>
+
+    <!-- Programs - Additional -->
+    <string name="programs_title">Programas y Desafios</string>
+    <string name="programs_active_title">Tus programas activos</string>
+    <string name="programs_browse_title">Explorar programas</string>
+    <string name="programs_participants">%1$d participantes</string>
+    <string name="programs_duration">%1$d dias</string>
+    <string name="programs_continue">Continuar</string>
+    <string name="programs_start">Comenzar</string>
+
+    <!-- Journal - Additional -->
+    <string name="journal_recent_entries">Entradas recientes</string>
+    <string name="journal_streak_current">%1$d dia(s) seguidos</string>
+    <string name="journal_total_entries">Total de entradas</string>
+    <string name="journal_current_streak">Racha actual</string>
+
+    <!-- Daily Needs -->
+    <string name="daily_need_anti_stress">Anti-estres</string>
+    <string name="daily_need_morning_energy">Energia matutina</string>
+    <string name="daily_need_relaxation">Relajacion</string>
+    <string name="daily_need_evening_practice">Practica nocturna</string>
+
+    <!-- Difficulty Levels -->
+    <string name="difficulty_beginner">Principiante</string>
+    <string name="difficulty_intermediate">Intermedio</string>
+    <string name="difficulty_advanced">Avanzado</string>
+    <string name="difficulty_all_levels">Todos los niveles</string>
+
+    <!-- Quick Sessions -->
+    <string name="session_breathing">Respiracion Tranquila</string>
+    <string name="session_flash_yoga">Flash Yoga</string>
+    <string name="session_meditation">Mini Meditacion</string>
+    <string name="session_self_massage">Auto-masaje</string>
+
+    <!-- Meditation Player -->
+    <string name="meditation_preparing">Preparando tu meditacion...</string>
+    <string name="meditation_night_mode">Modo nocturno</string>
+    <string name="meditation_breathing_ready">Listo</string>
+    <string name="meditation_breathing_inhale">Inhala</string>
+    <string name="meditation_breathing_hold_in">Manten</string>
+    <string name="meditation_breathing_exhale">Exhala</string>
+    <string name="meditation_breathing_hold_out">Pausa</string>
+    <string name="meditation_phase_indicator">Fase %1$d/%2$d - %3$s</string>
+    <string name="meditation_ambient_sounds">Sonidos ambientales</string>
+    <string name="meditation_ambient_rain">Lluvia</string>
+    <string name="meditation_ambient_forest">Bosque</string>
+    <string name="meditation_ambient_ocean">Oceano</string>
+    <string name="meditation_ambient_fire">Fuego</string>
+    <string name="meditation_ambient_silence">Silencio</string>
+
+    <!-- Yoga Player -->
+    <string name="yoga_preparing">Preparando tu sesion...</string>
+    <string name="yoga_error_loading">Error de carga</string>
+    <string name="yoga_mirror_mode">Modo espejo</string>
+    <string name="yoga_mirror_label">Espejo</string>
+    <string name="yoga_fullscreen">Pantalla completa</string>
+    <string name="yoga_side_none"></string>
+    <string name="yoga_side_left">Lado Izquierdo</string>
+    <string name="yoga_side_right">Lado Derecho</string>
+    <string name="yoga_next_pose">Proxima postura</string>
+    <string name="yoga_pose_number">Postura %1$d/%2$d</string>
+    <string name="yoga_previous_pose">Postura anterior</string>
+    <string name="yoga_next_pose_button">Postura siguiente</string>
+    <string name="yoga_rewind_10s">Retroceder 10s</string>
+    <string name="yoga_forward_10s">Adelantar 10s</string>
+    <string name="yoga_switch_side">Cambiar de lado</string>
+    <string name="yoga_chapter_warmup">Calentamiento</string>
+    <string name="yoga_chapter_sun_salutation">Saludo al Sol</string>
+    <string name="yoga_chapter_standing_poses">Posturas de Pie</string>
+    <string name="yoga_chapter_floor_poses">Posturas en el Suelo</string>
+    <string name="yoga_chapter_relaxation">Relajacion</string>
+
+    <!-- Massage Player -->
+    <string name="massage_preparing">Preparando tu sesion...</string>
+    <string name="massage_body_map">Mapa corporal</string>
+    <string name="massage_zone_neck">Cuello</string>
+    <string name="massage_zone_shoulders">Hombros</string>
+    <string name="massage_zone_back">Espalda</string>
+    <string name="massage_zone_arms">Brazos</string>
+    <string name="massage_zone_hands">Manos</string>
+    <string name="massage_repetition">Repeticion %1$d/%2$d</string>
+    <string name="massage_pressure">Presion</string>
+    <string name="massage_pressure_recommended">Recomendada: %1$s</string>
+    <string name="massage_pressure_low">Ligera</string>
+    <string name="massage_pressure_medium">Media</string>
+    <string name="massage_pressure_high">Fuerte</string>
+
+    <!-- Onboarding Categories -->
+    <string name="onboarding_category_goals">Objetivos</string>
+    <string name="onboarding_category_experience">Experiencia</string>
+    <string name="onboarding_category_preferences">Preferencias</string>
+    <string name="onboarding_category_personalization">Personalizacion</string>
+    <string name="onboarding_category_information">Informacion</string>
+    <string name="massage_zones_completed">Zonas completadas: %1$d/%2$d</string>
+    <string name="massage_zone_previous">Zona anterior</string>
+    <string name="massage_zone_next">Zona siguiente</string>
+    <string name="massage_zone_repeat">Repetir</string>
+    <string name="massage_zone_complete">Completar zona</string>
+    <string name="massage_instruction_neck_1">Coloca tus dedos en la base del craneo</string>
+    <string name="massage_instruction_neck_2">Realiza movimientos circulares</string>
+    <string name="massage_instruction_neck_3">Desciende gradualmente hacia los hombros</string>
+    <string name="massage_instruction_shoulders_1">Amasa el trapecio con el pulgar</string>
+    <string name="massage_instruction_shoulders_2">Alterna presion y liberacion</string>
+    <string name="massage_instruction_shoulders_3">Trabaja ambos lados</string>
+    <string name="massage_instruction_back_1">Usa una pelota de masaje</string>
+    <string name="massage_instruction_back_2">Rueda a lo largo de la columna</string>
+    <string name="massage_instruction_back_3">Insiste en los puntos de tension</string>
+    <string name="massage_instruction_arms_1">Masajea desde el hombro hasta la muneca</string>
+    <string name="massage_instruction_arms_2">Insiste en el antebrazo</string>
+    <string name="massage_instruction_arms_3">Estira los dedos</string>
+    <string name="massage_instruction_hands_1">Masajea la palma con el pulgar</string>
+    <string name="massage_instruction_hands_2">Estira cada dedo</string>
+    <string name="massage_instruction_hands_3">Termina con la muneca</string>
+
+    <!-- Library Screen -->
+    <string name="library_filter_all">Todo</string>
+    <string name="library_filter_all_durations">Todas</string>
+
+    <!-- Journal Screen -->
+    <string name="journal_title">Diario de gratitud</string>
+    <string name="journal_today">Hoy</string>
+    <string name="journal_gratitude_prompt">Tomate un momento para anotar tus gratitudes de hoy</string>
+    <string name="journal_mood_label">Estado de animo: %1$s</string>
+    <string name="journal_gratitude_reminder_title">Momento de gratitud</string>
+    <string name="journal_gratitude_reminder_message">Anota 3 cosas por las que estas agradecido(a)</string>
+    <string name="journal_and_more">y %1$d otro%2$s...</string>
+    <string name="journal_stats_title">Tus estadisticas</string>
+    <string name="journal_this_month">Este mes</string>
+
+    <!-- Programs Screen -->
+    <string name="programs_subtitle">Sigue programas estructurados para desarrollar tus habitos de bienestar</string>
+    <string name="programs_recommended_title">Recomendados para ti</string>
+    <string name="programs_popular_challenges">Desafios populares</string>
+
+    <!-- Profile Screen -->
+    <string name="profile_hi">Hola,</string>
+    <string name="profile_current_month">Mes actual</string>
+    <string name="profile_my">Mis</string>
+    <string name="profile_statistics">Estadisticas</string>
+    <string name="profile_challenge">Desafio</string>
+    <string name="profile_in_progress">en progreso</string>
+    <string name="profile_completed_workouts">entrenamientos\ncompletados</string>
+    <string name="profile_challenges_in_progress">desafios\nen progreso</string>
+    <string name="profile_completed_challenges">desafios\ncompletados</string>
+    <string name="profile_favorite_workouts">Entrenamientos Favoritos</string>
+    <string name="profile_favorite_challenges">Desafios Favoritos</string>
+
+    <!-- Data Model Constants -->
+    <string name="internal_category_meditation">Meditacion</string>
+    <string name="internal_category_yoga">Yoga</string>
+    <string name="internal_category_breathing">Respiracion</string>
+    <string name="internal_category_pilates">Pilates</string>
+    <string name="internal_category_wellness">Bienestar</string>
+    <string name="internal_category_sleep">Sueno</string>
+    <string name="internal_category_challenges">Desafios</string>
+
+    <!-- Daily Journal Entry Screen -->
+    <string name="journal_entry_title">Diario del %1$s</string>
+    <string name="journal_entry_delete">Eliminar</string>
+    <string name="journal_entry_cancel">Cancelar</string>
+    <string name="journal_entry_save">Guardar</string>
+    <string name="journal_entry_mood_title">Estado de animo del dia</string>
+    <string name="journal_entry_note_title">Anota unas palabras</string>
+    <string name="journal_entry_note_count">%1$d/200</string>
+    <string name="journal_entry_note_placeholder">Resumen rapido de tu dia...</string>
+    <string name="journal_entry_story_title">Que quieres contar sobre hoy?</string>
+    <string name="journal_entry_story_count">%1$d/2000</string>
+    <string name="journal_entry_story_placeholder">Cuenta tu dia en detalle...</string>
+    <string name="journal_entry_gratitude_title">Hoy, estoy agradecido(a) por...</string>
+    <string name="journal_entry_gratitude_number">%1$d.</string>
+    <string name="journal_entry_gratitude_placeholder">Tu gratitud...</string>
+    <string name="journal_entry_accomplishments_title">Hoy, he logrado...</string>
+    <string name="journal_entry_accomplishment_placeholder">Un logro...</string>
+    <string name="journal_entry_add_accomplishment">Agregar un logro</string>
+    <string name="journal_entry_improvements_title">Que puedo mejorar para manana?</string>
+    <string name="journal_entry_improvement_placeholder">Un punto a mejorar...</string>
+    <string name="journal_entry_learning_title">Que aprendi hoy?</string>
+    <string name="journal_entry_learning_count">%1$d/1000</string>
+    <string name="journal_entry_learning_placeholder">Tus aprendizajes del dia...</string>
+    <string name="journal_entry_reminder">Recuerdamelo manana</string>
+</resources>
