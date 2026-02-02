@@ -28,38 +28,24 @@ object LessonMapper {
      *
      * @param id Firestore document ID
      * @param doc LessonDocument from Firestore (snake_case)
+     * @param userLocale User's locale (e.g., "fr", "en", "es") - defaults to system locale
      * @return ContentItem for Android app (camelCase)
      */
-    fun fromFirestore(id: String, doc: LessonDocument): ContentItem {
+    fun fromFirestore(id: String, doc: LessonDocument, userLocale: String = java.util.Locale.getDefault().language): ContentItem {
+        Timber.d("Mapping lesson from Firestore: id=$id, title=${doc.title}, status=${doc.status}, locale=$userLocale")
 
         return ContentItem().apply {
             this.id = id
-            // Use i18n title with fallback chain: title_fr -> title_en -> title -> id
-            this.title = doc.title_fr?.takeIf { it.isNotBlank() }
-                ?: doc.title_en?.takeIf { it.isNotBlank() }
-                ?: doc.title.takeIf { it.isNotBlank() }
-                ?: id
-            // Use i18n description with fallback
-            this.description = doc.description_fr?.takeIf { it.isNotBlank() }
-                ?: doc.description_en?.takeIf { it.isNotBlank() }
-                ?: doc.description ?: ""
-            // Use i18n category with fallback
-            this.category = doc.category_fr?.takeIf { it.isNotBlank() }
-                ?: doc.category_en?.takeIf { it.isNotBlank() }
-                ?: mapLessonTypeToCategory(doc.type, doc.tags)
+            this.title = getLocalizedTitle(doc, userLocale)
+            this.description = getLocalizedDescription(doc, userLocale)
+            this.category = getLocalizedCategory(doc, userLocale)
             this.duration = formatDuration(doc.duration_sec)
             this.durationMinutes = (doc.duration_sec ?: 0) / 60
             this.instructor = extractInstructorFromTags(doc.tags)
-            // Priority: preview_image_url (always valid URL) > thumbnail_url (may be relative path)
-            // Some lessons have thumbnail_url as relative path (media/lessons/.../thumb.jpg) that doesn't exist
-            // preview_image_url is always a complete URL when present
-            val previewUrl = doc.preview_image_url?.takeIf { it.isNotBlank() }
-            val thumbUrl = doc.thumbnail_url?.takeIf { it.isNotBlank() }
-            this.previewImageUrl = toFullUrl(previewUrl ?: thumbUrl)
-            this.thumbnailUrl = toFullUrl(previewUrl ?: thumbUrl)
-            // FIX: Use storage_path_original as fallback if renditions not available
-            this.videoUrl = extractBestVideoUrl(doc.renditions, doc.storage_path_original, doc.type)
-            this.audioUrl = extractBestAudioUrl(doc.audio_variants, doc.storage_path_original, doc.type)
+            this.thumbnailUrl = doc.thumbnail_url
+            this.previewImageUrl = doc.preview_image_url
+            this.videoUrl = extractBestVideoUrl(doc.renditions)
+            this.audioUrl = extractBestAudioUrl(doc.audio_variants)
             this.isPremiumOnly = false // TODO: Determine from program settings
             this.isPopular = false // TODO: Calculate from usage stats
             this.isNew = isRecent(doc.created_at as? Timestamp)
@@ -81,94 +67,72 @@ object LessonMapper {
 
     /**
      * Extracts the best quality video path from renditions
-     * Priority: high > medium > low > storage_path_original
+     * Priority: high > medium > low
      *
      * Returns the Firebase Storage path, which will be converted to a signed download URL
      * by PracticeRepository when loading the practice for playback.
      *
-     * FIX: Added fallback to storage_path_original for lessons without processed renditions
-     *
      * @param renditions Map of video quality variants
-     * @param storagePathOriginal Original file path (fallback)
-     * @param type Lesson type ("video" or "audio")
-     * @return Storage path string or null if no video available
+     * @return Storage path string or null if no renditions available
      */
-    private fun extractBestVideoUrl(
-        renditions: Map<String, Map<String, Any>>?,
-        storagePathOriginal: String?,
-        type: String
-    ): String? {
-        // Try renditions first (processed, optimized files)
-        if (renditions != null) {
-            val path = renditions["high"]?.get("path") as? String
-                ?: renditions["medium"]?.get("path") as? String
-                ?: renditions["low"]?.get("path") as? String
-
-            if (path != null) {
-                Timber.d("✅ Extracted video path from renditions: quality=${when {
-                    path == renditions["high"]?.get("path") -> "high"
-                    path == renditions["medium"]?.get("path") -> "medium"
-                    path == renditions["low"]?.get("path") -> "low"
-                    else -> "unknown"
-                }}, path=$path")
-                return path
-            }
+    private fun extractBestVideoUrl(renditions: Map<String, Map<String, Any>>?): String? {
+        if (renditions == null) {
+            Timber.w("No video renditions available")
+            return null
         }
 
-        // Fallback: Use original file if it's a video lesson
-        if (type == "video" && !storagePathOriginal.isNullOrBlank()) {
-            Timber.d("⚠️ No renditions, using storage_path_original: $storagePathOriginal")
-            return storagePathOriginal
+        val path = renditions["high"]?.get("path") as? String
+            ?: renditions["medium"]?.get("path") as? String
+            ?: renditions["low"]?.get("path") as? String
+
+        if (path == null) {
+            Timber.w("No video path found in renditions")
+            return null
         }
 
-        Timber.w("❌ No video path available (renditions=null, original=${storagePathOriginal ?: "null"})")
-        return null
+        Timber.d("Extracted video path: quality=${when {
+            path == renditions["high"]?.get("path") -> "high"
+            path == renditions["medium"]?.get("path") -> "medium"
+            path == renditions["low"]?.get("path") -> "low"
+            else -> "none"
+        }}, path=$path")
+
+        return path
     }
 
     /**
      * Extracts the best quality audio path from audio variants
-     * Priority: high > medium > low > storage_path_original
+     * Priority: high > medium > low
      *
      * Returns the Firebase Storage path, which will be converted to a signed download URL
      * by PracticeRepository when loading the practice for playback.
      *
-     * FIX: Added fallback to storage_path_original for lessons without processed audio variants
-     *
      * @param audioVariants Map of audio quality variants
-     * @param storagePathOriginal Original file path (fallback)
-     * @param type Lesson type ("video" or "audio")
-     * @return Storage path string or null if no audio available
+     * @return Storage path string or null if no variants available
      */
-    private fun extractBestAudioUrl(
-        audioVariants: Map<String, Map<String, Any>>?,
-        storagePathOriginal: String?,
-        type: String
-    ): String? {
-        // Try audio variants first (processed, optimized files)
-        if (audioVariants != null) {
-            val path = audioVariants["high"]?.get("path") as? String
-                ?: audioVariants["medium"]?.get("path") as? String
-                ?: audioVariants["low"]?.get("path") as? String
-
-            if (path != null) {
-                Timber.d("✅ Extracted audio path from variants: quality=${when {
-                    path == audioVariants["high"]?.get("path") -> "high"
-                    path == audioVariants["medium"]?.get("path") -> "medium"
-                    path == audioVariants["low"]?.get("path") -> "low"
-                    else -> "unknown"
-                }}, path=$path")
-                return path
-            }
+    private fun extractBestAudioUrl(audioVariants: Map<String, Map<String, Any>>?): String? {
+        if (audioVariants == null) {
+            Timber.w("No audio variants available")
+            return null
         }
 
-        // Fallback: Use original file if it's an audio lesson
-        if (type == "audio" && !storagePathOriginal.isNullOrBlank()) {
-            Timber.d("⚠️ No audio variants, using storage_path_original: $storagePathOriginal")
-            return storagePathOriginal
+        val path = audioVariants["high"]?.get("path") as? String
+            ?: audioVariants["medium"]?.get("path") as? String
+            ?: audioVariants["low"]?.get("path") as? String
+
+        if (path == null) {
+            Timber.w("No audio path found in variants")
+            return null
         }
 
-        Timber.d("ℹ️ No audio path available for type=$type (this is normal for video-only lessons)")
-        return null
+        Timber.d("Extracted audio path: quality=${when {
+            path == audioVariants["high"]?.get("path") -> "high"
+            path == audioVariants["medium"]?.get("path") -> "medium"
+            path == audioVariants["low"]?.get("path") -> "low"
+            else -> "none"
+        }}, path=$path")
+
+        return path
     }
 
     /**
@@ -353,26 +317,59 @@ object LessonMapper {
         return "video"
     }
 
+    // ============================================================================
+    // i18n Helper Functions (Issue #39 - Phase 2)
+    // ============================================================================
+
     /**
-     * Converts a storage path or URL to a full Firebase Storage URL
+     * Gets localized title based on user's locale
+     * Priority: locale-specific field > fallback title
      *
-     * Some lessons have relative paths (e.g., "media/lessons/.../thumb.jpg")
-     * while others have full URLs. This normalizes them all to full URLs.
-     *
-     * @param path Storage path or URL (nullable)
-     * @return Full URL or null if input is null/blank
+     * @param doc LessonDocument from Firestore
+     * @param locale User's locale (fr, en, es)
+     * @return Localized title
      */
-    private fun toFullUrl(path: String?): String? {
-        if (path.isNullOrBlank()) return null
-
-        // Already a full URL
-        if (path.startsWith("http://") || path.startsWith("https://")) {
-            return path
+    private fun getLocalizedTitle(doc: LessonDocument, locale: String): String {
+        return when (locale.lowercase()) {
+            "fr" -> doc.title_fr ?: doc.title
+            "en" -> doc.title_en ?: doc.title
+            "es" -> doc.title_es ?: doc.title
+            else -> doc.title  // Fallback to default title
         }
+    }
 
-        // Convert relative path to Firebase Storage URL
-        // Format: https://storage.googleapis.com/BUCKET/PATH
-        val bucket = "ora-wellbeing.firebasestorage.app"
-        return "https://storage.googleapis.com/$bucket/$path"
+    /**
+     * Gets localized description based on user's locale
+     *
+     * @param doc LessonDocument from Firestore
+     * @param locale User's locale (fr, en, es)
+     * @return Localized description
+     */
+    private fun getLocalizedDescription(doc: LessonDocument, locale: String): String {
+        val localized = when (locale.lowercase()) {
+            "fr" -> doc.description_fr
+            "en" -> doc.description_en
+            "es" -> doc.description_es
+            else -> null
+        }
+        return localized ?: doc.description ?: ""
+    }
+
+    /**
+     * Gets localized category based on user's locale
+     * Falls back to mapping from tags if no localized category exists
+     *
+     * @param doc LessonDocument from Firestore
+     * @param locale User's locale (fr, en, es)
+     * @return Localized category
+     */
+    private fun getLocalizedCategory(doc: LessonDocument, locale: String): String {
+        val localized = when (locale.lowercase()) {
+            "fr" -> doc.category_fr
+            "en" -> doc.category_en
+            "es" -> doc.category_es
+            else -> null
+        }
+        return localized ?: mapLessonTypeToCategory(doc.type, doc.tags)
     }
 }

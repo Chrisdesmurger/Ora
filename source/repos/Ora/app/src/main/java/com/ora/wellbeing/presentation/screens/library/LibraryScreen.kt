@@ -11,14 +11,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
-import coil.compose.rememberAsyncImagePainter
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -396,132 +390,79 @@ private fun ContentCard(
 ) {
     Card(
         onClick = onClick,
-        modifier = modifier
-            .height(180.dp),
-        shape = RoundedCornerShape(12.dp),
+        modifier = modifier,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp,
-            pressedElevation = 4.dp
         )
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Background image - use first non-blank URL
-            val imageUrl = content.previewImageUrl?.takeIf { it.isNotBlank() }
-                ?: content.thumbnailUrl.takeIf { it.isNotBlank() }
-            if (!imageUrl.isNullOrBlank()) {
-                Image(
-                    painter = rememberAsyncImagePainter(model = imageUrl),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                // Placeholder color if no image
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.surfaceVariant
-                ) {}
-            }
-
-            // Dark gradient overlay for text readability
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black.copy(alpha = 0.7f)
-                            ),
-                            startY = 0f,
-                            endY = Float.POSITIVE_INFINITY
+        Box {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                // Badge NOUVEAU si nécessaire
+                if (showNewBadge) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.primary,
+                        shape = MaterialTheme.shapes.small,
+                        modifier = Modifier.align(Alignment.Start)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.library_badge_new),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
-                    )
-            )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
 
-            // Badge NOUVEAU (top right)
-            if (showNewBadge) {
+                // Badge catégorie
                 Surface(
-                    color = MaterialTheme.colorScheme.primary,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp)
+                    color = getCategoryColor(content.category).copy(alpha = 0.3f),
+                    shape = MaterialTheme.shapes.small
                 ) {
                     Text(
-                        text = stringResource(R.string.library_badge_new),
+                        text = content.category,
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color.White,
+                        color = Color(0xFF6B4E3D),
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
-            }
 
-            // Duration badge (top left)
-            Surface(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(8.dp),
-                shape = RoundedCornerShape(12.dp),
-                color = Color.Black.copy(alpha = 0.6f)
-            ) {
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = content.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color(0xFF6B4E3D)
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
                 Row(
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         imageVector = Icons.Default.Schedule,
                         contentDescription = null,
-                        modifier = Modifier.size(12.dp),
-                        tint = Color.White
+                        modifier = Modifier.size(16.dp),
+                        tint = Color(0xFF6B4E3D).copy(alpha = 0.6f)
                     )
+
                     Spacer(modifier = Modifier.width(4.dp))
+
                     Text(
                         text = content.duration,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF6B4E3D).copy(alpha = 0.6f)
                     )
                 }
-            }
-
-            // Content info (bottom)
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(12.dp)
-            ) {
-                // Category badge
-                Surface(
-                    color = getCategoryColor(content.category).copy(alpha = 0.9f),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        text = content.category,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = content.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.White,
-                    maxLines = 2
-                )
 
                 if (content.instructor.isNotEmpty()) {
                     Text(
                         text = stringResource(R.string.practice_with_instructor, content.instructor),
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.8f)
+                        color = Color(0xFF6B4E3D).copy(alpha = 0.6f)
                     )
                 }
             }
