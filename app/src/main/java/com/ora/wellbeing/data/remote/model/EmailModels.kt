@@ -19,6 +19,18 @@ enum class EmailType {
     @SerializedName("streak_reminder")
     STREAK_REMINDER,
 
+    @SerializedName("streak_milestone")
+    STREAK_MILESTONE,
+
+    @SerializedName("program_complete")
+    PROGRAM_COMPLETE,
+
+    @SerializedName("first_completion")
+    FIRST_COMPLETION,
+
+    @SerializedName("first_journal_entry")
+    FIRST_JOURNAL_ENTRY,
+
     @SerializedName("achievement_unlocked")
     ACHIEVEMENT_UNLOCKED,
 
