@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -54,14 +55,10 @@ class ContentLibraryCategoriesViewModel @Inject constructor(
             // Update item counts from content repository
             val categoriesWithCounts = categories.map { category ->
                 try {
-                    val count = contentRepository.getContentByCategory(category.id)
+                    val content = contentRepository.getContentByCategory(category.id)
                         .catch { emit(emptyList()) }
-                        .let { flow ->
-                            var itemCount = 0
-                            flow.collect { items -> itemCount = items.size }
-                            itemCount
-                        }
-                    category.copy(itemCount = count)
+                        .first() // Use first() to get single emission, not collect()
+                    category.copy(itemCount = content.size)
                 } catch (e: Exception) {
                     Timber.e(e, "Error getting count for ${category.id}")
                     category
