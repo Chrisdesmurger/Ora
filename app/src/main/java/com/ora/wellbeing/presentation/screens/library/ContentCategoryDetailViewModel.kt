@@ -3,6 +3,8 @@ package com.ora.wellbeing.presentation.screens.library
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ora.wellbeing.data.cache.ContentCacheManager
+import com.ora.wellbeing.data.cache.SubcategorySection
 import com.ora.wellbeing.data.model.ContentItem
 import com.ora.wellbeing.data.model.SubcategoryItem
 import com.ora.wellbeing.data.repository.SubcategoryRepository
@@ -18,7 +20,7 @@ import javax.inject.Inject
  *
  * Manages the state for a single category detail screen
  * Handles:
- * - Loading content for a specific category
+ * - Loading content for a specific category (from cache or repository)
  * - Loading subcategories from Firestore (managed via OraWebApp)
  * - Grouping content by subcategory for vertical sections
  *
@@ -26,11 +28,16 @@ import javax.inject.Inject
  * - Subcategories displayed as SECTION HEADERS (vertical scroll)
  * - Content cards scroll HORIZONTALLY under each section
  * - Managed from OraWebApp admin portal
+ *
+ * Performance:
+ * - Uses ContentCacheManager for instant loading if data was preloaded
+ * - Falls back to repository loading if not cached
  */
 @HiltViewModel
 class ContentCategoryDetailViewModel @Inject constructor(
     private val contentRepository: ContentRepository,
     private val subcategoryRepository: SubcategoryRepository,
+    private val contentCacheManager: ContentCacheManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -48,8 +55,76 @@ class ContentCategoryDetailViewModel @Inject constructor(
     val uiState: StateFlow<ContentCategoryDetailUiState> = _uiState.asStateFlow()
 
     init {
-        loadSubcategories()
-        loadCategoryContent()
+        loadData()
+    }
+
+    /**
+     * Load data - first check cache, then fall back to repository
+     */
+    private fun loadData() {
+        // Try to use cached data first for instant display
+        val cachedGrouped = contentCacheManager.getCachedGroupedContent(categoryId)
+        val cachedSubcategories = contentCacheManager.getCachedSubcategories(categoryId)
+        val cachedContent = contentCacheManager.getCachedContent(categoryId)
+
+        if (cachedGrouped != null && cachedSubcategories != null && cachedContent != null) {
+            // Use cached data - instant display!
+            Timber.d("Using cached data for $categoryId (${cachedGrouped.size} sections)")
+
+            _subcategories.value = cachedSubcategories
+            _groupedContent.value = cachedGrouped
+            _uiState.value = ContentCategoryDetailUiState(
+                categoryName = categoryId,
+                allContent = cachedContent,
+                totalContentCount = cachedContent.size,
+                isLoading = false
+            )
+
+            // Optionally refresh in background for fresh data
+            refreshDataInBackground()
+        } else {
+            // No cache - load from repository
+            Timber.d("No cache for $categoryId, loading from repository")
+            loadSubcategories()
+            loadCategoryContent()
+        }
+    }
+
+    /**
+     * Refresh data in background without blocking UI
+     * Updates cache when done
+     */
+    private fun refreshDataInBackground() {
+        viewModelScope.launch {
+            try {
+                // Load fresh subcategories
+                val freshSubcategories = subcategoryRepository.getSubcategoriesForCategory(categoryId)
+                    .catch { emit(emptyList()) }
+                    .first()
+                    .ifEmpty { subcategoryRepository.getDefaultSubcategories(categoryId) }
+
+                // Load fresh content
+                val freshContent = contentRepository.getContentByCategory(categoryId)
+                    .catch { emit(emptyList()) }
+                    .first()
+
+                // Only update if data changed
+                if (freshSubcategories != _subcategories.value || freshContent != _uiState.value.allContent) {
+                    _subcategories.value = freshSubcategories
+                    _uiState.value = _uiState.value.copy(
+                        allContent = freshContent,
+                        totalContentCount = freshContent.size
+                    )
+                    groupContentBySubcategory()
+
+                    // Update cache
+                    contentCacheManager.updateCache(categoryId, freshSubcategories, freshContent)
+                    Timber.d("Background refresh updated data for $categoryId")
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error during background refresh for $categoryId")
+            }
+        }
     }
 
     /**
@@ -96,6 +171,9 @@ class ContentCategoryDetailViewModel @Inject constructor(
                     )
                     // Group content by subcategory
                     groupContentBySubcategory()
+
+                    // Update cache with fresh data
+                    contentCacheManager.updateCache(categoryId, _subcategories.value, allContent)
                 }
         }
     }
@@ -166,13 +244,4 @@ data class ContentCategoryDetailUiState(
     val totalContentCount: Int = 0,
     val isLoading: Boolean = true,
     val error: String? = null
-)
-
-/**
- * Represents a section in the category detail screen
- * Each section has a subcategory header and horizontally scrolling content
- */
-data class SubcategorySection(
-    val subcategory: SubcategoryItem,
-    val content: List<ContentItem>
 )
