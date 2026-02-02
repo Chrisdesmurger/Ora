@@ -95,14 +95,14 @@ fun CategoryCard(
                     .padding(20.dp)
             )
 
-            // Optional item count badge
+            // Item count badge (bottom left)
             if (category.itemCount > 0) {
                 Surface(
                     modifier = Modifier
-                        .align(Alignment.TopEnd)
+                        .align(Alignment.BottomStart)
                         .padding(12.dp),
                     shape = RoundedCornerShape(12.dp),
-                    color = Color.White.copy(alpha = 0.3f)
+                    color = Color.Black.copy(alpha = 0.4f)
                 ) {
                     Text(
                         text = stringResource(R.string.library_content_count, category.itemCount),
@@ -110,7 +110,7 @@ fun CategoryCard(
                             color = Color.White,
                             fontWeight = FontWeight.Medium
                         ),
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                     )
                 }
             }
