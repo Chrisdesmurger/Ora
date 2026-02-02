@@ -3,14 +3,14 @@ package com.ora.wellbeing.presentation.screens.library
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -29,21 +29,25 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.ora.wellbeing.R
 import com.ora.wellbeing.data.model.ContentItem
-import com.ora.wellbeing.data.model.SubcategoryItem
-import com.ora.wellbeing.presentation.components.SubcategoryCard
 import com.ora.wellbeing.presentation.theme.TitleOrangeDark
 
 /**
  * ContentCategoryDetailScreen
  *
- * Detail screen for a single category (e.g., "Méditation")
- * Displays:
- * - Category title with back navigation
- * - Horizontal scrollable CARDS for subcategories (managed via OraWebApp)
- * - 2-column grid of content items
+ * Detail screen for a single category (e.g., "Yoga", "Méditation")
  *
- * Subcategories are visual cards that scroll horizontally,
- * managed from the OraWebApp admin portal.
+ * Layout:
+ * - Category title with back navigation
+ * - Vertical scrolling list of subcategory SECTIONS
+ * - Each section has a title (subcategory name) and horizontal scrolling content cards
+ *
+ * Content cards feature:
+ * - Background image with gradient overlay
+ * - Duration badge (top left)
+ * - Play button (center)
+ * - Title (bottom)
+ *
+ * Subcategories are managed from the OraWebApp admin portal.
  */
 @Composable
 fun ContentCategoryDetailScreen(
@@ -53,29 +57,19 @@ fun ContentCategoryDetailScreen(
     viewModel: ContentCategoryDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val subcategories by viewModel.subcategories.collectAsState()
-    val selectedSubcategory by viewModel.selectedSubcategory.collectAsState()
+    val groupedContent by viewModel.groupedContent.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Column {
-                        Text(
-                            text = uiState.categoryName,
-                            style = MaterialTheme.typography.headlineMedium.copy(
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = TitleOrangeDark
-                        )
-                        if (uiState.totalContentCount > 0) {
-                            Text(
-                                text = "${uiState.allContent.size} / ${uiState.totalContentCount} contenus",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
+                    Text(
+                        text = uiState.categoryName,
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = TitleOrangeDark
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
@@ -122,73 +116,40 @@ fun ContentCategoryDetailScreen(
                     }
                 }
 
-                else -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize()
+                groupedContent.isEmpty() && !uiState.isLoading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        // Subcategory cards section (horizontal scroll)
-                        if (subcategories.isNotEmpty()) {
-                            SubcategoriesSection(
-                                subcategories = subcategories,
-                                selectedSubcategory = selectedSubcategory,
-                                onSubcategoryClick = { viewModel.onSubcategorySelect(it) },
-                                onClearFilter = { viewModel.clearFilter() }
-                            )
+                        Text(
+                            text = stringResource(R.string.library_no_content),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
 
-                            Divider(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                else -> {
+                    // Vertical list of subcategory sections
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(vertical = 8.dp)
+                    ) {
+                        items(
+                            items = groupedContent,
+                            key = { it.subcategory.id }
+                        ) { section ->
+                            SubcategorySectionRow(
+                                section = section,
+                                onContentClick = onContentClick
                             )
                         }
 
-                        // Content grid
-                        if (uiState.allContent.isEmpty()) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(32.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = if (selectedSubcategory != null) {
-                                            stringResource(R.string.library_no_content_filtered)
-                                        } else {
-                                            stringResource(R.string.library_no_content)
-                                        },
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    if (selectedSubcategory != null) {
-                                        Spacer(modifier = Modifier.height(16.dp))
-                                        TextButton(onClick = { viewModel.clearFilter() }) {
-                                            Text(stringResource(R.string.library_show_all))
-                                        }
-                                    }
-                                }
-                            }
-                        } else {
-                            LazyVerticalGrid(
-                                columns = GridCells.Fixed(2),
-                                modifier = Modifier.fillMaxSize(),
-                                contentPadding = PaddingValues(16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                items(
-                                    items = uiState.allContent,
-                                    key = { it.id }
-                                ) { content ->
-                                    ContentGridCard(
-                                        content = content,
-                                        onClick = { onContentClick(content.id) }
-                                    )
-                                }
-                            }
+                        // Bottom spacing
+                        item {
+                            Spacer(modifier = Modifier.height(16.dp))
                         }
                     }
                 }
@@ -198,69 +159,40 @@ fun ContentCategoryDetailScreen(
 }
 
 /**
- * Subcategories section with horizontal scrolling cards
+ * A subcategory section with title and horizontal scrolling content
  */
 @Composable
-private fun SubcategoriesSection(
-    subcategories: List<SubcategoryItem>,
-    selectedSubcategory: SubcategoryItem?,
-    onSubcategoryClick: (SubcategoryItem?) -> Unit,
-    onClearFilter: () -> Unit
+private fun SubcategorySectionRow(
+    section: SubcategorySection,
+    onContentClick: (String) -> Unit
 ) {
     Column(
-        modifier = Modifier.padding(vertical = 12.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
     ) {
-        // Section title
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(R.string.library_subcategories),
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = TitleOrangeDark
-            )
-            if (selectedSubcategory != null) {
-                TextButton(
-                    onClick = onClearFilter,
-                    contentPadding = PaddingValues(horizontal = 8.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.library_show_all),
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                }
-            }
-        }
+        // Section title (subcategory name)
+        Text(
+            text = section.subcategory.name,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = TitleOrangeDark,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
 
-        // Horizontal scrolling subcategory cards
+        // Horizontal scrolling content cards
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // "All" card (first position)
-            item {
-                AllSubcategoryCard(
-                    isSelected = selectedSubcategory == null,
-                    onClick = onClearFilter,
-                    totalCount = subcategories.sumOf { it.itemCount }
-                )
-            }
-
-            // Subcategory cards
             items(
-                items = subcategories,
+                items = section.content,
                 key = { it.id }
-            ) { subcategory ->
-                SubcategoryCard(
-                    subcategory = subcategory,
-                    onClick = { onSubcategoryClick(subcategory) },
-                    isSelected = selectedSubcategory?.id == subcategory.id
+            ) { content ->
+                ContentHorizontalCard(
+                    content = content,
+                    onClick = { onContentClick(content.id) }
                 )
             }
         }
@@ -268,88 +200,17 @@ private fun SubcategoriesSection(
 }
 
 /**
- * "All" card shown first in subcategory row
+ * Content card for horizontal scroll display
+ *
+ * Design:
+ * - Background image with gradient overlay
+ * - Duration badge (top left)
+ * - Play button (center)
+ * - Title (bottom left)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AllSubcategoryCard(
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    totalCount: Int,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        onClick = onClick,
-        modifier = modifier
-            .width(140.dp)
-            .height(100.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) {
-                MaterialTheme.colorScheme.primaryContainer
-            } else {
-                MaterialTheme.colorScheme.surfaceVariant
-            }
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isSelected) 8.dp else 2.dp
-        ),
-        border = if (isSelected) {
-            androidx.compose.foundation.BorderStroke(
-                width = 2.dp,
-                color = MaterialTheme.colorScheme.primary
-            )
-        } else null
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp)
-        ) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                // Count badge
-                if (totalCount > 0) {
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                        modifier = Modifier.align(Alignment.End)
-                    ) {
-                        Text(
-                            text = "$totalCount",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                Text(
-                    text = stringResource(R.string.library_all_content),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = if (isSelected) {
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    }
-                )
-            }
-        }
-    }
-}
-
-/**
- * Content card for the grid (with image)
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ContentGridCard(
+private fun ContentHorizontalCard(
     content: ContentItem,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -357,10 +218,10 @@ private fun ContentGridCard(
     Card(
         onClick = onClick,
         modifier = modifier
-            .fillMaxWidth()
-            .height(160.dp),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            .width(180.dp)
+            .height(220.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             // Background image
@@ -375,7 +236,7 @@ private fun ContentGridCard(
                     contentScale = ContentScale.Crop
                 )
 
-                // Gradient overlay
+                // Gradient overlay for text readability
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -383,12 +244,14 @@ private fun ContentGridCard(
                             brush = Brush.verticalGradient(
                                 colors = listOf(
                                     Color.Transparent,
-                                    Color.Black.copy(alpha = 0.7f)
-                                )
+                                    Color.Black.copy(alpha = 0.6f)
+                                ),
+                                startY = 100f
                             )
                         )
                 )
             } else {
+                // Fallback background
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.surfaceVariant
@@ -399,7 +262,7 @@ private fun ContentGridCard(
             Surface(
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .padding(8.dp),
+                    .padding(10.dp),
                 shape = RoundedCornerShape(8.dp),
                 color = Color.Black.copy(alpha = 0.6f)
             ) {
@@ -407,21 +270,43 @@ private fun ContentGridCard(
                     text = content.duration,
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.White,
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                 )
             }
 
-            // Content info (bottom)
+            // Play button (center)
+            Surface(
+                modifier = Modifier
+                    .size(48.dp)
+                    .align(Alignment.Center),
+                shape = CircleShape,
+                color = Color.White
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.PlayArrow,
+                        contentDescription = stringResource(R.string.action_play),
+                        tint = Color.Black,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            }
+
+            // Title (bottom)
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .padding(10.dp)
+                    .padding(12.dp)
             ) {
                 Text(
                     text = content.title,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
-                    color = if (imageUrl != null) Color.White else MaterialTheme.colorScheme.onSurface,
+                    color = Color.White,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -430,11 +315,7 @@ private fun ContentGridCard(
                     Text(
                         text = content.instructor,
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (imageUrl != null) {
-                            Color.White.copy(alpha = 0.8f)
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        },
+                        color = Color.White.copy(alpha = 0.8f),
                         maxLines = 1
                     )
                 }

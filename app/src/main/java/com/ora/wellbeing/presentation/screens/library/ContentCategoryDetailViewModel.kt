@@ -20,10 +20,12 @@ import javax.inject.Inject
  * Handles:
  * - Loading content for a specific category
  * - Loading subcategories from Firestore (managed via OraWebApp)
- * - Filtering by subcategory
+ * - Grouping content by subcategory for vertical sections
  *
- * Subcategories are displayed as horizontal scrolling cards
- * and are managed from the OraWebApp admin portal.
+ * Layout:
+ * - Subcategories displayed as SECTION HEADERS (vertical scroll)
+ * - Content cards scroll HORIZONTALLY under each section
+ * - Managed from OraWebApp admin portal
  */
 @HiltViewModel
 class ContentCategoryDetailViewModel @Inject constructor(
@@ -34,17 +36,13 @@ class ContentCategoryDetailViewModel @Inject constructor(
 
     private val categoryId: String = savedStateHandle.get<String>("categoryId") ?: ""
 
-    // Selected subcategory for filtering
-    private val _selectedSubcategory = MutableStateFlow<SubcategoryItem?>(null)
-    val selectedSubcategory: StateFlow<SubcategoryItem?> = _selectedSubcategory.asStateFlow()
-
     // Subcategories from Firestore (managed via OraWebApp)
     private val _subcategories = MutableStateFlow<List<SubcategoryItem>>(emptyList())
     val subcategories: StateFlow<List<SubcategoryItem>> = _subcategories.asStateFlow()
 
-    // Legacy: tag-based subcategories (fallback)
-    private val _availableSubcategories = MutableStateFlow<List<String>>(emptyList())
-    val availableSubcategories: StateFlow<List<String>> = _availableSubcategories.asStateFlow()
+    // Content grouped by subcategory
+    private val _groupedContent = MutableStateFlow<List<SubcategorySection>>(emptyList())
+    val groupedContent: StateFlow<List<SubcategorySection>> = _groupedContent.asStateFlow()
 
     private val _uiState = MutableStateFlow(ContentCategoryDetailUiState())
     val uiState: StateFlow<ContentCategoryDetailUiState> = _uiState.asStateFlow()
@@ -74,6 +72,8 @@ class ContentCategoryDetailViewModel @Inject constructor(
                         _subcategories.value = defaults
                         Timber.d("Using ${defaults.size} default subcategories")
                     }
+                    // Re-group content when subcategories change
+                    groupContentBySubcategory()
                 }
         }
     }
@@ -87,86 +87,73 @@ class ContentCategoryDetailViewModel @Inject constructor(
                         error = exception.message ?: "Erreur de chargement"
                     )
                 }
-                .combine(_selectedSubcategory) { allContent, selectedSub ->
-                    // Extract unique tags from all content (for legacy chip display)
-                    val uniqueTags = allContent
-                        .flatMap { it.tags }
-                        .distinct()
-                        .sorted()
-                    _availableSubcategories.value = uniqueTags
-
-                    // Filter content based on selected subcategory
-                    val filteredContent = if (selectedSub != null) {
-                        // Filter by subcategory's filter_tags
-                        allContent.filter { content ->
-                            content.tags.any { tag ->
-                                selectedSub.filterTags.any { filterTag ->
-                                    tag.equals(filterTag, ignoreCase = true)
-                                }
-                            }
-                        }
-                    } else {
-                        allContent
-                    }
-
-                    ContentCategoryDetailUiState(
+                .collect { allContent ->
+                    _uiState.value = ContentCategoryDetailUiState(
                         categoryName = categoryId,
-                        allContent = filteredContent,
+                        allContent = allContent,
                         totalContentCount = allContent.size,
                         isLoading = false
                     )
-                }
-                .collect { state ->
-                    _uiState.value = state
+                    // Group content by subcategory
+                    groupContentBySubcategory()
                 }
         }
     }
 
     /**
-     * Select a subcategory card to filter content
+     * Group content by subcategory for vertical section display
+     * Each subcategory becomes a section with horizontally scrolling content
      */
-    fun onSubcategorySelect(subcategory: SubcategoryItem?) {
-        _selectedSubcategory.value = if (subcategory == _selectedSubcategory.value) {
-            // Toggle off if same subcategory clicked
-            null
-        } else {
-            subcategory
-        }
-        Timber.d("Selected subcategory: ${subcategory?.name ?: "All"}")
-    }
+    private fun groupContentBySubcategory() {
+        val allContent = _uiState.value.allContent
+        val subcats = _subcategories.value
 
-    /**
-     * Legacy: click on tag-based subcategory (text chip)
-     */
-    fun onSubcategoryClick(subcategory: String?) {
-        viewModelScope.launch {
-            // Find matching SubcategoryItem by name or create temporary one
-            val matchingSubcategory = _subcategories.value.find {
-                it.name.equals(subcategory, ignoreCase = true) ||
-                it.filterTags.any { tag -> tag.equals(subcategory, ignoreCase = true) }
+        if (allContent.isEmpty()) {
+            _groupedContent.value = emptyList()
+            return
+        }
+
+        val sections = mutableListOf<SubcategorySection>()
+        val assignedContentIds = mutableSetOf<String>()
+
+        // Group content by each subcategory's filterTags
+        for (subcat in subcats) {
+            val matchingContent = allContent.filter { content ->
+                content.tags.any { tag ->
+                    subcat.filterTags.any { filterTag ->
+                        tag.equals(filterTag, ignoreCase = true)
+                    }
+                }
             }
 
-            if (matchingSubcategory != null) {
-                onSubcategorySelect(matchingSubcategory)
-            } else if (subcategory != null) {
-                // Create temporary subcategory for legacy tag-based filtering
-                val tempSubcategory = SubcategoryItem(
-                    id = subcategory,
-                    parentCategory = categoryId,
-                    name = subcategory,
-                    filterTags = listOf(subcategory)
+            if (matchingContent.isNotEmpty()) {
+                sections.add(
+                    SubcategorySection(
+                        subcategory = subcat,
+                        content = matchingContent
+                    )
                 )
-                _selectedSubcategory.value = tempSubcategory
+                assignedContentIds.addAll(matchingContent.map { it.id })
             }
         }
-    }
 
-    /**
-     * Clear subcategory filter (show all content)
-     */
-    fun clearFilter() {
-        _selectedSubcategory.value = null
-        Timber.d("Filter cleared - showing all content")
+        // Add "Autres" section for content that doesn't match any subcategory
+        val unassignedContent = allContent.filter { it.id !in assignedContentIds }
+        if (unassignedContent.isNotEmpty()) {
+            sections.add(
+                SubcategorySection(
+                    subcategory = SubcategoryItem(
+                        id = "autres",
+                        parentCategory = categoryId,
+                        name = "Autres"
+                    ),
+                    content = unassignedContent
+                )
+            )
+        }
+
+        _groupedContent.value = sections
+        Timber.d("Grouped content into ${sections.size} sections")
     }
 }
 
@@ -179,4 +166,13 @@ data class ContentCategoryDetailUiState(
     val totalContentCount: Int = 0,
     val isLoading: Boolean = true,
     val error: String? = null
+)
+
+/**
+ * Represents a section in the category detail screen
+ * Each section has a subcategory header and horizontally scrolling content
+ */
+data class SubcategorySection(
+    val subcategory: SubcategoryItem,
+    val content: List<ContentItem>
 )

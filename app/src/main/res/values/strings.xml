@@ -188,6 +188,9 @@
     <string name="video_new_badge">NOUVEAU</string>
     <string name="video_play">Lire</string>
 
+    <!-- Actions -->
+    <string name="action_play">Lire</string>
+
     <!-- Practice Detail (NEW) -->
     <string name="practice_start_session">Commencer la seance</string>
     <string name="practice_add_to_program">Ajouter au programme</string>
