@@ -1,0 +1,26 @@
+{
+  "from": "gateway-tech",
+  "to": "supervisor-tech",
+  "topic": "task:request",
+  "payload": {
+    "intent": "Ajouter un feed Programmes + détails vidéo sur Android & iOS, et l’endpoint /v1/programs côté backend",
+    "affectedAgents": [
+      "tech-backend-firebase",
+      "tech-android",
+      "tech-ios",
+      "tech-portal-web"
+    ],
+    "acceptance": [
+      "Android/iOS affichent une liste paginée de programmes",
+      "Détail programme avec lecteur vidéo disponible",
+      "openapi.yaml contient GET /v1/programs",
+      "CI build OK"
+    ],
+    "artifactsExpected": [
+      "functions/src/index.ts (stub /v1/programs)",
+      "apps/android/feature/programs/**",
+      "apps/ios/Programs/**"
+    ]
+  },
+  "ts": "2025-10-04T05:03:01.382152Z"
+}

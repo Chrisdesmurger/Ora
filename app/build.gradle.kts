@@ -30,7 +30,7 @@ android {
 
         // FIX(email-api): Default OraWebApp base URL for all build types
         // This can be overridden per build type below
-        buildConfigField("String", "ORA_WEBAPP_BASE_URL", "\"https://ora-webapp.vercel.app/\"")
+        buildConfigField("String", "ORA_WEBAPP_BASE_URL", "\"https://dashboard.wellness-ora.com/api/\"")
     }
 
     buildTypes {
@@ -44,7 +44,7 @@ android {
             signingConfig = signingConfigs.getByName("debug")
 
             // FIX(email-api): Production OraWebApp URL
-            buildConfigField("String", "ORA_WEBAPP_BASE_URL", "\"https://ora-webapp.vercel.app/\"")
+            buildConfigField("String", "ORA_WEBAPP_BASE_URL", "\"https://dashboard.wellness-ora.com/api/\"")
         }
         debug {
             isDebuggable = true
@@ -56,7 +56,7 @@ android {
 
             // FIX(email-api): Development/Staging OraWebApp URL
             // Change this to localhost or staging URL during development if needed
-            buildConfigField("String", "ORA_WEBAPP_BASE_URL", "\"https://ora-webapp.vercel.app/\"")
+            buildConfigField("String", "ORA_WEBAPP_BASE_URL", "\"https://dashboard.wellness-ora.com/api/\"")
         }
     }
 

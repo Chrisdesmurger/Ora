@@ -1,0 +1,137 @@
+package com.ora.wellbeing.presentation.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import com.ora.wellbeing.R
+import com.ora.wellbeing.data.model.CategoryItem
+
+/**
+ * Get localized category name based on category ID
+ * Maps category IDs to string resources for i18n support
+ */
+@Composable
+private fun getLocalizedCategoryName(categoryId: String): String {
+    return when (categoryId.lowercase()) {
+        "meditation", "méditation" -> stringResource(R.string.category_meditation)
+        "yoga" -> stringResource(R.string.category_yoga)
+        "pilates" -> stringResource(R.string.category_pilates)
+        "bien-etre", "bien-être", "wellness" -> stringResource(R.string.category_wellness)
+        "respiration", "breathing" -> stringResource(R.string.category_breathing)
+        "sommeil", "sleep" -> stringResource(R.string.category_sleep)
+        "massage" -> stringResource(R.string.category_massage)
+        else -> categoryId // Fallback to raw ID if no mapping found
+    }
+}
+
+/**
+ * CategoryCard - Large horizontal card for library categories
+ *
+ * Displays a category with:
+ * - Full-width background (image or color)
+ * - Category name overlay with dark gradient for readability
+ * - Ripple effect on click
+ *
+ * Design inspired by "alo moves" app reference
+ *
+ * @param category The category to display
+ * @param onClick Callback when card is clicked
+ * @param modifier Optional modifier
+ */
+@Composable
+fun CategoryCard(
+    category: CategoryItem,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(140.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 4.dp,
+            pressedElevation = 8.dp
+        )
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // Background: Image (from drawable or URL) or solid color
+            when {
+                category.iconResId != null -> {
+                    // Image background from local drawable resource
+                    AsyncImage(
+                        model = category.iconResId,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+                category.imageUrl != null -> {
+                    // Image background from URL (fallback)
+                    AsyncImage(
+                        model = category.imageUrl,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+                else -> {
+                    // Solid color background
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(category.color)
+                    )
+                }
+            }
+
+            // Category name text (localized based on category ID)
+            Text(
+                text = getLocalizedCategoryName(category.id).uppercase(),
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                ),
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(20.dp)
+            )
+
+            // Item count badge (bottom left)
+            if (category.itemCount > 0) {
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(12.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color.Black.copy(alpha = 0.4f)
+                ) {
+                    Text(
+                        text = stringResource(R.string.library_content_count, category.itemCount),
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = Color.White,
+                            fontWeight = FontWeight.Medium
+                        ),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                    )
+                }
+            }
+        }
+    }
+}

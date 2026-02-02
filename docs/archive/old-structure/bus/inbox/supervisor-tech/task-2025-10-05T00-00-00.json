@@ -1,0 +1,293 @@
+{
+  "from": "gateway-tech",
+  "to": "supervisor-tech",
+  "topic": "task:request",
+  "payload": {
+    "taskId": "TASK-2025-10-05-FIRESTORE-DYNAMIC-SCREENS",
+    "intent": "Dynamiser toutes les pages de l'application avec Firestore en suivant le modèle ProfileScreen (programmes par type, gratitudes, contenu de bibliothèque, recommandations)",
+    "description": "Intégrer Firestore comme backend pour toutes les pages principales de l'application Ora: Journal (gratitudes), Programs (programmes par catégorie), Library (contenu média), et Home (recommandations personnalisées). Actuellement seul ProfileScreen utilise Firestore (UserProfile et UserStats). Les autres screens utilisent des données mockées.",
+    "affectedAgents": [
+      "tech-android",
+      "tech-backend-firebase"
+    ],
+    "acceptance": [
+      "Collection Firestore 'gratitudes' créée avec modèle GratitudeEntry et sécurité UID-based",
+      "Collection Firestore 'programs' créée avec catégorisation et tracking utilisateur",
+      "Collection Firestore 'content' créée pour le catalogue de méditations/yoga",
+      "Collection Firestore 'user_programs' créée pour tracking progression utilisateur",
+      "JournalViewModel connecté à Firestore avec real-time listeners",
+      "ProgramsViewModel connecté à Firestore avec filtrage par catégorie",
+      "LibraryViewModel connecté à Firestore avec filtres et recherche",
+      "HomeViewModel mis à jour avec recommandations basées sur Firestore",
+      "Security rules Firestore déployées pour toutes nouvelles collections",
+      "Repositories implémentés suivant le pattern UserProfileRepository",
+      "Tests de validation pour chaque collection (CRUD + listeners)",
+      "Stratégie offline-first avec cache Firestore activée",
+      "Migration des données mockées vers Firestore (seed data)",
+      "Documentation mise à jour avec schémas des nouvelles collections"
+    ],
+    "artifactsExpected": [
+      "data/model/GratitudeEntry.kt",
+      "data/model/Program.kt",
+      "data/model/ContentItem.kt",
+      "data/model/UserProgram.kt",
+      "data/repository/GratitudeRepository.kt",
+      "data/repository/ProgramRepository.kt",
+      "data/repository/ContentRepository.kt",
+      "data/repository/UserProgramRepository.kt",
+      "data/repository/impl/GratitudeRepositoryImpl.kt",
+      "data/repository/impl/ProgramRepositoryImpl.kt",
+      "data/repository/impl/ContentRepositoryImpl.kt",
+      "data/repository/impl/UserProgramRepositoryImpl.kt",
+      "presentation/screens/journal/JournalViewModel.kt (updated)",
+      "presentation/screens/programs/ProgramsViewModel.kt (updated)",
+      "presentation/screens/library/LibraryViewModel.kt (updated)",
+      "presentation/screens/home/HomeViewModel.kt (updated)",
+      "firestore.rules (updated)",
+      "firebase/seed_data.json",
+      "docs/FIRESTORE_COLLECTIONS_SCHEMA.md"
+    ],
+    "technicalDetails": {
+      "firestoreCollections": [
+        {
+          "name": "gratitudes",
+          "path": "gratitudes/{uid}/entries/{date}",
+          "description": "Entrées de journal de gratitudes par utilisateur",
+          "fields": {
+            "uid": "String (immutable, Firebase Auth UID)",
+            "date": "String (ISO format yyyy-MM-dd, document ID)",
+            "gratitudes": "List<String> (max 3 éléments)",
+            "mood": "String (emoji + label, optionnel)",
+            "notes": "String (optionnel, max 500 chars)",
+            "createdAt": "Long (epoch ms)",
+            "updatedAt": "Long (epoch ms)"
+          },
+          "securityRules": "read/write seulement si request.auth.uid == uid",
+          "indexes": [
+            {
+              "fields": ["uid", "date"],
+              "order": "desc"
+            }
+          ]
+        },
+        {
+          "name": "programs",
+          "path": "programs/{programId}",
+          "description": "Catalogue global des programmes disponibles",
+          "fields": {
+            "id": "String (document ID)",
+            "title": "String",
+            "description": "String",
+            "category": "String (Méditation, Yoga, Bien-être, Défis, Sommeil)",
+            "duration": "Int (nombre de jours)",
+            "level": "String (Débutant, Intermédiaire, Avancé, Tous niveaux)",
+            "participantCount": "Int",
+            "rating": "Float",
+            "thumbnailUrl": "String",
+            "instructor": "String",
+            "isPremiumOnly": "Boolean",
+            "sessions": "List<Map> (session par jour avec contentId, title, duration)",
+            "createdAt": "Long (epoch ms)",
+            "isActive": "Boolean"
+          },
+          "securityRules": "read: si authentifié, write: admin only (future)",
+          "indexes": [
+            {
+              "fields": ["category", "rating"],
+              "order": "desc"
+            },
+            {
+              "fields": ["isActive", "participantCount"],
+              "order": "desc"
+            }
+          ]
+        },
+        {
+          "name": "user_programs",
+          "path": "user_programs/{uid}/enrolled/{programId}",
+          "description": "Programmes auxquels l'utilisateur est inscrit avec progression",
+          "fields": {
+            "uid": "String (immutable, Firebase Auth UID)",
+            "programId": "String (référence à programs/{id})",
+            "currentDay": "Int",
+            "totalDays": "Int",
+            "progressPercentage": "Int",
+            "startedAt": "Long (epoch ms)",
+            "lastSessionAt": "Long (epoch ms, optionnel)",
+            "completedSessions": "List<String> (contentIds)",
+            "isCompleted": "Boolean",
+            "completedAt": "Long (epoch ms, optionnel)"
+          },
+          "securityRules": "read/write seulement si request.auth.uid == uid",
+          "indexes": [
+            {
+              "fields": ["uid", "isCompleted", "lastSessionAt"],
+              "order": "desc"
+            }
+          ]
+        },
+        {
+          "name": "content",
+          "path": "content/{contentId}",
+          "description": "Catalogue de contenu média (méditations, yoga, respirations)",
+          "fields": {
+            "id": "String (document ID)",
+            "title": "String",
+            "category": "String (Méditation, Yoga, Respiration, Pilates, Bien-être)",
+            "duration": "String (format '10 min')",
+            "durationMinutes": "Int",
+            "instructor": "String",
+            "description": "String",
+            "thumbnailUrl": "String",
+            "videoUrl": "String",
+            "audioUrl": "String",
+            "isPremiumOnly": "Boolean",
+            "isPopular": "Boolean",
+            "isNew": "Boolean",
+            "rating": "Float",
+            "completionCount": "Int",
+            "tags": "List<String>",
+            "createdAt": "Long (epoch ms)",
+            "publishedAt": "Long (epoch ms)",
+            "isActive": "Boolean"
+          },
+          "securityRules": "read: si authentifié, write: admin only (future)",
+          "indexes": [
+            {
+              "fields": ["category", "rating"],
+              "order": "desc"
+            },
+            {
+              "fields": ["isActive", "isPopular", "publishedAt"],
+              "order": "desc"
+            },
+            {
+              "fields": ["isActive", "isNew", "publishedAt"],
+              "order": "desc"
+            }
+          ]
+        }
+      ],
+      "repositoryPattern": "Suivre le pattern de UserProfileRepository: interface dans domain/, implémentation dans data/repository/impl/, DI dans di/FirestoreModule.kt",
+      "dataMapping": "Utiliser regular class (PAS data class), propriétés var avec @get:PropertyName et @set:PropertyName pour snake_case, méthodes computed avec @Exclude",
+      "realTimeSync": "Utiliser Flow-based listeners avec callbackFlow et addSnapshotListener pour toutes les collections utilisateur (gratitudes, user_programs)",
+      "offlineSupport": "Activer enablePersistence sur FirebaseFirestore, gérer offline mode avec cache local",
+      "errorHandling": "NetworkError -> cache + Snackbar 'Hors ligne', PermissionDenied -> logout, DocumentNotFound -> créer avec defaults",
+      "migration": "Créer seed_data.json avec contenu initial pour programs et content, script de déploiement Firebase Functions (future)"
+    },
+    "implementationPlan": [
+      {
+        "phase": 1,
+        "title": "Firestore Models et Security Rules",
+        "tasks": [
+          "Créer data/model/GratitudeEntry.kt (suivre pattern UserProfile)",
+          "Créer data/model/Program.kt avec mapping Firestore",
+          "Créer data/model/UserProgram.kt pour tracking progression",
+          "Créer data/model/ContentItem.kt pour catalogue média",
+          "Mettre à jour firestore.rules avec nouvelles collections",
+          "Valider rules avec tests unitaires Firestore Emulator"
+        ],
+        "assignedTo": "tech-android",
+        "dependencies": [],
+        "estimatedDuration": "4 heures",
+        "validationGate": "backend_ready"
+      },
+      {
+        "phase": 2,
+        "title": "Repository Implementations",
+        "tasks": [
+          "Créer domain/repository/GratitudeRepository.kt interface",
+          "Créer data/repository/impl/GratitudeRepositoryImpl.kt avec Flow listeners",
+          "Créer domain/repository/ProgramRepository.kt interface",
+          "Créer data/repository/impl/ProgramRepositoryImpl.kt",
+          "Créer domain/repository/UserProgramRepository.kt interface",
+          "Créer data/repository/impl/UserProgramRepositoryImpl.kt avec progression tracking",
+          "Créer domain/repository/ContentRepository.kt interface",
+          "Créer data/repository/impl/ContentRepositoryImpl.kt avec filtrage",
+          "Ajouter DI dans di/FirestoreModule.kt pour tous les repositories"
+        ],
+        "assignedTo": "tech-android",
+        "dependencies": ["phase-1"],
+        "estimatedDuration": "6 heures",
+        "validationGate": "backend_ready"
+      },
+      {
+        "phase": 3,
+        "title": "ViewModel Integration",
+        "tasks": [
+          "Mettre à jour JournalViewModel pour utiliser GratitudeRepository",
+          "Implémenter real-time listeners pour gratitudes du jour et historique",
+          "Mettre à jour ProgramsViewModel pour utiliser ProgramRepository et UserProgramRepository",
+          "Implémenter filtrage par catégorie et tracking progression",
+          "Mettre à jour LibraryViewModel pour utiliser ContentRepository",
+          "Implémenter filtres (catégorie, durée) et recherche en temps réel",
+          "Mettre à jour HomeViewModel pour recommandations personnalisées basées sur UserStats et UserPrograms"
+        ],
+        "assignedTo": "tech-android",
+        "dependencies": ["phase-2"],
+        "estimatedDuration": "5 heures",
+        "validationGate": "android_web_ios_ready"
+      },
+      {
+        "phase": 4,
+        "title": "Seed Data et Déploiement",
+        "tasks": [
+          "Créer firebase/seed_data.json avec programmes initiaux",
+          "Créer firebase/seed_data.json avec contenu média initial (10-15 items)",
+          "Script de déploiement Firebase Functions pour import seed data",
+          "Déployer firestore.rules avec firebase deploy --only firestore:rules",
+          "Valider sécurité avec tests d'accès cross-user",
+          "Tester offline mode et synchronisation"
+        ],
+        "assignedTo": "tech-backend-firebase",
+        "dependencies": ["phase-3"],
+        "estimatedDuration": "3 heures",
+        "validationGate": "backend_ready"
+      },
+      {
+        "phase": 5,
+        "title": "Tests et Documentation",
+        "tasks": [
+          "Tests unitaires pour tous les repositories (CRUD operations)",
+          "Tests d'intégration pour ViewModels avec Flow listeners",
+          "Tests de sécurité Firestore rules (Emulator)",
+          "Tests offline-first avec cache",
+          "Créer docs/FIRESTORE_COLLECTIONS_SCHEMA.md",
+          "Mettre à jour CLAUDE.md avec nouvelles collections",
+          "Créer docs/FIRESTORE_MIGRATION_GUIDE.md"
+        ],
+        "assignedTo": "tech-android",
+        "dependencies": ["phase-4"],
+        "estimatedDuration": "4 heures",
+        "validationGate": "analytics_ready"
+      }
+    ],
+    "risks": [
+      "Coût Firestore: Avec real-time listeners sur 4 collections, surveiller les lectures/écritures. Mitigation: Cache local agressif, throttling des listeners",
+      "Latence réseau: Première requête peut être lente. Mitigation: Skeleton screens, cache optimiste",
+      "Seed data volumétrique: Besoin de contenu réaliste pour tests. Mitigation: Générer 20-30 items minimum avec GPT",
+      "Mapping Firestore: Erreurs de sérialisation si data class utilisé. Mitigation: Suivre strictement FIRESTORE_KOTLIN_MAPPING_GUIDE.md",
+      "Offline conflicts: Résolution automatique peut écraser données. Mitigation: Implémenter conflict resolution UI pour gratitudes"
+    ],
+    "successMetrics": [
+      "Toutes les pages affichent données Firestore réelles (pas mock)",
+      "Real-time sync fonctionne: changement Firestore visible immédiatement dans UI",
+      "Offline mode: app utilisable sans réseau avec cache",
+      "Security rules: aucun accès cross-user possible (validé par tests)",
+      "Performance: Temps de chargement initial < 2s avec cache",
+      "Code coverage: > 80% pour repositories et ViewModels",
+      "Zero crashes liés à Firestore mapping (CI/CD green)"
+    ],
+    "notes": [
+      "Inspiration: ProfileScreen déjà connecté à Firestore avec UserProfile et UserStats - suivre ce pattern",
+      "Référence: docs/FIRESTORE_KOTLIN_MAPPING_GUIDE.md pour éviter erreurs de mapping",
+      "Priority: Journal (gratitudes) en premier car feature core de l'app",
+      "Future: Ajouter Firebase Cloud Functions pour calculs côté serveur (streak calculation, recommendations)",
+      "RGPD: Toutes les collections user-specific doivent être supprimables (account deletion flow)"
+    ]
+  },
+  "ts": "2025-10-05T00:00:00Z",
+  "priority": "high",
+  "estimatedTotalDuration": "22 heures",
+  "createdBy": "gateway-tech"
+}

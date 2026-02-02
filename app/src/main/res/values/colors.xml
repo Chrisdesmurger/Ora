@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Material 3 Color Scheme - Ora Theme -->
+
+    <!-- Primary colors -->
+    <color name="primary">#F4845F</color>
+    <color name="on_primary">#FFFFFF</color>
+    <color name="primary_container">#FDF6F0</color>
+    <color name="on_primary_container">#F4845F</color>
+
+    <!-- Secondary colors -->
+    <color name="secondary">#9DB5A6</color>
+    <color name="on_secondary">#FFFFFF</color>
+    <color name="secondary_container">#E8F5E8</color>
+    <color name="on_secondary_container">#9DB5A6</color>
+
+    <!-- Tertiary colors -->
+    <color name="tertiary">#B197E3</color>
+    <color name="on_tertiary">#FFFFFF</color>
+    <color name="tertiary_container">#F3EAFF</color>
+    <color name="on_tertiary_container">#B197E3</color>
+
+    <!-- Background and surface colors -->
+    <color name="background">#FDF6F0</color>
+    <color name="on_background">#2C2C2C</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="on_surface">#2C2C2C</color>
+    <color name="surface_variant">#F5F5F5</color>
+    <color name="on_surface_variant">#5A5A5A</color>
+
+    <!-- Error colors -->
+    <color name="error">#BA1A1A</color>
+    <color name="on_error">#FFFFFF</color>
+    <color name="error_container">#FFDAD6</color>
+    <color name="on_error_container">#410002</color>
+
+    <!-- Additional UI colors -->
+    <color name="outline">#E0E0E0</color>
+    <color name="outline_variant">#F0F0F0</color>
+    <color name="scrim">#000000</color>
+
+    <!-- Semantic colors -->
+    <color name="mood_happy">#4CAF50</color>
+    <color name="mood_good">#8BC34A</color>
+    <color name="mood_neutral">#FFC107</color>
+    <color name="mood_sad">#FF5722</color>
+
+    <!-- UI element colors -->
+    <color name="card_background">#FFFFFF</color>
+    <color name="divider">#E0E0E0</color>
+    <color name="text_hint">#9E9E9E</color>
+    <color name="icon_tint">#757575</color>
+
+    <!-- Status and system colors -->
+    <color name="transparent">#00000000</color>
+    <color name="black">#000000</color>
+    <color name="white">#FFFFFF</color>
+
+    <!-- Dark theme variants (for future use) -->
+    <color name="primary_dark">#E8743F</color>
+    <color name="surface_dark">#1C1B1F</color>
+    <color name="background_dark">#1C1B1F</color>
+</resources>

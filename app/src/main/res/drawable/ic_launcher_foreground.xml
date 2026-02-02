@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Background circle -->
+    <group android:scaleX="0.5"
+           android:scaleY="0.5"
+           android:translateX="54"
+           android:translateY="54">
+
+        <!-- Ora logo circle -->
+        <path
+            android:fillColor="@color/primary"
+            android:pathData="M0,36A36,36 0,1 1,72 36A36,36 0,1 1,0 36z" />
+
+        <!-- Inner zen circle -->
+        <path
+            android:fillColor="@color/on_primary"
+            android:pathData="M18,36A18,18 0,1 1,54 36A18,18 0,1 1,18 36z" />
+
+        <!-- Meditation dot -->
+        <path
+            android:fillColor="@color/primary"
+            android:pathData="M30,36A6,6 0,1 1,42 36A6,6 0,1 1,30 36z" />
+
+        <!-- Decorative petals around -->
+        <path
+            android:fillColor="@color/secondary"
+            android:fillAlpha="0.7"
+            android:pathData="M36,12 Q42,18 36,24 Q30,18 36,12z" />
+        <path
+            android:fillColor="@color/secondary"
+            android:fillAlpha="0.7"
+            android:pathData="M60,36 Q54,42 48,36 Q54,30 60,36z" />
+        <path
+            android:fillColor="@color/secondary"
+            android:fillAlpha="0.7"
+            android:pathData="M36,60 Q30,54 36,48 Q42,54 36,60z" />
+        <path
+            android:fillColor="@color/secondary"
+            android:fillAlpha="0.7"
+            android:pathData="M12,36 Q18,30 24,36 Q18,42 12,36z" />
+    </group>
+</vector>

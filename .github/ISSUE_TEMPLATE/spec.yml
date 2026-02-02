@@ -1,0 +1,258 @@
+name: 📋 Technical Specification
+description: Create a detailed technical specification for a feature
+title: "[SPEC] "
+labels: ["spec", "documentation"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 📋 Technical Specification
+        This template is used to create detailed technical specifications before implementation.
+        **AI-assisted**: Claude Code can help generate implementation plans from this spec.
+
+  - type: input
+    id: feature_issue
+    attributes:
+      label: 🔗 Related Feature Issue
+      description: Link to the feature request this spec is for
+      placeholder: "#123"
+    validations:
+      required: false
+
+  - type: textarea
+    id: overview
+    attributes:
+      label: 📖 Overview
+      description: High-level summary of what will be built
+      placeholder: |
+        This spec covers the implementation of custom meditation timers,
+        allowing users to select from predefined durations (5, 10, 15, 20, 30 min)
+        with notification support and offline-first storage.
+    validations:
+      required: true
+
+  - type: textarea
+    id: architecture
+    attributes:
+      label: 🏗️ Architecture & Design
+      description: Architectural decisions and design patterns
+      placeholder: |
+        ## Components
+        - UI: TimerPickerBottomSheet.kt (Compose bottom sheet)
+        - ViewModel: MeditationPlayerViewModel.kt (state management)
+        - Repository: TimerPreferencesRepository.kt (offline-first)
+        - Database: Room entity for timer preferences
+        - Worker: TimerNotificationWorker.kt (WorkManager)
+
+        ## Data Flow
+        1. User selects timer duration → ViewModel updates state
+        2. Preference saved to Room database
+        3. ExoPlayer starts with duration limit
+        4. WorkManager schedules notification
+        5. Notification fires when timer completes
+        6. Stats synced to Firestore
+
+        ## Design Patterns
+        - MVVM for presentation layer
+        - Repository pattern for data access
+        - Offline-first architecture
+        - Clean Architecture separation
+    validations:
+      required: true
+
+  - type: textarea
+    id: ui_components
+    attributes:
+      label: 🎨 UI Components (Compose)
+      description: Composable functions and UI structure
+      placeholder: |
+        ```kotlin
+        @Composable
+        fun TimerPickerBottomSheet(
+            selectedDuration: Int,
+            onDurationSelected: (Int) -> Unit,
+            onDismiss: () -> Unit
+        )
+
+        @Composable
+        fun MeditationPlayerScreen(
+            viewModel: MeditationPlayerViewModel,
+            contentId: String
+        )
+        ```
+      render: markdown
+    validations:
+      required: false
+
+  - type: textarea
+    id: data_models
+    attributes:
+      label: 🗄️ Data Models
+      description: Room entities, Firestore models, data classes
+      placeholder: |
+        ```kotlin
+        // Room entity
+        @Entity(tableName = "timer_preferences")
+        data class TimerPreference(
+            @PrimaryKey val userId: String,
+            val defaultDuration: Int, // minutes
+            val lastUsedDuration: Int,
+            val updatedAt: Long
+        )
+
+        // Firestore model (synced for cross-device)
+        data class UserTimerSettings(
+            val defaultDuration: Int = 10,
+            val customDurations: List<Int> = listOf(5, 10, 15, 20, 30)
+        )
+        ```
+      render: markdown
+    validations:
+      required: false
+
+  - type: textarea
+    id: api_contracts
+    attributes:
+      label: 🔌 API Contracts (if applicable)
+      description: Backend API endpoints, request/response schemas
+      placeholder: |
+        ```kotlin
+        // Firestore path
+        users/{userId}/settings/timer
+
+        // Retrofit interface (if using custom backend)
+        interface TimerApi {
+            @GET("users/{userId}/timer-settings")
+            suspend fun getTimerSettings(@Path("userId") userId: String): TimerSettings
+
+            @PUT("users/{userId}/timer-settings")
+            suspend fun updateTimerSettings(
+                @Path("userId") userId: String,
+                @Body settings: TimerSettings
+            )
+        }
+        ```
+      render: markdown
+    validations:
+      required: false
+
+  - type: textarea
+    id: offline_support
+    attributes:
+      label: 💾 Offline Support Strategy
+      description: How will this feature work offline?
+      placeholder: |
+        - Room database stores timer preferences locally
+        - Firestore syncs when network available
+        - WorkManager handles timer notifications (works offline)
+        - ExoPlayer playback works offline for cached content
+        - Sync conflict resolution: client-side timestamp wins
+    validations:
+      required: false
+
+  - type: textarea
+    id: security
+    attributes:
+      label: 🔒 Security Considerations
+      description: Firestore rules, permissions, validation
+      placeholder: |
+        - Only authenticated users can read/write their timer settings
+        - Firestore rule: allow read, write: if request.auth.uid == userId
+        - Input validation: duration must be 1-120 minutes
+        - No sensitive data stored (just preferences)
+    validations:
+      required: false
+
+  - type: textarea
+    id: performance
+    attributes:
+      label: ⚡ Performance Considerations
+      description: Performance optimizations, memory management
+      placeholder: |
+        - Timer preferences cached in Room for instant access
+        - Firestore listeners only active when user is logged in
+        - WorkManager timer uses AlarmManager for accuracy
+        - UI state updates via Flow for reactive performance
+        - No heavy computations on main thread
+    validations:
+      required: false
+
+  - type: textarea
+    id: testing
+    attributes:
+      label: 🧪 Testing Strategy
+      description: Unit tests, UI tests, integration tests
+      placeholder: |
+        ## Unit Tests (JUnit + Mockk)
+        - TimerPreferencesRepository CRUD operations
+        - MeditationPlayerViewModel timer logic
+        - Duration validation edge cases
+
+        ## UI Tests (Compose Test)
+        - TimerPickerBottomSheet selection
+        - MeditationPlayerScreen timer display
+        - Navigation after timer completion
+
+        ## Integration Tests
+        - End-to-end timer flow (select → play → notify)
+        - Offline mode persistence
+        - Firestore sync after network reconnect
+    validations:
+      required: false
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: 📦 Dependencies & Prerequisites
+      description: Required libraries, versions, setup
+      placeholder: |
+        - Jetpack Compose (already in project)
+        - Room 2.6.1 (already in project)
+        - WorkManager 2.9.0 (already in project)
+        - ExoPlayer 1.2.0 (already configured)
+        - Firebase Firestore (already configured)
+        - Material 3 components
+    validations:
+      required: false
+
+  - type: textarea
+    id: rollout
+    attributes:
+      label: 🚀 Rollout Plan
+      description: Deployment strategy, feature flags, migration
+      placeholder: |
+        Phase 1: Implement UI and local storage (week 1)
+        Phase 2: Add WorkManager notifications (week 2)
+        Phase 3: Integrate with Firestore sync (week 3)
+        Phase 4: Beta testing with 10 users (week 4)
+        Phase 5: Full rollout to all users (week 5)
+
+        Migration: Add default timer preference for existing users
+    validations:
+      required: false
+
+  - type: textarea
+    id: implementation_tasks
+    attributes:
+      label: ✅ Implementation Tasks (Claude Code will assist)
+      description: Checklist of tasks to implement this spec
+      placeholder: |
+        - [ ] Create TimerPreference Room entity
+        - [ ] Create TimerPreferencesDao with CRUD operations
+        - [ ] Implement TimerPreferencesRepository (offline-first)
+        - [ ] Add timer state to MeditationPlayerViewModel
+        - [ ] Create TimerPickerBottomSheet composable
+        - [ ] Update MeditationPlayerScreen with timer UI
+        - [ ] Implement TimerNotificationWorker
+        - [ ] Add Firestore sync for cross-device support
+        - [ ] Write unit tests for repository and ViewModel
+        - [ ] Write UI tests for timer picker
+        - [ ] Update Firestore security rules
+        - [ ] Test offline mode thoroughly
+        - [ ] Document timer feature in user guide
+      value: |
+        - [ ]
+    validations:
+      required: false
