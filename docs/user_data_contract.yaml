@@ -1,0 +1,205 @@
+# FIX(user-dynamic): Contrat des données utilisateur Ora
+# Définit les schémas Firestore, valeurs par défaut, et événements qui modifient les données
+
+version: "1.0"
+last_updated: "2025-10-04"
+
+collections:
+  # Collection des profils utilisateurs
+  users:
+    path: "users/{uid}"
+    description: "Profil de base de chaque utilisateur authentifié"
+
+    fields:
+      uid:
+        type: String
+        required: true
+        description: "Firebase Auth UID, source de vérité, immutable"
+
+      firstName:
+        type: String
+        required: false
+        default: null
+        max_length: 50
+        description: "Prénom de l'utilisateur (optionnel, PII minimal)"
+
+      photoUrl:
+        type: String
+        required: false
+        default: null
+        description: "URL de la photo de profil (Firebase Storage ou provider)"
+
+      planTier:
+        type: String
+        required: true
+        default: "free"
+        allowed_values: ["free", "premium"]
+        description: "Niveau d'abonnement"
+
+      createdAt:
+        type: Long
+        required: true
+        default: "System.currentTimeMillis()"
+        description: "Timestamp de création du compte (epoch ms)"
+
+      locale:
+        type: String
+        required: false
+        default: null
+        allowed_values: ["fr", "en", null]
+        description: "Locale préférée (null = système)"
+
+      lastSyncAt:
+        type: Long
+        required: false
+        default: null
+        description: "Dernier sync réussi (epoch ms)"
+
+    indexes: []
+
+    events:
+      - name: "user_registered"
+        trigger: "Premier login Firebase Auth"
+        action: "Créer document users/{uid} avec valeurs par défaut"
+
+      - name: "profile_updated"
+        trigger: "Utilisateur modifie firstName/photoUrl/locale"
+        action: "Mise à jour champs + lastSyncAt"
+
+      - name: "plan_upgraded"
+        trigger: "Achat In-App Billing premium"
+        action: "planTier = 'premium'"
+
+  # Collection des statistiques utilisateurs
+  stats:
+    path: "stats/{uid}"
+    description: "Statistiques d'activité et progression"
+
+    fields:
+      uid:
+        type: String
+        required: true
+        description: "Firebase Auth UID, référence au profil"
+
+      totalMinutes:
+        type: Int
+        required: true
+        default: 0
+        min: 0
+        max: 525600  # 1 an de minutes
+        description: "Total de minutes de pratique"
+
+      sessions:
+        type: Int
+        required: true
+        default: 0
+        min: 0
+        description: "Nombre de séances complétées"
+
+      streakDays:
+        type: Int
+        required: true
+        default: 0
+        min: 0
+        max: 3650  # 10 ans
+        description: "Jours consécutifs de pratique"
+
+      lastPracticeAt:
+        type: Long
+        required: false
+        default: null
+        description: "Timestamp de dernière pratique (epoch ms)"
+
+      updatedAt:
+        type: Long
+        required: true
+        default: "System.currentTimeMillis()"
+        description: "Dernier update des stats (epoch ms)"
+
+    indexes:
+      - fields: ["lastPracticeAt"]
+        order: "desc"
+        description: "Pour requêtes 'utilisateurs actifs'"
+
+    events:
+      - name: "session_completed"
+        trigger: "Utilisateur termine une séance (player fin)"
+        action: |
+          - totalMinutes += durationMinutes
+          - sessions += 1
+          - streakDays = calculateStreak(lastPracticeAt, now)
+          - lastPracticeAt = now
+          - updatedAt = now
+        business_logic: |
+          Streak calculation:
+          - Si lastPracticeAt == null → streakDays = 1
+          - Si même jour (lastPracticeAt vs now) → streakDays inchangé
+          - Si jour consécutif → streakDays += 1
+          - Sinon (gap > 1 jour) → streakDays = 1
+
+      - name: "stats_reset"
+        trigger: "Admin ou user demande reset (rare)"
+        action: "Réinitialiser streakDays = 0 uniquement"
+
+# Règles de sécurité Firestore (voir firestore.rules)
+security_rules_summary: |
+  - users/{uid}: lecture/écriture seulement si request.auth.uid == uid
+  - stats/{uid}: idem + validation types/bornes sur écriture
+  - Aucun accès cross-user permis
+  - Validation: totalMinutes >= 0, sessions >= 0, streakDays >= 0
+
+# Stratégie offline-first
+offline_strategy:
+  cache_enabled: true
+  cache_size_mb: 10
+
+  behavior:
+    - "Firestore SDK cache automatique activé (enablePersistence)"
+    - "Flow listeners retournent données cache si offline"
+    - "Écritures en attente sync auto à la reconnexion"
+    - "UI affiche indicateur 'sync en cours' si pending writes"
+
+  error_handling:
+    - "Network error → afficher données cache + snackbar 'Hors ligne'"
+    - "Permission denied → logout user (token expiré)"
+    - "Document not found → créer profil par défaut"
+
+# Migration & compatibilité
+migration:
+  from_version: null
+  to_version: "1.0"
+  notes: |
+    - Première version, pas de migration
+    - Si Room existe (Journal), ajouter colonne userId aux entités locales
+    - Migration Room: ALTER TABLE add column userId TEXT NOT NULL DEFAULT ''
+
+# Privacy & GDPR
+privacy:
+  pii_fields: ["firstName", "photoUrl"]
+  retention_policy: "Suppression complète à la demande (account deletion)"
+  anonymization: "Sur demande, remplacer firstName par null, photoUrl par null, garder stats anonymes"
+
+  gdpr_export:
+    - "users/{uid}"
+    - "stats/{uid}"
+    - "journal entries (si implémenté)"
+
+# Tests & validation
+test_scenarios:
+  - scenario: "Nouvel utilisateur login"
+    expected: "Profil créé avec defaults, stats = 0/0/0"
+
+  - scenario: "Utilisateur termine séance 10min jour 1"
+    expected: "totalMinutes=10, sessions=1, streakDays=1"
+
+  - scenario: "Utilisateur pratique jour 2 consécutif"
+    expected: "streakDays=2"
+
+  - scenario: "Utilisateur skip 2 jours puis pratique"
+    expected: "streakDays=1 (reset)"
+
+  - scenario: "Offline mode"
+    expected: "Affiche données cache, sync à la reconnexion"
+
+  - scenario: "Tentative écriture cross-user"
+    expected: "Permission denied par Firestore rules"

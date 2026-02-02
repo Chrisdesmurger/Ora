@@ -1,0 +1,155 @@
+name: 🐛 Bug Report
+description: Report a bug or unexpected behavior in Ora Android app
+title: "[BUG] "
+labels: ["bug", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🐛 Bug Report
+        Please provide detailed information to help us reproduce and fix the issue.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 📝 Bug Description
+      description: A clear and concise description of the bug
+      placeholder: When I try to save a journal entry, the app crashes with a null pointer exception...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 🔄 Steps to Reproduce
+      description: Step-by-step instructions to reproduce the bug
+      placeholder: |
+        1. Open the app
+        2. Navigate to Journal tab
+        3. Fill in gratitude entries
+        4. Click "Save"
+        5. Observe crash
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: ✅ Expected Behavior
+      description: What should happen?
+      placeholder: The journal entry should save successfully and show a confirmation message
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: ❌ Actual Behavior
+      description: What actually happens?
+      placeholder: App crashes with "NullPointerException at JournalViewModel.kt:124"
+    validations:
+      required: true
+
+  - type: textarea
+    id: error_message
+    attributes:
+      label: 🔴 Error Message / Logcat Output
+      description: Copy the full error message or logcat output
+      placeholder: |
+        E/AndroidRuntime: FATAL EXCEPTION: main
+        Process: com.ora.wellbeing, PID: 12345
+        java.lang.NullPointerException: Attempt to invoke virtual method...
+            at com.ora.wellbeing.presentation.screens.journal.JournalViewModel.saveEntry(JournalViewModel.kt:124)
+      render: shell
+    validations:
+      required: false
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: 🚨 Severity
+      description: How severe is this bug?
+      options:
+        - 🔴 Critical (app crashes, data loss)
+        - 🟠 High (major feature broken)
+        - 🟡 Medium (minor feature impacted)
+        - 🟢 Low (cosmetic, workaround exists)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: 🔁 Frequency
+      description: How often does this occur?
+      options:
+        - Always (100%)
+        - Often (>50%)
+        - Sometimes (25-50%)
+        - Rarely (<25%)
+        - Once
+    validations:
+      required: true
+
+  - type: input
+    id: android_version
+    attributes:
+      label: 📱 Android Version
+      description: Which Android version are you using?
+      placeholder: Android 14 (API 34)
+    validations:
+      required: true
+
+  - type: input
+    id: device
+    attributes:
+      label: 📲 Device Model
+      description: Which device are you using?
+      placeholder: Google Pixel 7, Samsung Galaxy S23, Emulator
+    validations:
+      required: true
+
+  - type: input
+    id: app_version
+    attributes:
+      label: 🏷️ App Version
+      description: Which version of Ora are you using?
+      placeholder: 1.0.0 (build 42)
+    validations:
+      required: false
+
+  - type: dropdown
+    id: network_state
+    attributes:
+      label: 🌐 Network State
+      description: Were you online or offline when the bug occurred?
+      options:
+        - Online (WiFi)
+        - Online (Mobile Data)
+        - Offline
+        - Unknown
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 📸 Screenshots / Screen Recording
+      description: Attach screenshots or videos showing the bug
+      placeholder: Drag and drop files here
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 💡 Additional Context
+      description: Any other relevant information
+      placeholder: |
+        - Started happening after updating to version 1.2.0
+        - Only occurs when offline
+        - Works fine on other devices

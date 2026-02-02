@@ -1,0 +1,16 @@
+gates:
+  backend_ready:
+    checks:
+      - openapi.yaml exists
+  android_web_ios_ready:
+    checks:
+      - apps build ok
+  analytics_ready:
+    checks:
+      - events wired
+  devops_ready:
+    checks:
+      - ci green
+  security_ready:
+    checks:
+      - no critical findings

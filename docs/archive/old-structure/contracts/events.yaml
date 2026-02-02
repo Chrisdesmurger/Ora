@@ -1,0 +1,5 @@
+events:
+  session_completed:
+    props: [uid, sessionId, durationMin, type]
+  app_open:
+    props: [uid, locale, planTier]

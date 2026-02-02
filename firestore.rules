@@ -1,0 +1,314 @@
+rules_version = '2';
+
+// FIX(user-dynamic): Regles de securite Firestore pour Ora
+// Privacy by design: Chaque utilisateur peut uniquement acceder a ses propres donnees
+// Base sur user_data_contract.yaml
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Collection users/{uid}
+    // Regle: Lecture/ecriture uniquement si request.auth.uid == uid
+    match /users/{uid} {
+      // Permet lecture et ecriture uniquement si authentifie et c'est son propre document
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      // Validation des champs a l'ecriture
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && validateUserProfile(request.resource.data);
+
+      allow update: if request.auth != null
+                    && request.auth.uid == uid
+                    && validateUserProfile(request.resource.data);
+
+      // FIX(stats): Sous-collection users/{uid}/sessions - Historique des sessions
+      match /sessions/{sessionId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+
+        // Validation des champs a l'ecriture
+        allow create: if request.auth != null
+                      && request.auth.uid == uid
+                      && validatePracticeSession(request.resource.data);
+
+        allow update: if request.auth != null
+                      && request.auth.uid == uid
+                      && validatePracticeSession(request.resource.data);
+      }
+
+      // FIX(stats): Sous-collection users/{uid}/practiceStats - Stats agregees par type
+      match /practiceStats/{practiceType} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+
+        // Validation des champs a l'ecriture
+        allow create: if request.auth != null
+                      && request.auth.uid == uid
+                      && validatePracticeStats(request.resource.data);
+
+        allow update: if request.auth != null
+                      && request.auth.uid == uid
+                      && validatePracticeStats(request.resource.data);
+      }
+
+      // NEW: Sous-collection users/{uid}/dailyJournal - Entrees de journal quotidien
+      match /dailyJournal/{date} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+
+        // Validation des champs a l'ecriture
+        allow create: if request.auth != null
+                      && request.auth.uid == uid
+                      && validateDailyJournalEntry(request.resource.data);
+
+        allow update: if request.auth != null
+                      && request.auth.uid == uid
+                      && validateDailyJournalEntry(request.resource.data);
+      }
+
+    }
+
+    // NEW: Collection user_onboarding/{uid} - Onboarding par utilisateur
+    match /user_onboarding/{uid} {
+      // Sous-collection responses - Reponses d'onboarding
+      match /responses/{responseId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+
+        // Validation des champs a l'ecriture
+        allow create: if request.auth != null
+                      && request.auth.uid == uid
+                      && validateOnboardingResponse(request.resource.data);
+
+        allow update: if request.auth != null
+                      && request.auth.uid == uid
+                      && validateOnboardingResponse(request.resource.data);
+      }
+
+      // Sous-collection recommendations - Recommandations personnalisees
+      match /recommendations/{recommendationId} {
+        allow read: if request.auth != null && request.auth.uid == uid;
+        allow write: if false; // Only Cloud Functions can write
+      }
+    }
+
+    // Collection stats/{uid}
+    // Regle: Lecture/ecriture uniquement si request.auth.uid == uid
+    match /stats/{uid} {
+      // Permet lecture et ecriture uniquement si authentifie et c'est son propre document
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      // Validation des champs a l'ecriture
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && validateUserStats(request.resource.data);
+
+      allow update: if request.auth != null
+                    && request.auth.uid == uid
+                    && validateUserStats(request.resource.data);
+    }
+
+    // Collection gratitudes/{uid}/entries/{date}
+    // Regle: UID-based isolation - chaque utilisateur accede uniquement a ses propres entrees
+    match /gratitudes/{uid}/entries/{date} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      // Validation des champs a l'ecriture
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && validateGratitudeEntry(request.resource.data);
+
+      allow update: if request.auth != null
+                    && request.auth.uid == uid
+                    && validateGratitudeEntry(request.resource.data);
+    }
+
+    // Collection programs/{programId}
+    // Regle: Lecture pour tous les utilisateurs authentifies, ecriture admin uniquement
+    match /programs/{programId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Admin only (future Cloud Functions)
+    }
+
+    // Collection user_programs/{uid}/enrolled/{programId}
+    // Regle: UID-based isolation - chaque utilisateur accede uniquement a ses propres programmes inscrits
+    match /user_programs/{uid}/enrolled/{programId} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      // Validation des champs a l'ecriture
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && validateUserProgram(request.resource.data);
+
+      allow update: if request.auth != null
+                    && request.auth.uid == uid
+                    && validateUserProgram(request.resource.data);
+    }
+
+    // Collection content/{contentId}
+    // Regle: Lecture pour tous les utilisateurs authentifies, ecriture admin uniquement
+    match /content/{contentId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Admin only (future Cloud Functions)
+    }
+
+    // Collection lessons/{lessonId}
+    // Regle: Lecture pour tous les utilisateurs authentifies, ecriture admin uniquement
+    match /lessons/{lessonId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Admin only (from OraWebApp)
+    }
+
+    // Collection onboarding_configs/{configId}
+    // Regle: Lecture pour tous les utilisateurs authentifies, ecriture admin uniquement
+    match /onboarding_configs/{configId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Admin only (from OraWebApp)
+    }
+
+    // Fonctions de validation
+
+    // Valide les donnees du profil utilisateur
+    function validateUserProfile(data) {
+      return data.uid is string
+          && data.uid.size() > 0
+          && (data.first_name == null || (data.first_name is string && data.first_name.size() <= 50))
+          && (data.last_name == null || (data.last_name is string && data.last_name.size() <= 50))
+          && (data.email == null || data.email is string)
+          && (data.photo_url == null || data.photo_url is string)
+          && (data.motto == null || (data.motto is string && data.motto.size() <= 200))
+          && (data.plan_tier == null || data.plan_tier in ['free', 'premium', 'lifetime'])
+          && (data.created_at == null || data.created_at is int)
+          && (data.locale == null || data.locale in ['fr', 'en'])
+          && (data.updated_at == null || data.updated_at is int)
+          && (data.birth_date == null || (data.birth_date is string && data.birth_date.size() <= 10))
+          && (data.gender == null || data.gender in ['male', 'female', 'non_binary', 'prefer_not_to_say'])
+          && (data.has_completed_onboarding == null || data.has_completed_onboarding is bool)
+          && (data.onboarding == null || data.onboarding is map);
+    }
+
+    // Valide les statistiques utilisateur
+    function validateUserStats(data) {
+      return data.uid is string
+          && data.uid.size() > 0
+          && data.totalMinutes is int
+          && data.totalMinutes >= 0
+          && data.totalMinutes <= 525600  // Max 1 an de minutes
+          && data.totalSessions is int
+          && data.totalSessions >= 0
+          && data.currentStreak is int
+          && data.currentStreak >= 0
+          && data.currentStreak <= 3650  // Max 10 ans
+          && (data.lastPracticeAt == null || data.lastPracticeAt is timestamp)
+          && data.createdAt is timestamp
+          && data.updatedAt is timestamp;
+    }
+
+    // Valide une entree de gratitude
+    function validateGratitudeEntry(data) {
+      return data.uid is string
+          && data.uid.size() > 0
+          && data.date is string
+          && data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')  // Format YYYY-MM-DD
+          && data.gratitudes is list
+          && data.gratitudes.size() >= 1
+          && data.gratitudes.size() <= 3
+          && (data.notes == null || (data.notes is string && data.notes.size() <= 500))
+          && data.createdAt is timestamp
+          && (data.updatedAt == null || data.updatedAt is timestamp);
+    }
+
+    // NEW: Valide une entree de journal quotidien
+    function validateDailyJournalEntry(data) {
+      return data.uid is string
+          && data.uid.size() > 0
+          && data.date is string
+          && data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')  // Format YYYY-MM-DD
+          && (data.mood == null || data.mood in ['happy', 'neutral', 'sad', 'frustrated'])
+          && (data.shortNote == null || (data.shortNote is string && data.shortNote.size() <= 200))
+          && (data.dailyStory == null || (data.dailyStory is string && data.dailyStory.size() <= 2000))
+          && (data.gratitudes == null || (data.gratitudes is list && data.gratitudes.size() <= 3))
+          && (data.accomplishments == null || data.accomplishments is list)
+          && (data.improvements == null || (data.improvements is list && data.improvements.size() <= 3))
+          && (data.learnings == null || (data.learnings is string && data.learnings.size() <= 1000))
+          && (data.remindMeTomorrow == null || data.remindMeTomorrow is bool)
+          && data.createdAt is timestamp
+          && (data.updatedAt == null || data.updatedAt is timestamp);
+    }
+
+    // Valide un programme utilisateur
+    function validateUserProgram(data) {
+      return data.uid is string
+          && data.uid.size() > 0
+          && data.programId is string
+          && data.programId.size() > 0
+          && data.currentDay is int
+          && data.currentDay >= 0
+          && data.totalDays is int
+          && data.totalDays > 0
+          && data.currentDay <= data.totalDays
+          && data.isCompleted is bool
+          && data.startedAt is timestamp
+          && (data.lastSessionAt == null || data.lastSessionAt is timestamp)
+          && (data.completedAt == null || data.completedAt is timestamp);
+    }
+
+    // FIX(stats): Valide une session de pratique
+    function validatePracticeSession(data) {
+      return data.uid is string
+          && data.uid.size() > 0
+          && data.contentId is string
+          && data.contentId.size() > 0
+          && data.contentTitle is string
+          && data.contentTitle.size() > 0
+          && data.practiceType in ['yoga', 'meditation', 'pilates', 'breathing']
+          && data.durationMinutes is int
+          && data.durationMinutes >= 0
+          && data.durationMinutes <= 180  // Max 3h
+          && data.plannedDurationMinutes is int
+          && data.plannedDurationMinutes >= 0
+          && data.completionPercentage is int
+          && data.completionPercentage >= 0
+          && data.completionPercentage <= 100
+          && data.completed is bool
+          && data.startedAt is int  // timestamp
+          && data.completedAt is int  // timestamp
+          && data.createdAt is int;  // timestamp
+    }
+
+    // FIX(stats): Valide les stats agregees par type de pratique
+    function validatePracticeStats(data) {
+      return data.practiceType in ['yoga', 'meditation', 'pilates', 'breathing']
+          && data.totalMinutes is int
+          && data.totalMinutes >= 0
+          && data.totalSessions is int
+          && data.totalSessions >= 0
+          && data.completedSessions is int
+          && data.completedSessions >= 0
+          && data.minutesThisWeek is int
+          && data.minutesThisWeek >= 0
+          && data.minutesThisMonth is int
+          && data.minutesThisMonth >= 0
+          && data.sessionsThisWeek is int
+          && data.sessionsThisWeek >= 0
+          && data.sessionsThisMonth is int
+          && data.sessionsThisMonth >= 0
+          && data.averageDurationMinutes is int
+          && data.averageDurationMinutes >= 0
+          && data.updatedAt is int;  // timestamp
+    }
+
+    // NEW: Valide une reponse d'onboarding
+    function validateOnboardingResponse(data) {
+      return data.uid is string
+          && data.uid.size() > 0
+          && data.configVersion is string
+          && data.completed is bool
+          && data.answers is list
+          && (data.startedAt == null || data.startedAt is timestamp)
+          && (data.completedAt == null || data.completedAt is timestamp);
+    }
+
+    // Bloquer tout acces aux autres collections par defaut
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

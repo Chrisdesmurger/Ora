@@ -1,0 +1,264 @@
+project: Ora Android App
+version: MVP 1.0
+
+core_features:
+  onboarding:
+    priority: critical
+    complexity: medium
+    estimated_days: 5
+    components:
+      - TimePreferenceScreen:
+          description: "Choix des créneaux préférés (matin/jour/soir)"
+          inputs: ["morning_time", "day_time", "evening_time"]
+          validations: ["time_format", "preference_required"]
+      - WelcomeCarousel:
+          description: "Introduction aux fonctionnalités principales"
+          slides: ["welcome", "yoga_intro", "meditation_intro", "journal_intro"]
+          navigation: ["skip", "next", "finish"]
+      - PermissionsScreen:
+          description: "Demande consentement notifications"
+          permissions: ["notification"]
+          explanations: ["why_notifications", "privacy_respect"]
+    user_stories:
+      - "En tant que nouvelle utilisatrice, je veux configurer mes préférences en moins de 3 minutes"
+      - "En tant qu'utilisatrice, je veux comprendre les bénéfices avant de donner mes permissions"
+
+  home_dashboard:
+    priority: critical
+    complexity: high
+    estimated_days: 8
+    components:
+      - DailyRecommendationCard:
+          description: "Suggestion personnalisée basée sur l'heure et historique"
+          data_sources: ["user_preferences", "time_of_day", "recent_activity"]
+          display: ["content_thumbnail", "duration", "difficulty", "cta_button"]
+      - QuickActionButtons:
+          description: "Accès rapide aux sessions 5min"
+          actions: ["quick_breathing", "flash_yoga", "mini_meditation"]
+          states: ["available", "completed_today", "locked"]
+      - ProgressOverview:
+          description: "Aperçu des statistiques hebdomadaires"
+          metrics: ["sessions_week", "minutes_practiced", "streak_days"]
+          visualization: ["progress_ring", "calendar_dots"]
+    user_stories:
+      - "En tant qu'utilisatrice régulière, je veux voir une recommandation pertinente dès l'ouverture"
+      - "En tant qu'utilisatrice pressée, je veux accéder à une session de 5min en 2 taps"
+
+  content_library:
+    priority: critical
+    complexity: high
+    estimated_days: 10
+    components:
+      - ContentGrid:
+          description: "Grille des contenus avec lazy loading"
+          layout: ["staggered_grid", "2_columns_portrait", "3_columns_landscape"]
+          item_info: ["thumbnail", "title", "duration", "difficulty", "type"]
+      - FilterBottomSheet:
+          description: "Filtres avancés pour contenu"
+          filters:
+            duration: ["5min", "10min", "15min", "20min+"]
+            difficulty: ["débutant", "intermédiaire", "avancé"]
+            type: ["yoga", "pilates", "méditation", "respiration"]
+            goal: ["réveil", "détente", "énergie", "sommeil"]
+      - CategoryTabs:
+          description: "Navigation par catégories principales"
+          tabs: ["Tous", "Yoga", "Méditation", "Respiration", "Pilates"]
+          indicators: ["active_state", "content_count"]
+      - SearchBar:
+          description: "Recherche textuelle avec suggestions"
+          features: ["autocomplete", "recent_searches", "popular_terms"]
+    user_stories:
+      - "En tant qu'utilisatrice, je veux filtrer par durée pour trouver une session adaptée à mon temps"
+      - "En tant qu'utilisatrice débutante, je veux voir uniquement le contenu à mon niveau"
+
+  journal:
+    priority: critical
+    complexity: medium
+    estimated_days: 6
+    components:
+      - GratitudeInputs:
+          description: "3 champs pour gratitudes quotidiennes"
+          validation: ["min_length", "max_length", "required_fields"]
+          features: ["auto_save", "suggestion_prompts"]
+      - MoodSelector:
+          description: "Sélecteur d'humeur visuel"
+          moods: ["rayonnante", "joyeuse", "sereine", "neutre", "fatiguée", "stressée", "triste"]
+          display: ["emoji_scale", "color_coding", "animation_feedback"]
+      - DayStoryEditor:
+          description: "Éditeur de texte libre pour récit du jour"
+          features: ["rich_text", "auto_save", "word_count", "privacy_reminder"]
+      - JournalHistory:
+          description: "Historique des entrées avec navigation calendrier"
+          views: ["calendar_view", "list_view", "search_entries"]
+          privacy: ["biometric_lock", "private_mode"]
+    user_stories:
+      - "En tant qu'utilisatrice, je veux noter mes 3 gratitudes rapidement chaque soir"
+      - "En tant qu'utilisatrice, je veux relire mes anciens journaux pour voir mon évolution"
+
+  profile_stats:
+    priority: high
+    complexity: medium
+    estimated_days: 7
+    components:
+      - StatsCards:
+          description: "Cartes statistiques principales"
+          metrics:
+            - total_sessions: "Nombre total de sessions"
+            - total_minutes: "Minutes de pratique"
+            - current_streak: "Série de jours consécutifs"
+            - favorite_type: "Type de contenu préféré"
+          display: ["animated_counters", "trend_indicators"]
+      - ActivityCalendar:
+          description: "Calendrier d'activité type GitHub"
+          data: ["daily_sessions", "intensity_levels"]
+          interaction: ["tap_for_details", "month_navigation"]
+      - AchievementsBadges:
+          description: "Système de badges et accomplissements"
+          categories: ["consistency", "exploration", "mindfulness", "growth"]
+          states: ["locked", "in_progress", "achieved"]
+      - SettingsMenu:
+          description: "Configuration de l'application"
+          sections:
+            preferences: ["notifications", "theme", "language"]
+            privacy: ["data_export", "account_deletion"]
+            about: ["version", "legal", "feedback"]
+    user_stories:
+      - "En tant qu'utilisatrice, je veux voir mes progrès pour rester motivée"
+      - "En tant qu'utilisatrice, je veux configurer mes notifications selon mes préférences"
+
+technical_features:
+  video_player:
+    priority: critical
+    complexity: high
+    estimated_days: 8
+    components:
+      - VideoPlayerScreen:
+          description: "Lecteur vidéo full-screen avec contrôles"
+          features: ["fullscreen", "portrait_landscape", "gesture_controls"]
+          controls: ["play_pause", "seek_bar", "volume", "speed"]
+      - AudioPlayerControls:
+          description: "Contrôles audio pour méditations"
+          features: ["background_playback", "notification_controls", "sleep_timer"]
+      - SessionTimer:
+          description: "Timer de session avec phases"
+          phases: ["preparation", "practice", "relaxation"]
+          notifications: ["start", "phase_transition", "completion"]
+      - PlaybackSpeed:
+          description: "Contrôle vitesse de lecture"
+          speeds: ["0.75x", "1x", "1.25x", "1.5x"]
+          persistence: ["remember_preference"]
+    technical_requirements:
+      - exoplayer_media3: "Lecture vidéo performante"
+      - background_audio: "Lecture en arrière-plan"
+      - pip_mode: "Picture-in-picture optionnel"
+      - offline_playback: "Lecture hors ligne"
+
+  offline_support:
+    priority: high
+    complexity: medium
+    estimated_days: 5
+    components:
+      - ContentDownloader:
+          description: "Téléchargement contenu pour usage hors ligne"
+          features: ["selective_download", "wifi_only", "storage_management"]
+      - SyncManager:
+          description: "Synchronisation données utilisateur"
+          strategy: ["eventual_consistency", "conflict_resolution"]
+      - OfflineIndicator:
+          description: "Indicateur statut connexion"
+          states: ["online", "offline", "syncing"]
+    technical_requirements:
+      - room_database: "Stockage local complet"
+      - workmanager: "Tâches de synchronisation"
+      - connectivity_manager: "Détection réseau"
+
+nice_to_have:
+  programs_21_days:
+    priority: medium
+    complexity: medium
+    estimated_days: 6
+    description: "Programmes structurés sur 21 jours"
+    components:
+      - ProgramOverview: "Vue d'ensemble du programme"
+      - DailyProgramCard: "Session du jour dans le programme"
+      - ProgressTracker: "Suivi progression dans le programme"
+    implementation_phase: "v1.1"
+
+  achievements_system:
+    priority: medium
+    complexity: medium
+    estimated_days: 4
+    description: "Système de badges et défis"
+    components:
+      - BadgeGallery: "Collection de badges obtenus"
+      - WeeklyChallenges: "Défis hebdomadaires"
+      - ProgressNotifications: "Notifications de progression"
+    implementation_phase: "v1.1"
+
+  smart_notifications:
+    priority: high
+    complexity: low
+    estimated_days: 3
+    description: "Notifications intelligentes et personnalisables"
+    components:
+      - NotificationScheduler: "Planification intelligente"
+      - CustomNotificationSettings: "Paramétrage fin"
+      - ContextualReminders: "Rappels contextuels"
+    implementation_phase: "v1.0"
+
+development_phases:
+  phase_1_core:
+    duration: "4-5 semaines"
+    features: ["onboarding", "home_dashboard", "content_library", "video_player"]
+    milestone: "Navigation et lecture de contenu fonctionnelles"
+
+  phase_2_personal:
+    duration: "2-3 semaines"
+    features: ["journal", "profile_stats", "offline_support"]
+    milestone: "Expérience personnalisée et données utilisateur"
+
+  phase_3_enhancement:
+    duration: "1-2 semaines"
+    features: ["smart_notifications", "polish", "testing"]
+    milestone: "MVP complet et testé"
+
+  phase_4_future:
+    duration: "post-MVP"
+    features: ["programs_21_days", "achievements_system", "beauty_selfcare"]
+    milestone: "Fonctionnalités d'engagement avancées"
+
+acceptance_criteria:
+  critical_paths:
+    - name: "Parcours onboarding complet"
+      steps: ["ouvrir_app", "configurer_preferences", "voir_dashboard", "lancer_premiere_session"]
+      success_metric: "< 5 minutes pour premier usage"
+
+    - name: "Session vidéo complète"
+      steps: ["parcourir_bibliotheque", "filtrer_contenu", "lancer_video", "completer_session"]
+      success_metric: "Lecture fluide sans interruption"
+
+    - name: "Écriture journal quotidien"
+      steps: ["ouvrir_journal", "ecrire_gratitudes", "selectionner_humeur", "sauvegarder"]
+      success_metric: "Sauvegarde instantanée et sécurisée"
+
+    - name: "Navigation bottom bar"
+      steps: ["tester_5_onglets", "verification_etats", "navigation_fluide"]
+      success_metric: "Transitions sans lag < 200ms"
+
+quality_gates:
+  performance:
+    - cold_start: "< 2 secondes"
+    - navigation: "< 200ms entre écrans"
+    - video_start: "< 3 secondes"
+    - memory_usage: "< 150MB moyenne"
+
+  accessibility:
+    - talkback_support: "100% navigation possible"
+    - contrast_ratio: "> 4.5:1 pour textes"
+    - touch_targets: "> 48dp minimum"
+    - focus_indicators: "Visible sur tous éléments"
+
+  offline:
+    - core_features: "100% fonctionnelles hors ligne"
+    - data_persistence: "Pas de perte de données"
+    - sync_recovery: "Automatique au retour en ligne"

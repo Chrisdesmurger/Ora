@@ -1,0 +1,373 @@
+{
+  "taskId": "FIREBASE-001-FIRESTORE-COLLECTIONS-2025-10-05",
+  "from": "supervisor-tech",
+  "to": "tech-backend-firebase",
+  "priority": "HIGH",
+  "status": "PENDING",
+  "createdAt": "2025-10-05T00:00:00Z",
+  "assignedPhases": [1, 4],
+  "estimatedDuration": "7 hours",
+  "title": "Create Firestore Collections Infrastructure (Rules, Indexes, Seed Data)",
+  "description": "Set up Firestore backend infrastructure for 4 new collections: gratitudes, programs, content, user_programs. Update security rules with UID-based isolation, create composite indexes, generate seed data, and deploy to Firebase.",
+  "context": {
+    "projectRoot": "c:\\Users\\chris\\source\\repos\\Ora",
+    "firebaseProject": "ora-wellbeing-app",
+    "existingCollections": ["users", "stats"],
+    "referenceFiles": [
+      "c:\\Users\\chris\\source\\repos\\Ora\\firestore.rules",
+      "c:\\Users\\chris\\source\\repos\\Ora\\docs\\FIRESTORE_KOTLIN_MAPPING_GUIDE.md",
+      "c:\\Users\\chris\\source\\repos\\Ora\\reports\\firestore-dynamization-plan.md"
+    ],
+    "firestoreConsoleUrl": "https://console.firebase.google.com/project/ora-wellbeing-app/firestore"
+  },
+  "objectives": [
+    "Update firestore.rules with 4 new collections and validation functions",
+    "Create firestore.indexes.json with 7 composite indexes for optimized queries",
+    "Generate firebase/seed_data.json with 10+ programs and 15+ content items",
+    "Deploy rules and indexes to Firebase",
+    "Validate security rules (no cross-user access)",
+    "Test offline mode and synchronization"
+  ],
+  "phases": {
+    "phase1": {
+      "phaseId": 1,
+      "title": "Firestore Security Rules and Indexes",
+      "estimatedDuration": "4 hours",
+      "status": "READY_TO_START",
+      "dependencies": [],
+      "tasks": [
+        {
+          "taskId": "1.1",
+          "title": "Update firestore.rules with gratitudes collection",
+          "description": "Add security rules for gratitudes/{uid}/entries/{date} with UID-based isolation and field validation",
+          "files": ["firestore.rules"],
+          "acceptanceCriteria": [
+            "Rule: allow read, write: if request.auth.uid == uid",
+            "Validation function validateGratitudeEntry() created",
+            "Field validations: gratitudes.size() <= 3, notes.size() <= 500"
+          ]
+        },
+        {
+          "taskId": "1.2",
+          "title": "Update firestore.rules with programs collection",
+          "description": "Add security rules for programs/{programId} - read-only for authenticated users",
+          "files": ["firestore.rules"],
+          "acceptanceCriteria": [
+            "Rule: allow read: if request.auth != null",
+            "Rule: allow write: if false (admin only for future)"
+          ]
+        },
+        {
+          "taskId": "1.3",
+          "title": "Update firestore.rules with user_programs collection",
+          "description": "Add security rules for user_programs/{uid}/enrolled/{programId} with UID-based isolation",
+          "files": ["firestore.rules"],
+          "acceptanceCriteria": [
+            "Rule: allow read, write: if request.auth.uid == uid",
+            "Validation function validateUserProgram() created",
+            "Field validations: currentDay > 0, totalDays > 0"
+          ]
+        },
+        {
+          "taskId": "1.4",
+          "title": "Update firestore.rules with content collection",
+          "description": "Add security rules for content/{contentId} - read-only for authenticated users",
+          "files": ["firestore.rules"],
+          "acceptanceCriteria": [
+            "Rule: allow read: if request.auth != null",
+            "Rule: allow write: if false (admin only for future)"
+          ]
+        },
+        {
+          "taskId": "1.5",
+          "title": "Create firestore.indexes.json",
+          "description": "Create composite indexes for optimized queries on all 4 collections",
+          "files": ["firestore.indexes.json"],
+          "acceptanceCriteria": [
+            "Index: gratitudes/entries [uid ASC, date DESC]",
+            "Index: programs [category ASC, rating DESC]",
+            "Index: programs [isActive ASC, participantCount DESC]",
+            "Index: user_programs/enrolled [uid ASC, isCompleted ASC, lastSessionAt DESC]",
+            "Index: content [category ASC, rating DESC]",
+            "Index: content [isActive ASC, isPopular ASC, publishedAt DESC]",
+            "Index: content [isActive ASC, isNew ASC, publishedAt DESC]"
+          ]
+        }
+      ],
+      "deliverables": [
+        "firestore.rules (updated with 4 new collections)",
+        "firestore.indexes.json (7 composite indexes)"
+      ],
+      "validationGate": "backend_ready"
+    },
+    "phase4": {
+      "phaseId": 4,
+      "title": "Seed Data and Deployment",
+      "estimatedDuration": "3 hours",
+      "status": "BLOCKED",
+      "dependencies": ["phase-1", "phase-2", "phase-3"],
+      "tasks": [
+        {
+          "taskId": "4.1",
+          "title": "Generate seed data for programs collection",
+          "description": "Create firebase/seed_data.json with 10+ realistic programs across all categories",
+          "files": ["firebase/seed_data.json"],
+          "acceptanceCriteria": [
+            "Minimum 10 programs created",
+            "Categories covered: Méditation, Yoga, Bien-être, Défis, Sommeil",
+            "Mix of free and premium programs",
+            "Mix of beginner, intermediate, advanced levels",
+            "Each program has sessions array with at least 3 sessions",
+            "Realistic data: titles, descriptions, participant counts, ratings"
+          ],
+          "seedDataStructure": {
+            "programs": [
+              {
+                "id": "unique-program-id",
+                "title": "Program title in French",
+                "description": "Detailed description",
+                "category": "Méditation | Yoga | Bien-être | Défis | Sommeil",
+                "duration": "number of days (7-30)",
+                "level": "Débutant | Intermédiaire | Avancé | Tous niveaux",
+                "participant_count": "100-5000",
+                "rating": "4.0-5.0",
+                "thumbnail_url": "placeholder or real URL",
+                "instructor": "French name",
+                "is_premium_only": "true/false",
+                "is_active": "true",
+                "sessions": [
+                  {
+                    "day": 1,
+                    "content_id": "reference to content item",
+                    "title": "Session title",
+                    "duration_minutes": 10
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "taskId": "4.2",
+          "title": "Generate seed data for content collection",
+          "description": "Create firebase/seed_data.json with 15+ realistic content items (meditation, yoga, etc.)",
+          "files": ["firebase/seed_data.json"],
+          "acceptanceCriteria": [
+            "Minimum 15 content items created",
+            "Categories covered: Méditation, Yoga, Respiration, Pilates, Bien-être",
+            "Mix of free and premium content",
+            "Some marked as popular, some as new",
+            "Duration range: 5-30 minutes",
+            "Realistic tags and ratings",
+            "Placeholder URLs for video/audio/thumbnails"
+          ],
+          "seedDataStructure": {
+            "content": [
+              {
+                "id": "unique-content-id",
+                "title": "Content title in French",
+                "category": "Méditation | Yoga | Respiration | Pilates | Bien-être",
+                "duration": "5 min | 10 min | 15 min | 20 min | 30 min",
+                "duration_minutes": 5,
+                "instructor": "French name",
+                "description": "Detailed description",
+                "thumbnail_url": "placeholder URL",
+                "video_url": "placeholder URL (optional)",
+                "audio_url": "placeholder URL (optional)",
+                "is_premium_only": "true/false",
+                "is_popular": "true/false",
+                "is_new": "true/false",
+                "rating": "4.0-5.0",
+                "completion_count": "100-10000",
+                "tags": ["tag1", "tag2", "tag3"],
+                "is_active": "true"
+              }
+            ]
+          }
+        },
+        {
+          "taskId": "4.3",
+          "title": "Deploy firestore.rules to Firebase",
+          "description": "Deploy updated security rules to production Firebase project",
+          "command": "firebase deploy --only firestore:rules",
+          "acceptanceCriteria": [
+            "Command executed successfully",
+            "No deployment errors",
+            "Rules visible in Firebase Console",
+            "Existing users/stats collections unaffected"
+          ]
+        },
+        {
+          "taskId": "4.4",
+          "title": "Deploy firestore.indexes to Firebase",
+          "description": "Deploy composite indexes to production Firebase project",
+          "command": "firebase deploy --only firestore:indexes",
+          "acceptanceCriteria": [
+            "Command executed successfully",
+            "Indexes building in Firebase Console",
+            "All 7 indexes present"
+          ]
+        },
+        {
+          "taskId": "4.5",
+          "title": "Import seed data to Firestore",
+          "description": "Manually import programs and content seed data via Firebase Console",
+          "acceptanceCriteria": [
+            "All programs imported to programs collection",
+            "All content items imported to content collection",
+            "Documents visible in Firebase Console",
+            "Field types correct (String, Int, Float, Boolean, Array)"
+          ],
+          "instructions": [
+            "1. Open Firebase Console > Firestore Database",
+            "2. Create 'programs' collection if not exists",
+            "3. Import each program as a document (use program.id as document ID)",
+            "4. Create 'content' collection if not exists",
+            "5. Import each content item as a document (use content.id as document ID)",
+            "6. Verify field types match schema (snake_case keys)"
+          ]
+        },
+        {
+          "taskId": "4.6",
+          "title": "Validate security rules with cross-user access tests",
+          "description": "Test that users cannot access other users' gratitudes or user_programs",
+          "acceptanceCriteria": [
+            "User A cannot read User B's gratitudes",
+            "User A cannot write to User B's user_programs",
+            "Public collections (programs, content) are readable by all authenticated users",
+            "Public collections are NOT writable by any user"
+          ],
+          "testScenarios": [
+            "Auth as User A, attempt to read gratitudes/{userB}/entries/{date} → PERMISSION_DENIED",
+            "Auth as User A, attempt to write user_programs/{userB}/enrolled/{programId} → PERMISSION_DENIED",
+            "Auth as User A, read programs/{programId} → SUCCESS",
+            "Auth as User A, write programs/{programId} → PERMISSION_DENIED"
+          ]
+        },
+        {
+          "taskId": "4.7",
+          "title": "Test offline mode and Firestore cache",
+          "description": "Validate that Firestore persistence cache works correctly",
+          "acceptanceCriteria": [
+            "Android app loads data from cache when offline",
+            "Changes sync automatically when back online",
+            "No data loss in offline mode"
+          ]
+        }
+      ],
+      "deliverables": [
+        "firebase/seed_data.json (10+ programs, 15+ content items)",
+        "Firestore rules deployed to production",
+        "Firestore indexes deployed and built",
+        "Seed data imported to Firestore",
+        "Security test report (no cross-user access)",
+        "Offline mode validation report"
+      ],
+      "validationGate": "backend_ready + security_ready"
+    }
+  },
+  "technicalRequirements": {
+    "firestoreRulesPattern": "Follow existing users/stats pattern with UID-based isolation",
+    "namingConvention": "Collection names in snake_case, field names in snake_case",
+    "securityPrinciples": [
+      "Privacy by design: Each user can only access their own data",
+      "Public catalogs (programs, content) are read-only for authenticated users",
+      "Field validation in rules to prevent malformed data",
+      "Admin write access reserved for future Cloud Functions"
+    ],
+    "indexOptimization": [
+      "Composite indexes for all multi-field queries",
+      "Order by rating DESC for content discovery",
+      "Order by date DESC for recent entries",
+      "Filter by category + sort for catalog browsing"
+    ]
+  },
+  "referenceImplementation": {
+    "existingRules": "firestore.rules (users and stats collections)",
+    "securityPattern": "request.auth != null && request.auth.uid == uid",
+    "validationPattern": "function validateUserProfile(data) { return data.uid is string && ... }"
+  },
+  "deliverables": [
+    {
+      "file": "firestore.rules",
+      "description": "Updated with 4 new collections and validation functions",
+      "location": "c:\\Users\\chris\\source\\repos\\Ora\\firestore.rules"
+    },
+    {
+      "file": "firestore.indexes.json",
+      "description": "Composite indexes for optimized queries",
+      "location": "c:\\Users\\chris\\source\\repos\\Ora\\firestore.indexes.json"
+    },
+    {
+      "file": "firebase/seed_data.json",
+      "description": "Seed data with 10+ programs and 15+ content items",
+      "location": "c:\\Users\\chris\\source\\repos\\Ora\\firebase\\seed_data.json"
+    },
+    {
+      "file": "bus/outbox/tech-backend-firebase/report-firestore-deployment-2025-10-05.json",
+      "description": "Deployment report with validation results",
+      "location": "c:\\Users\\chris\\source\\repos\\Ora\\bus\\outbox\\tech-backend-firebase\\report-firestore-deployment-2025-10-05.json"
+    }
+  ],
+  "acceptanceCriteria": [
+    "firestore.rules updated with 4 new collections (gratitudes, programs, content, user_programs)",
+    "Validation functions created for user-specific collections",
+    "firestore.indexes.json created with 7 composite indexes",
+    "firebase/seed_data.json created with 10+ programs and 15+ content items",
+    "Rules deployed successfully to Firebase",
+    "Indexes deployed and building in Firebase Console",
+    "Seed data imported to Firestore via Console",
+    "Security testing passed: no cross-user access possible",
+    "Offline mode validated: cache works correctly",
+    "Deployment report published to bus/outbox/"
+  ],
+  "risks": [
+    {
+      "risk": "Incorrect collection names (snake_case vs camelCase mismatch with Android)",
+      "mitigation": "Use exact collection names from plan: gratitudes, programs, content, user_programs",
+      "severity": "HIGH"
+    },
+    {
+      "risk": "Security rule syntax errors causing deployment failure",
+      "mitigation": "Test rules locally with Firebase Emulator before deployment",
+      "severity": "MEDIUM"
+    },
+    {
+      "risk": "Index build time (composite indexes can take minutes to hours)",
+      "mitigation": "Deploy indexes early, monitor build status in Console",
+      "severity": "LOW"
+    }
+  ],
+  "dependencies": {
+    "beforeStart": [
+      "Firebase CLI installed and authenticated (firebase login)",
+      "Access to Firebase Console for manual seed data import",
+      "Firebase Emulator (optional, for local testing)"
+    ],
+    "afterCompletion": [
+      "tech-android can proceed with repository implementations (Phase 2)",
+      "Firestore infrastructure ready for Android app to connect"
+    ]
+  },
+  "notes": [
+    "Collection names MUST match Android repository constants exactly",
+    "Use snake_case for all field names to match Kotlin @PropertyName annotations",
+    "Security rules follow existing users/stats pattern (UID-based isolation)",
+    "Seed data should be realistic and diverse for testing UI properly",
+    "Phase 4 is BLOCKED until tech-android completes Phase 1-3 (models, repositories, ViewModels)",
+    "Report back to bus/outbox/ after each phase completion"
+  ],
+  "reportingRequirements": {
+    "progressUpdates": "Update status/pipeline.json after each task completion",
+    "phaseCompletion": "Publish report to bus/outbox/tech-backend-firebase/ with validation results",
+    "issues": "Report blockers or issues to supervisor-tech immediately",
+    "finalDeliverable": "Comprehensive deployment report with security test results"
+  },
+  "timeline": {
+    "phase1Start": "2025-10-05T00:15:00Z",
+    "phase1End": "2025-10-05T04:15:00Z",
+    "phase4Start": "2025-10-05T15:00:00Z (after Phase 3)",
+    "phase4End": "2025-10-05T18:00:00Z",
+    "totalDuration": "7 hours"
+  }
+}

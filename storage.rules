@@ -1,0 +1,46 @@
+rules_version = '2';
+
+// Firebase Storage Security Rules for Ora App
+// Updated: 2025-11-08
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // User profile photos: /users/{userId}/profile.jpg
+    match /users/{userId}/profile.jpg {
+      // Allow read for all authenticated users
+      allow read: if request.auth != null;
+
+      // Allow write only for the owner
+      allow write: if request.auth != null
+                   && request.auth.uid == userId
+                   && request.resource.size < 5 * 1024 * 1024  // Max 5MB
+                   && request.resource.contentType.matches('image/.*');  // Only images
+    }
+
+    // User files: /users/{userId}/**
+    match /users/{userId}/{allPaths=**} {
+      // Allow read for all authenticated users
+      allow read: if request.auth != null;
+
+      // Allow write only for the owner
+      allow write: if request.auth != null
+                   && request.auth.uid == userId
+                   && request.resource.size < 10 * 1024 * 1024;  // Max 10MB
+    }
+
+    // Public assets (if needed): /public/**
+    match /public/{allPaths=**} {
+      // Anyone can read public assets
+      allow read: if true;
+
+      // Only admins can write (you'll need to implement custom claims for this)
+      allow write: if false;  // Disabled for now
+    }
+
+    // Deny all other access by default
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
