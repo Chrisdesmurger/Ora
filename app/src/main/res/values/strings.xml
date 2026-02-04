@@ -485,6 +485,12 @@
     <string name="yoga_rewind_10s">Reculer 10s</string>
     <string name="yoga_forward_10s">Avancer 10s</string>
     <string name="yoga_switch_side">Changer de cote</string>
+    <!-- Yoga Landscape Mode -->
+    <string name="yoga_landscape_mode">Mode paysage</string>
+    <string name="yoga_rotate_device">Tournez votre appareil</string>
+    <string name="yoga_lock_orientation">Verrouiller l\'orientation</string>
+    <string name="yoga_unlock_orientation">Deverrouiller l\'orientation</string>
+    <string name="yoga_controls_panel">Controles</string>
     <string name="yoga_chapter_warmup">Echauffement</string>
     <string name="yoga_chapter_sun_salutation">Salutation au soleil</string>
     <string name="yoga_chapter_standing_poses">Postures debout</string>
