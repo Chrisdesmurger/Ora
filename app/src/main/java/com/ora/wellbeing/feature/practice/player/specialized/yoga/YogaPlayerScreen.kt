@@ -84,6 +84,7 @@ fun YogaPlayerScreen(
             uiState.practice != null -> YogaPlayerContent(
                 uiState = uiState,
                 onEvent = viewModel::onEvent,
+                exoPlayer = viewModel.getExoPlayer(),
                 onBack = onBack,
                 onMinimize = onMinimize
             )
@@ -151,6 +152,7 @@ private fun YogaErrorState(
 private fun YogaPlayerContent(
     uiState: YogaPlayerState,
     onEvent: (YogaPlayerEvent) -> Unit,
+    exoPlayer: androidx.media3.exoplayer.ExoPlayer?,
     onBack: () -> Unit,
     onMinimize: () -> Unit
 ) {
@@ -158,121 +160,146 @@ private fun YogaPlayerContent(
 
     // Landscape layout: Video (70%) | Controls (30%)
     Row(modifier = Modifier.fillMaxSize()) {
-        // Left side: Video Player with seek bar
-        Column(
+        // Left side: Video Player with overlaid seek bar
+        Box(
             modifier = Modifier
                 .weight(0.7f)
                 .fillMaxHeight()
-        ) {
-            // Video Player avec mode miroir (16:9 aspect ratio)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .clip(RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp))
-                    .background(Color.Black)
-                    .graphicsLayer {
-                        // Appliquer le mode miroir
-                        scaleX = if (uiState.isMirrorMode) -1f else 1f
-                    }
-                    .clickable { onEvent(YogaPlayerEvent.ToggleFullscreen) }
-            ) {
-                AndroidView(
-                    factory = { ctx ->
-                        PlayerView(ctx).apply {
-                            useController = false
-                            resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
-                        }
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
-
-                // Indicateur mode miroir
-                if (uiState.isMirrorMode) {
-                    Surface(
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .padding(12.dp)
-                            .graphicsLayer { scaleX = -1f }, // Réinverser le texte
-                        shape = RoundedCornerShape(8.dp),
-                        color = PlayerColors.Yoga.accent.copy(alpha = 0.9f)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.Flip,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                                tint = Color.White
-                            )
-                            Text(
-                                text = stringResource(R.string.yoga_mirror_label),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color.White
-                            )
-                        }
-                    }
+                .clip(RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp))
+                .background(Color.Black)
+                .graphicsLayer {
+                    // Appliquer le mode miroir
+                    scaleX = if (uiState.isMirrorMode) -1f else 1f
                 }
+                .clickable { onEvent(YogaPlayerEvent.TogglePlayPause) }
+        ) {
+            // Video PlayerView connected to ExoPlayer
+            AndroidView(
+                factory = { ctx ->
+                    PlayerView(ctx).apply {
+                        useController = false
+                        resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
+                        player = exoPlayer
+                    }
+                },
+                update = { playerView ->
+                    playerView.player = exoPlayer
+                },
+                modifier = Modifier.fillMaxSize()
+            )
 
-                // Side indicator overlay
-                if (uiState.currentSide != YogaSide.NONE) {
-                    Surface(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(12.dp)
-                            .graphicsLayer { scaleX = if (uiState.isMirrorMode) -1f else 1f },
-                        shape = RoundedCornerShape(8.dp),
-                        color = PlayerColors.Yoga.accentDark.copy(alpha = 0.9f)
+            // Indicateur mode miroir
+            if (uiState.isMirrorMode) {
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(12.dp)
+                        .graphicsLayer { scaleX = -1f }, // Réinverser le texte
+                    shape = RoundedCornerShape(8.dp),
+                    color = PlayerColors.Yoga.accent.copy(alpha = 0.9f)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
+                        Icon(
+                            Icons.Default.Flip,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = Color.White
+                        )
                         Text(
-                            text = stringResource(uiState.currentSide.nameRes),
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                            text = stringResource(R.string.yoga_mirror_label),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White
                         )
                     }
                 }
+            }
 
-                // Buffering indicator
-                if (uiState.playerState.buffering) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = Color.White
+            // Side indicator overlay
+            if (uiState.currentSide != YogaSide.NONE) {
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(12.dp)
+                        .graphicsLayer { scaleX = if (uiState.isMirrorMode) -1f else 1f },
+                    shape = RoundedCornerShape(8.dp),
+                    color = PlayerColors.Yoga.accentDark.copy(alpha = 0.9f)
+                ) {
+                    Text(
+                        text = stringResource(uiState.currentSide.nameRes),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                     )
                 }
+            }
 
-                // Play/Pause overlay on tap
+            // Fullscreen toggle button (top-right, after side indicator)
+            IconButton(
+                onClick = { onEvent(YogaPlayerEvent.ToggleFullscreen) },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = if (uiState.currentSide != YogaSide.NONE) 48.dp else 8.dp, end = 8.dp)
+                    .graphicsLayer { scaleX = if (uiState.isMirrorMode) -1f else 1f }
+            ) {
+                Icon(
+                    if (uiState.isFullscreen) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
+                    contentDescription = stringResource(
+                        if (uiState.isFullscreen) R.string.yoga_exit_fullscreen
+                        else R.string.yoga_enter_fullscreen
+                    ),
+                    tint = Color.White,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+
+            // Buffering indicator
+            if (uiState.playerState.buffering) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = Color.White
+                )
+            }
+
+            // Play/Pause overlay (only visible when paused)
+            if (!uiState.playerState.isPlaying) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.Center)
                         .size(64.dp)
                         .clip(CircleShape)
-                        .background(Color.Black.copy(alpha = 0.4f))
-                        .clickable { onEvent(YogaPlayerEvent.TogglePlayPause) },
+                        .background(Color.Black.copy(alpha = 0.4f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        if (uiState.playerState.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = stringResource(if (uiState.playerState.isPlaying) R.string.player_pause else R.string.player_play),
+                        Icons.Default.PlayArrow,
+                        contentDescription = stringResource(R.string.player_play),
                         modifier = Modifier.size(40.dp),
                         tint = Color.White
                     )
                 }
             }
 
-            // Seek bar below video
-            CustomSeekBar(
-                currentPosition = uiState.playerState.currentPosition,
-                duration = uiState.playerState.duration,
-                onSeek = { onEvent(YogaPlayerEvent.SeekTo(it)) },
+            // Seek bar overlay at the bottom of the video (transparent background)
+            Box(
                 modifier = Modifier
+                    .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-            )
+                    .background(Color.Black.copy(alpha = 0.35f))
+                    .graphicsLayer { scaleX = if (uiState.isMirrorMode) -1f else 1f }
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+            ) {
+                CustomSeekBar(
+                    currentPosition = uiState.playerState.currentPosition,
+                    duration = uiState.playerState.duration,
+                    onSeek = { onEvent(YogaPlayerEvent.SeekTo(it)) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
 
         // Right side: Controls Panel (30%)
