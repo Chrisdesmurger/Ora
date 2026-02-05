@@ -44,6 +44,19 @@ class LessonDocument() {
      */
     var type: String = "video"
 
+    /**
+     * Lesson discipline (e.g., "yoga", "meditation", "breathing", "pilates", "massage")
+     * Primary field used for category filtering in the library.
+     * Set by OraWebApp when creating/editing lessons.
+     */
+    var discipline: String = ""
+
+    /**
+     * Lesson category (legacy field, fallback for discipline)
+     * Some older lessons may use this instead of discipline.
+     */
+    var category: String? = null
+
     // ============================================================================
     // i18n Fields (Issue #39 - Phase 2)
     // ============================================================================
