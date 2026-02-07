@@ -494,6 +494,14 @@
     <string name="yoga_rewind_10s">Retroceder 10s</string>
     <string name="yoga_forward_10s">Adelantar 10s</string>
     <string name="yoga_switch_side">Cambiar de lado</string>
+    <!-- Yoga Landscape Mode -->
+    <string name="yoga_landscape_mode">Modo horizontal</string>
+    <string name="yoga_rotate_device">Gira tu dispositivo</string>
+    <string name="yoga_lock_orientation">Bloquear orientacion</string>
+    <string name="yoga_unlock_orientation">Desbloquear orientacion</string>
+    <string name="yoga_controls_panel">Controles</string>
+    <string name="yoga_enter_fullscreen">Pantalla completa</string>
+    <string name="yoga_exit_fullscreen">Salir de pantalla completa</string>
     <string name="yoga_chapter_warmup">Calentamiento</string>
     <string name="yoga_chapter_sun_salutation">Saludo al Sol</string>
     <string name="yoga_chapter_standing_poses">Posturas de Pie</string>

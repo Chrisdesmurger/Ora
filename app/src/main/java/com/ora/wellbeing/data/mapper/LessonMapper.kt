@@ -44,8 +44,9 @@ object LessonMapper {
             this.title = getLocalizedTitle(doc, languageCode).ifBlank { id }
             // Use i18n description based on device locale
             this.description = getLocalizedDescription(doc, languageCode)
-            // Use i18n category based on device locale
+            // Category priority: i18n category > discipline field > tags fallback
             this.category = getLocalizedCategory(doc, languageCode)
+                ?: mapDisciplineToCategory(doc.discipline, doc.category)
                 ?: mapLessonTypeToCategory(doc.type, doc.tags)
             this.duration = formatDuration(doc.duration_sec)
             this.durationMinutes = (doc.duration_sec ?: 0) / 60
@@ -172,7 +173,33 @@ object LessonMapper {
     }
 
     /**
-     * Maps lesson type and tags to Android category
+     * Maps Firestore discipline/category field to Android category string
+     *
+     * This is the primary mapping used when i18n category fields are not set.
+     * The discipline field is set by OraWebApp when creating/editing lessons.
+     *
+     * @param discipline Firestore discipline field (e.g., "yoga", "meditation")
+     * @param category Firestore category field (legacy fallback)
+     * @return Category string or null if discipline is empty
+     */
+    private fun mapDisciplineToCategory(discipline: String, category: String?): String? {
+        val value = discipline.ifBlank { category ?: "" }.lowercase().trim()
+        if (value.isBlank()) return null
+
+        return when (value) {
+            "yoga" -> "Yoga"
+            "meditation", "méditation" -> "Meditation"
+            "breathing", "respiration" -> "Respiration"
+            "pilates" -> "Pilates"
+            "massage", "auto-massage", "self-massage" -> "Massage"
+            "sleep", "sommeil" -> "Sommeil"
+            "wellness", "bien-être", "bien-etre" -> "Bien-etre"
+            else -> value.replaceFirstChar { it.uppercase() }
+        }
+    }
+
+    /**
+     * Maps lesson type and tags to Android category (last resort fallback)
      *
      * Uses tags to determine the most appropriate category from:
      * - Meditation, Yoga, Respiration, Pilates, Bien-etre, Sommeil, Massage
@@ -185,7 +212,7 @@ object LessonMapper {
         // Priority-based category mapping from tags
         return when {
             tags.any { it.equals("yoga", ignoreCase = true) } -> "Yoga"
-            tags.any { it.equals("meditation", ignoreCase = true) || it.equals("meditation", ignoreCase = true) } -> "Meditation"
+            tags.any { it.equals("meditation", ignoreCase = true) || it.equals("méditation", ignoreCase = true) } -> "Meditation"
             tags.any { it.equals("breathing", ignoreCase = true) || it.equals("respiration", ignoreCase = true) } -> "Respiration"
             tags.any { it.equals("pilates", ignoreCase = true) } -> "Pilates"
             tags.any { it.equals("sleep", ignoreCase = true) || it.equals("sommeil", ignoreCase = true) } -> "Sommeil"
