@@ -166,7 +166,7 @@ private fun YogaPlayerContent(
                 .weight(0.7f)
                 .fillMaxHeight()
                 .clip(RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp))
-                .background(Color.Black)
+                .background(PlayerColors.Yoga.background)
                 .graphicsLayer {
                     // Appliquer le mode miroir
                     scaleX = if (uiState.isMirrorMode) -1f else 1f
